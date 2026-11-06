@@ -80,6 +80,18 @@
     />
   </Field>
 
+  <Field label="Graphics" hint="Software drawing uses about 60 MB less memory; hardware opens and closes the island a little more smoothly. Takes effect the next time Tensei Island starts.">
+    <Choice
+      label="Graphics"
+      value={s.graphics}
+      options={[
+        { value: 'gpu', label: 'Hardware' },
+        { value: 'software', label: 'Software' },
+      ]}
+      onchange={(v) => void settings.set({ graphics: v })}
+    />
+  </Field>
+
   <Field label="Shortcut" hint="Opens and closes the island from anywhere. Click, then press the keys.">
     <button class="key" class:rec={recording} onclick={() => (recording = true)} onkeydown={record} onblur={() => (recording = false)}>
       {recording ? 'Press keys…' : s.hotkey || 'None'}
