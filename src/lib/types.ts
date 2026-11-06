@@ -166,8 +166,15 @@ export interface GameEnded {
 }
 
 /** The island window right now (island.rs `island_state`). */
+/** A maximized window in front of the island's monitor and its program ("vivaldi", "T3 Code"). */
+export interface Front {
+  maximized: boolean;
+  app: string;
+}
+
 export interface IslandState {
   maximized: boolean;
+  app: string;
   hidden: boolean;
   shown: boolean;
 }

@@ -13,7 +13,10 @@ export interface Settings {
   hoverDelay: number;
   collapseDelay: number;
   hideInFullscreen: boolean;
-  lineWhenMaximized: boolean;
+  /** Over a maximized window: learn per app, always a thin line, or never. */
+  overMaximized: 'learn' | 'line' | 'full';
+  /** Apps (lower-case program names) the island rests as a line over; learned or added. */
+  lineApps: string[];
   /** Rest as a thin line when nothing is happening. */
   tuckWhenIdle: boolean;
   /** Seconds of nothing before tucking. */
@@ -91,7 +94,8 @@ export const DEFAULTS: Settings = {
   hoverDelay: 220,
   collapseDelay: 380,
   hideInFullscreen: true,
-  lineWhenMaximized: true,
+  overMaximized: 'learn',
+  lineApps: [],
   tuckWhenIdle: true,
   tuckAfter: 20,
   respectDnd: true,

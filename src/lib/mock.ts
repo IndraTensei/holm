@@ -217,7 +217,7 @@ export async function call<T>(cmd: string, args?: Record<string, unknown>): Prom
       case 'autostart_get':
         return false;
       case 'island_state':
-        return { maximized: false, hidden: false, shown: true };
+        return { maximized: false, app: '', hidden: false, shown: true };
       case 'quiet_get':
         return false;
       case 'island_summon':

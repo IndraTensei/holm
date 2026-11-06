@@ -65,7 +65,13 @@ Calm by default, each adjustable in Settings → General → Behaviour:
   arriving with the button down counts once it is released. Click-through still follows the cursor at once,
   so files can be dropped.
 - Tuck when idle: with nothing live for 20 s the island rests as a thin line (`tuckWhenIdle`, `tuckAfter`).
-- A maximized window in front turns the resting island into a thin line (`lineWhenMaximized`, now on).
+- Over a maximized window (`overMaximized`): Learn (default), Thin line or Full. Learn keeps the full island
+  until it gets in the way over an app: an open on hover that closes within 2 s with no click, scroll or key is
+  a miss, and three misses over one app within three days (no real use in between) add the app to `lineApps`,
+  with a one-time note. Rust reports the front app with `island://maximized` {maximized, app}; the counting is
+  in `stores/fit.svelte.ts`, misses in data.json `lineMisses`. Settings → General lists learned apps.
+- After each view or style change settles, the whole surface is repainted once: WebView2 in a transparent
+  window can otherwise keep a stale frame outside the area it last redrew (a faded copy of the open island).
 - Windows Do not disturb (`quiet.rs`): song, volume and charging pop-ups are dropped, chimes are silent, and
   agent news is held and shown as one card when it ends (`respectDnd`). Song-change pop-ups are off by default.
 - Starting never steals focus: for 5 s after start, focus that lands on the island without a hover or the

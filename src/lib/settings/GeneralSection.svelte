@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ArrowUp, ArrowDown } from '@lucide/svelte';
+  import { ArrowUp, ArrowDown, X } from '@lucide/svelte';
   import Field from './Field.svelte';
   import Toggle from './Toggle.svelte';
   import Choice from './Choice.svelte';
@@ -132,9 +132,31 @@
     </Field>
   {/if}
 
-  <Field label="Thin line when a window is maximized" hint="Keeps browser tabs and title bars clear; hover still opens it.">
-    <Toggle label="Thin line when maximized" checked={s.lineWhenMaximized} onchange={(v) => settings.set({ lineWhenMaximized: v })} />
+  <Field label="Over a maximized window" hint="Learn: stays full until it keeps opening by accident over an app (a browser's tabs), then rests as a thin line over that app only. Hover still opens the line.">
+    <Choice
+      label="Over a maximized window"
+      value={s.overMaximized}
+      options={[
+        { value: 'learn', label: 'Learn' },
+        { value: 'line', label: 'Thin line' },
+        { value: 'full', label: 'Full' },
+      ]}
+      onchange={(v) => void settings.set({ overMaximized: v })}
+    />
   </Field>
+
+  {#if s.overMaximized === 'learn' && s.lineApps.length}
+    <Field label="A thin line over" hint="Learned from use. Remove an app to give it the full island again.">
+      <ul class="apps">
+        {#each s.lineApps as app (app)}
+          <li>
+            <span>{app}</span>
+            <button aria-label="Give {app} the full island" onclick={() => settings.set({ lineApps: s.lineApps.filter((a) => a !== app) })}><X size={13} /></button>
+          </li>
+        {/each}
+      </ul>
+    </Field>
+  {/if}
 
   <Field label="Respect Do not disturb" hint="While Windows' Do not disturb is on: no song, volume or charging pop-ups and no chimes. Agent news waits and shows when it is off.">
     <Toggle label="Respect Do not disturb" checked={s.respectDnd} onchange={(v) => settings.set({ respectDnd: v })} />
@@ -172,6 +194,36 @@
 </section>
 
 <style>
+  .apps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .apps li {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 28px;
+    padding: 0 4px 0 10px;
+    border-radius: 8px;
+    background: var(--fill-1);
+    font-size: var(--t-sm);
+  }
+  .apps button {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    color: var(--ink-3);
+  }
+  .apps button:hover {
+    background: var(--fill-2);
+    color: var(--ink);
+  }
   .key {
     min-width: 150px;
     height: 32px;

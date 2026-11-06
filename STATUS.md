@@ -56,6 +56,7 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 | Games | Open shortcut summons the island over a game; hide shortcut (Ctrl+Alt+H); play time on quit | ✅ verified |
 | Games | Agent news while playing is held (no chime) and shown as "While you were playing" after | ✅ verified |
 | Daily | No focus stealing at start; hover never opens mid-drag; tuck to a line when idle or behind a maximized window | ✅ verified (dev build) |
+| Daily | Over maximized windows: learns per app (accidental hover opens) whether to rest as a line | ✅ verified (dev build); real-life tuning 🧪 |
 | Daily | Respect Windows Do not disturb: chatty pop-ups dropped, chimes off, agent news held | ✅ verified by flipping the registry value; real toggle 🧪 |
 
 ## Next steps, in order
@@ -155,3 +156,11 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   again at once (many restarts under `tauri dev`). Now the cache keeps the last good reading per provider, the
   next check time and the backoff; Retry-After is honoured; old readings show dimmed with their age. The
   service itself answered 200 when probed, so the 429s are intermittent.
+- 2026-11-06 (session 4, later): the thin line over every maximized window was too much (the owner works in
+  a maximized T3 Code all day). Replaced with Learn / Thin line / Full (`overMaximized`, default Learn):
+  per-app learning from accidental hover opens (see ARCHITECTURE, Daily behaviour). Verified on the real app
+  with pointer moves only: full over maximized T3 Code and Vivaldi until learned; three quick hover-and-leaves
+  over Vivaldi → "Resting as a line over vivaldi" and a thin line there, saved to settings.json (test entry
+  removed afterwards). Found on the way: a stale faded frame of the open island after it shrank (WebView2
+  partial redraw); fixed with a full repaint after changes settle, not seen again in the rerun. One hover
+  counted twice in the real app (hover flicker while growing); misses within 1.5 s now count once.

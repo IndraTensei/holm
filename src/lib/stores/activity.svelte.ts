@@ -2,7 +2,7 @@
 // a track changed, the volume moved) and settles back. Higher priority wins; equal priority
 // replaces. Approvals are not peeks: they stay until answered (see IslandApp).
 
-export type PeekKind = 'done' | 'attention' | 'track' | 'volume' | 'charging' | 'timer' | 'shelf' | 'pear' | 'game' | 'gameover' | 'missed';
+export type PeekKind = 'done' | 'attention' | 'track' | 'volume' | 'charging' | 'timer' | 'shelf' | 'pear' | 'game' | 'gameover' | 'missed' | 'note';
 
 export interface Peek {
   id: number;
@@ -24,6 +24,7 @@ const PRIORITY: Record<PeekKind, number> = {
   charging: 50,
   track: 30,
   volume: 20,
+  note: 40,
 };
 
 /** Pop-ups that are only nice to have: dropped while Do not disturb is on. */
