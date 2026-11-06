@@ -1,6 +1,6 @@
 <script lang="ts">
   // A moment of news: the island grows, says one thing, and settles back.
-  import { Check, BatteryCharging, Volume2, VolumeX, FolderDown, Timer, MessageCircleQuestion, Plug, Gamepad2, Bell } from '@lucide/svelte';
+  import { Check, BatteryCharging, Volume2, VolumeX, FolderDown, Timer, MessageCircleQuestion, Plug, Gamepad2, Bell, PanelTopClose } from '@lucide/svelte';
   import GameIntro from './GameIntro.svelte';
   import Art from '../ui/Art.svelte';
   import Eq from '../ui/Eq.svelte';
@@ -84,6 +84,14 @@
   <div class="peek slim">
     <FolderDown size={17} />
     <span class="label">{d.count} {d.count === 1 ? 'file' : 'files'} added to the shelf</span>
+  </div>
+{:else if peek.kind === 'note'}
+  <div class="peek">
+    <PanelTopClose size={17} />
+    <div>
+      <div class="title">{d.title}</div>
+      {#if d.sub}<div class="sub">{d.sub}</div>{/if}
+    </div>
   </div>
 {:else if peek.kind === 'pear'}
   <div class="peek slim">

@@ -69,6 +69,8 @@ pub struct Island {
     fullscreen_hidden: AtomicBool,
     user_hidden: AtomicBool,
     maximized: AtomicBool,
+    /// Program of the maximized window in front ("" when none), for per-app behaviour.
+    front_app: Mutex<String>,
     previous_foreground: AtomicIsize,
     /// A game is in front and smart hide is on.
     game_hidden: AtomicBool,
@@ -155,6 +157,7 @@ impl Island {
             fullscreen_hidden: AtomicBool::new(false),
             user_hidden: AtomicBool::new(false),
             maximized: AtomicBool::new(false),
+            front_app: Mutex::new(String::new()),
             previous_foreground: AtomicIsize::new(0),
             game_hidden: AtomicBool::new(false),
             summoned: AtomicBool::new(false),
@@ -440,8 +443,22 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
                         island.fullscreen_hidden.store(false, Ordering::Relaxed);
                     }
                     let maximized = island.foreground_maximized(&geometry);
-                    if maximized != island.maximized.swap(maximized, Ordering::Relaxed) {
-                        let _ = app.emit("island://maximized", maximized);
+                    let name = if maximized {
+                        games::app_name(foreground)
+                    } else {
+                        String::new()
+                    };
+                    let was = island.maximized.swap(maximized, Ordering::Relaxed);
+                    let mut front = island.front_app.lock().expect("front lock");
+                    if maximized != was || name != *front {
+                        *front = name.clone();
+                        let _ = app.emit(
+                            "island://maximized",
+                            Front {
+                                maximized,
+                                app: name,
+                            },
+                        );
                     }
                 }
                 if elapsed % 2000 < step {
@@ -515,12 +532,21 @@ pub fn island_release_focus(island: State<'_, Arc<Island>>) {
     }
 }
 
+/// A maximized window in front of the island's monitor, and its program.
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct Front {
+    maximized: bool,
+    app: String,
+}
+
 /// What the window state is right now. Events only report changes, and the frontend can start
 /// after the first ones went out (slow first load), so it asks once at start.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IslandState {
     maximized: bool,
+    app: String,
     hidden: bool,
     shown: bool,
 }
@@ -529,6 +555,11 @@ pub struct IslandState {
 pub fn island_state(island: State<'_, Arc<Island>>) -> IslandState {
     IslandState {
         maximized: island.maximized.load(Ordering::Relaxed),
+        app: island
+            .front_app
+            .lock()
+            .map(|a| a.clone())
+            .unwrap_or_default(),
         hidden: island.user_hidden.load(Ordering::Relaxed),
         shown: island.shown.load(Ordering::Relaxed),
     }

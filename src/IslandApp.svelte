@@ -18,12 +18,13 @@
   import { focus, shelf, note, weather } from './lib/stores/widgets.svelte';
   import { clock } from './lib/stores/clock.svelte';
   import { beat } from './lib/stores/beat.svelte';
+  import { fit } from './lib/stores/fit.svelte';
   import { inTauri, on, send, call, focusWindow, onFileDrop, registerHotkeys } from './lib/bridge';
   import { findTheme, themeVars, applyVars, accentFromArt } from './lib/themes';
   import { artColor } from './lib/artColor';
   import { motionFor } from './lib/motion';
   import { chime } from './lib/sound';
-  import type { Game, GameEnded, IslandState, Live } from './lib/types';
+  import type { Front, Game, GameEnded, IslandState, Live } from './lib/types';
 
   type Mode = 'compact' | 'peek' | 'approval' | 'drop' | 'expanded';
 
@@ -33,7 +34,6 @@
   let page = $state<PageId>('home');
   let hover = $state(false);
   let dropping = $state(false);
-  let maximized = $state(false);
   let size = $state({ w: 176, h: 34 });
   let islandEl = $state<HTMLDivElement>();
   let bubbleEl = $state<HTMLButtonElement>();
@@ -82,7 +82,22 @@
     return () => clearTimeout(timer);
   });
 
-  const style = $derived(s.style === 'line' || tucked || (maximized && s.lineWhenMaximized) ? 'line' : s.style);
+  const style = $derived(s.style === 'line' || tucked || fit.line ? 'line' : s.style);
+
+  // WebView2 in a transparent window can keep showing an old frame outside the area it last
+  // redrew (seen as a faded copy of the open island after it shrank to a line). Once a change
+  // has settled, repaint the whole surface once.
+  $effect(() => {
+    void viewKey;
+    void style;
+    const timer = setTimeout(() => {
+      const root = document.documentElement;
+      root.style.opacity = '0.999';
+      requestAnimationFrame(() => requestAnimationFrame(() => (root.style.opacity = '')));
+    }, motion.duration + 150);
+    return () => clearTimeout(timer);
+  });
+
   const lineNow = $derived(style === 'line' && mode === 'compact');
   const notch = $derived(style === 'notch');
 
@@ -126,6 +141,7 @@
     else if (target) page = target;
     if (!s.pages.includes(page)) page = s.pages[0] ?? 'home';
     openedBy = by;
+    if (!expanded) fit.opened(by);
     expanded = true;
     activity.dismiss();
   }
@@ -134,6 +150,7 @@
   let summoned = false;
 
   function close() {
+    if (expanded) fit.closed();
     expanded = false;
     pinned = false;
     if (inTauri && document.hasFocus()) send('island_release_focus');
@@ -343,6 +360,7 @@
         },
       );
       await shelf.load();
+      await fit.load();
       await note.load();
       weather.start();
       focus.onFinish = (phase) => {
@@ -358,7 +376,7 @@
       // Changes are events; the state before this window finished loading is asked for once.
       const state = await call<IslandState>('island_state').catch(() => null);
       if (state) {
-        maximized = state.maximized;
+        fit.set(state);
         hidden = state.hidden;
         beat.pause(!state.shown);
       }
@@ -381,7 +399,7 @@
         }),
       );
       stops.push(await on('island://toggle', toggle));
-      stops.push(await on<boolean>('island://maximized', (v) => (maximized = v)));
+      stops.push(await on<Front>('island://maximized', (v) => fit.set(v)));
       stops.push(await on('island://placed', () => ((lastRect = ''), reportRect())));
       stops.push(
         await onFileDrop((e) => {
@@ -426,9 +444,13 @@
     if (game) setTimeout(() => activity.show('game', { name: game, exe: 'game.exe' }, 1e9), 300);
     if (q.get('missed'))
       activity.show('missed', { title: 'While you were playing', items: [{ project: 'meetbot', text: 'is done' }, { project: 'tensei-island', text: 'needs you' }], count: 2 }, 1e9);
+    const front = q.get('front');
+    if (front) fit.set({ maximized: true, app: front });
     if (q.get('ended')) activity.show('gameover', { name: 'Valorant', exe: 'valorant.exe', durationMs: 4_320_000 }, 1e9);
   }
 </script>
+
+<svelte:window onpointerdown={() => expanded && fit.used()} onwheel={() => expanded && fit.used()} onkeydown={() => expanded && fit.used()} />
 
 <div
   class="stage"

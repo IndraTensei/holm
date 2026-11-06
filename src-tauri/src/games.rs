@@ -205,6 +205,19 @@ impl Tracker {
     }
 }
 
+/// The front window's program name without ".exe" ("vivaldi", "T3 Code"), or "" if unknown.
+pub fn app_name(hwnd: HWND) -> String {
+    let mut pid = 0u32;
+    unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
+    exe_path(pid)
+        .and_then(|p| {
+            std::path::Path::new(&p)
+                .file_stem()
+                .map(|s| s.to_string_lossy().into_owned())
+        })
+        .unwrap_or_default()
+}
+
 fn exe_path(pid: u32) -> Option<String> {
     unsafe {
         let process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
