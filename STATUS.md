@@ -150,3 +150,8 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   without checking what is under the cursor); Do not disturb holds a done event and shows it after; tuck after
   20 s in the browser preview. Higgsfield: "Katana" is a claude.ai feature behind the Higgsfield MCP connector
   (https://mcp.higgsfield.ai/mcp), not in the CLI; the video is planned as code-made motion of the real UI.
+- 2026-11-06 (session 4, later): the usage ring kept showing "Rate limited" after restarts. Cause: only good
+  readings were cached and only their time, so a restart forgot the last numbers and the backoff, and asked
+  again at once (many restarts under `tauri dev`). Now the cache keeps the last good reading per provider, the
+  next check time and the backoff; Retry-After is honoured; old readings show dimmed with their age. The
+  service itself answered 200 when probed, so the 429s are intermittent.
