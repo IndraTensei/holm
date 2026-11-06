@@ -164,3 +164,10 @@ export interface GameEnded {
   exe: string;
   durationMs: number;
 }
+
+/** The island window right now (island.rs `island_state`). */
+export interface IslandState {
+  maximized: boolean;
+  hidden: boolean;
+  shown: boolean;
+}

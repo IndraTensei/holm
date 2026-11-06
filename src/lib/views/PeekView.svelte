@@ -25,7 +25,7 @@
   <div class="peek wide">
     <span class="badge accent"><Bell size={16} strokeWidth={2.4} /></span>
     <div class="text">
-      <div class="title display">While you were playing</div>
+      <div class="title display">{d.title ?? 'While you were away'}</div>
       {#each d.items as item}
         <div class="sub"><b>{item.project}</b> {item.text}</div>
       {/each}

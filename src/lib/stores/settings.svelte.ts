@@ -14,6 +14,12 @@ export interface Settings {
   collapseDelay: number;
   hideInFullscreen: boolean;
   lineWhenMaximized: boolean;
+  /** Rest as a thin line when nothing is happening. */
+  tuckWhenIdle: boolean;
+  /** Seconds of nothing before tucking. */
+  tuckAfter: number;
+  /** Hold pop-ups and chimes while Windows' Do not disturb is on. */
+  respectDnd: boolean;
   autostart: boolean;
   /** WebView2 compositing. 'software' uses ~60 MB less memory; read by Rust at start-up. */
   graphics: 'gpu' | 'software';
@@ -82,10 +88,13 @@ export const DEFAULTS: Settings = {
   offsetY: 8,
   scale: 1,
   openOn: 'hover',
-  hoverDelay: 140,
+  hoverDelay: 220,
   collapseDelay: 380,
   hideInFullscreen: true,
-  lineWhenMaximized: false,
+  lineWhenMaximized: true,
+  tuckWhenIdle: true,
+  tuckAfter: 20,
+  respectDnd: true,
   autostart: false,
   graphics: 'gpu',
   hotkey: 'Ctrl+Alt+Space',
@@ -113,7 +122,7 @@ export const DEFAULTS: Settings = {
   pearToken: '',
   pearClientId: '',
   lyrics: true,
-  trackToasts: true,
+  trackToasts: false,
   volumeOsd: true,
   agents: true,
   hookPort: 47821,

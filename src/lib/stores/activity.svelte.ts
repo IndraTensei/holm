@@ -26,12 +26,18 @@ const PRIORITY: Record<PeekKind, number> = {
   volume: 20,
 };
 
+/** Pop-ups that are only nice to have: dropped while Do not disturb is on. */
+const CHATTY: PeekKind[] = ['track', 'volume', 'charging', 'pear'];
+
 class ActivityStore {
   peek = $state<Peek | null>(null);
+  /** Windows' Do not disturb is on and the user wants it respected. */
+  quiet = false;
   private seq = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
 
   show(kind: PeekKind, data: Record<string, unknown> = {}, ms = 4000): void {
+    if (this.quiet && CHATTY.includes(kind)) return;
     const priority = PRIORITY[kind];
     const current = this.peek;
     if (current && current.priority > priority && current.until > Date.now()) return;

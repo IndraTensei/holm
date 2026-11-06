@@ -118,12 +118,30 @@
     <span class="num val">{s.hoverDelay} ms</span>
   </Field>
 
-  <Field label="Hide during full screen" hint="Games, videos and presentations are never covered.">
-    <Toggle label="Hide during full screen" checked={s.hideInFullscreen} onchange={(v) => settings.set({ hideInFullscreen: v })} />
+  <h3>Behaviour</h3>
+  <p class="lead">How much the island asks for your attention day to day.</p>
+
+  <Field label="Rest as a thin line when idle" hint="With no music, agents or timers, the island tucks into a line after a while. Pointing at it brings it back.">
+    <Toggle label="Rest as a thin line when idle" checked={s.tuckWhenIdle} onchange={(v) => settings.set({ tuckWhenIdle: v })} />
   </Field>
 
-  <Field label="Thin line when a window is maximized" hint="Keeps the top of maximized apps clear; hover still opens it.">
+  {#if s.tuckWhenIdle}
+    <Field label="Tuck after" hint="How long nothing has to happen first.">
+      <input type="range" min="5" max="120" step="5" value={s.tuckAfter} oninput={(e) => settings.set({ tuckAfter: Number((e.target as HTMLInputElement).value) })} />
+      <span class="num val">{s.tuckAfter} s</span>
+    </Field>
+  {/if}
+
+  <Field label="Thin line when a window is maximized" hint="Keeps browser tabs and title bars clear; hover still opens it.">
     <Toggle label="Thin line when maximized" checked={s.lineWhenMaximized} onchange={(v) => settings.set({ lineWhenMaximized: v })} />
+  </Field>
+
+  <Field label="Respect Do not disturb" hint="While Windows' Do not disturb is on: no song, volume or charging pop-ups and no chimes. Agent news waits and shows when it is off.">
+    <Toggle label="Respect Do not disturb" checked={s.respectDnd} onchange={(v) => settings.set({ respectDnd: v })} />
+  </Field>
+
+  <Field label="Hide during full screen" hint="Games, videos and presentations are never covered.">
+    <Toggle label="Hide during full screen" checked={s.hideInFullscreen} onchange={(v) => settings.set({ hideInFullscreen: v })} />
   </Field>
 
   {#if monitors.length > 1}
