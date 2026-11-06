@@ -140,7 +140,7 @@ export const DEFAULTS: Settings = {
   autoOpenApprovals: true,
   quotaClaude: true,
   quotaCodex: true,
-  quotaMinutes: 5,
+  quotaMinutes: 1,
   toolsShown: {},
   clipboardHistory: true,
   clipboardMax: 30,

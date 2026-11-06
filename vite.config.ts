@@ -5,7 +5,9 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 export default defineConfig({
   plugins: [svelte()],
   clearScreen: false,
-  server: { port: 1420, strictPort: true },
+  // Rust's build output lives inside the project: a release build next to `tauri dev` would
+  // otherwise reload every open window mid-build (seen as a blank settings window).
+  server: { port: 1420, strictPort: true, watch: { ignored: ['**/src-tauri/target/**'] } },
   build: {
     target: 'chrome120',
     outDir: 'dist',
