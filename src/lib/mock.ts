@@ -218,6 +218,11 @@ export async function call<T>(cmd: string, args?: Record<string, unknown>): Prom
         return false;
       case 'island_state':
         return { maximized: false, app: '', hidden: false, shown: true };
+      case 'app_volume_get':
+        return { level: 0.7, muted: false };
+      case 'app_volume_set':
+      case 'app_volume_mute':
+        return true;
       case 'quotas_get':
         return [];
       case 'harness_scan': {
