@@ -9,6 +9,7 @@
 compile_error!("Tensei Island targets Windows 10/11 only.");
 
 mod agents;
+mod appvolume;
 mod clipboard;
 mod config;
 mod games;
@@ -210,6 +211,9 @@ pub fn run() {
             quotas::quotas_refresh,
             quotas::quotas_get,
             harness::harness_scan,
+            appvolume::app_volume_get,
+            appvolume::app_volume_set,
+            appvolume::app_volume_mute,
             quiet::quiet_get,
             clipboard::clipboard_list,
             clipboard::clipboard_copy,

@@ -218,6 +218,16 @@ pub fn app_name(hwnd: HWND) -> String {
         .unwrap_or_default()
 }
 
+/// A process's program name without ".exe", lower case ("spotify", "youtube music").
+pub fn process_name(pid: u32) -> Option<String> {
+    let path = exe_path(pid)?;
+    let stem = std::path::Path::new(&path)
+        .file_stem()?
+        .to_string_lossy()
+        .to_lowercase();
+    Some(stem)
+}
+
 fn exe_path(pid: u32) -> Option<String> {
     unsafe {
         let process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;

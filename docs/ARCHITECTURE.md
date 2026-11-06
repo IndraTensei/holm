@@ -12,6 +12,7 @@
 │ games.rs    front window → game intro, smart hide, play time (no extra thread)    │
 │ quiet.rs    Windows Do not disturb (registry change notification, no polling)     │
 │ harness.rs  AI coding tools on this PC and today's usage, on request only          │
+│ appvolume.rs  the playing app's own volume through the Windows mixer                │
 │ media.rs    GSMTC sessions (event driven) → media://state; media_control          │
 │ agents.rs   127.0.0.1:47821 HTTP hook server → agents://state|approval|done       │
 │ quotas.rs   Claude / Codex usage every N min → quotas://update                    │

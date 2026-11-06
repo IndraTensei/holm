@@ -12,6 +12,7 @@
   import { settings } from '../stores/settings.svelte';
   import { clock } from '../stores/clock.svelte';
   import { clockTime } from '../format';
+  import { call, send } from '../bridge';
 
   const now = $derived(media.now);
   $effect(() => (now?.playing ? clock.fast() : undefined));
@@ -28,16 +29,41 @@
     if (el) lyricBox.scrollTo({ top: el.offsetTop - lyricBox.clientHeight / 2 + el.clientHeight / 2, behavior: 'smooth' });
   });
 
-  const volume = $derived(now?.source === 'pear' ? (now.volume ?? 0) / 100 : system.volume?.muted ? 0 : (system.volume?.level ?? 0));
+  // Any player's own volume through the Windows mixer (Spotify, a browser, VLC…); the PC volume
+  // only when the player's sound cannot be found there. Pear uses its own API.
+  let appVolume = $state<{ level: number; muted: boolean } | null>(null);
+  const appSession = $derived(now && now.source !== 'pear' ? now.sessionId : null);
+  $effect(() => {
+    const session = appSession;
+    appVolume = null;
+    if (session) void call<{ level: number; muted: boolean } | null>('app_volume_get', { session }).then((v) => {
+      if (session === appSession) appVolume = v;
+    }).catch(() => {});
+  });
+  const volume = $derived(
+    now?.source === 'pear'
+      ? (now.volume ?? 0) / 100
+      : appVolume
+        ? appVolume.muted ? 0 : appVolume.level
+        : system.volume?.muted ? 0 : (system.volume?.level ?? 0),
+  );
+  const volumeLabel = $derived(now?.source === 'pear' || appVolume ? `${now?.app ?? 'Player'} volume` : 'PC volume');
   function setVolume(v: number) {
     if (now?.source === 'pear') void pear.setVolume(v * 100);
-    else system.setVolume(v);
+    else if (appVolume && appSession) {
+      appVolume = { level: v, muted: false };
+      send('app_volume_set', { session: appSession, level: v });
+    } else system.setVolume(v);
   }
   function toggleMute() {
     if (now?.source === 'pear') void pear.toggleMute();
-    else system.toggleMute();
+    else if (appVolume && appSession) {
+      appVolume = { ...appVolume, muted: !appVolume.muted };
+      send('app_volume_mute', { session: appSession, muted: appVolume.muted });
+    } else system.toggleMute();
   }
-  const pearHint = $derived(settings.v.musicSource !== 'system' && (pear.status === 'needs-auth' || pear.status === 'denied'));
+  // Only while Pear is the player: Spotify and the rest need no setup.
+  const pearHint = $derived(now?.app === 'Pear' && settings.v.musicSource !== 'system' && (pear.status === 'needs-auth' || pear.status === 'denied'));
 </script>
 
 {#if now}
@@ -106,7 +132,7 @@
             </Btn>
           {/if}
           <div class="volume">
-            <button class="mute" aria-label="Mute" onclick={toggleMute}>
+            <button class="mute" aria-label="Mute {volumeLabel}" title={volumeLabel} onclick={toggleMute}>
               {#if volume === 0}<VolumeX size={15} />{:else}<Volume2 size={15} />{/if}
             </button>
             <input
@@ -115,7 +141,8 @@
               max="1"
               step="0.01"
               value={volume}
-              aria-label="Volume"
+              aria-label={volumeLabel}
+              title={volumeLabel}
               style="--v:{volume * 100}%"
               oninput={(e) => setVolume(Number((e.target as HTMLInputElement).value))}
             />
@@ -157,9 +184,7 @@
   <div class="empty">
     <p class="display">Nothing is playing</p>
     <span>Play something in Spotify, Pear, a browser or any player that shows in the Windows media card.</span>
-    {#if settings.v.musicSource !== 'system' && pear.status === 'needs-auth'}
-      <button onclick={() => pear.authorize()}>Connect Pear</button>
-    {/if}
+
   </div>
 {/if}
 
@@ -336,14 +361,6 @@
     flex: 1;
   }
   .hint button,
-  .empty button {
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: var(--accent);
-    color: var(--accent-ink);
-    font-weight: 600;
-    font-size: var(--t-sm);
-  }
   .lyrics {
     position: relative;
     margin-top: 16px;
@@ -409,8 +426,5 @@
     font-size: var(--t-sm);
     max-width: 52ch;
     line-height: 1.5;
-  }
-  .empty button {
-    margin-top: 8px;
   }
 </style>
