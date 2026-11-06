@@ -11,6 +11,7 @@
 │ island.rs   cursor poll → click-through on/off, hover, full screen, maximized     │
 │ games.rs    front window → game intro, smart hide, play time (no extra thread)    │
 │ quiet.rs    Windows Do not disturb (registry change notification, no polling)     │
+│ harness.rs  AI coding tools on this PC and today's usage, on request only          │
 │ media.rs    GSMTC sessions (event driven) → media://state; media_control          │
 │ agents.rs   127.0.0.1:47821 HTTP hook server → agents://state|approval|done       │
 │ quotas.rs   Claude / Codex usage every N min → quotas://update                    │
@@ -82,6 +83,20 @@ Calm by default, each adjustable in Settings → General → Behaviour:
   shortcut goes back to the previous window (Tauri's first show and WebView2's load both activate it).
 - State that events only report on change (maximized, hidden, shown) is read once at start with
   `island_state`, since the frontend can finish loading after the first events went out.
+
+## AI tools
+
+`harness.rs` finds AI coding tools (Claude Code, Codex, OpenCode, Antigravity, Gemini CLI, Copilot CLI,
+Cline, Cursor Agent, Amp, Qwen Code, Crush, Factory Droid, Kiro, Goose, Aider) by their program on PATH or
+their data folder, marks them running from the process list (or a data write in the last 90 s), and reads
+today's usage from the files each tool keeps: Claude Code's session logs (read incrementally, by offset),
+Codex's session logs (cumulative token totals, today's share), OpenCode's and Cline's SQLite databases
+(through Windows' own `winsqlite3.dll`, loaded at runtime: no bundled SQLite), and session folders for the
+rest. Nothing is written and nothing leaves the PC. `harness_scan(since)` runs only while the Agents page
+or Settings → AI tools is on screen (`stores/tools.svelte.ts`, every 5 min there). Claude Code and Codex are
+shown by default when installed (their plan rings: `quotaClaude`, `quotaCodex`); others are opt-in
+(`toolsShown`). Plan limits are only asked for when the tool's sign-in folder exists; `quotas_get` hands a
+window that opens later the last readings.
 
 ## Games
 

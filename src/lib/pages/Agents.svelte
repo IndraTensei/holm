@@ -5,9 +5,10 @@
   import ApprovalCard from '../views/ApprovalCard.svelte';
   import { agents } from '../stores/agents.svelte';
   import { system } from '../stores/system.svelte';
+  import { tools, shown } from '../stores/tools.svelte';
   import { clock } from '../stores/clock.svelte';
   import { call, send } from '../bridge';
-  import { ago, clockTime, until } from '../format';
+  import { ago, clockTime, until, tokens } from '../format';
   import type { AgentSession, HookStatus } from '../types';
 
   let selected = $state<string | null>(null);
@@ -15,6 +16,10 @@
   let hooks = $state<HookStatus | null>(null);
 
   $effect(() => (agents.working.length ? clock.fast() : undefined));
+  // Other AI tools the owner chose to see (Settings → AI tools): what each did today.
+  $effect(() => tools.use());
+  const quotas = $derived(system.quotas.filter((q) => shown(q.provider)));
+  const others = $derived(tools.installed.filter((t) => !t.plan && shown(t.id)));
   $effect(() => {
     void call<HookStatus>('hooks_status').then((h) => (hooks = h)).catch(() => {});
   });
@@ -105,9 +110,9 @@
     </div>
   {/if}
 
-  {#if system.quotas.length}
+  {#if quotas.length || others.length}
     <div class="quotas">
-      {#each system.quotas as p (p.provider)}
+      {#each quotas as p (p.provider)}
         {#if p.ok}
           {#each p.items.slice(0, 3) as q}
             <div class="q" class:stale={p.error} title={p.error ? `${p.error}. Last updated ${ago(p.fetchedAt, clock.now)}.` : undefined}>
@@ -127,6 +132,17 @@
             </div>
           </div>
         {/if}
+      {/each}
+      {#each others as t (t.id)}
+        <div class="q tool" class:stale={!t.running}>
+          <span class="dot" class:live={t.running}></span>
+          <div>
+            <div class="q-label">{t.name}</div>
+            <div class="q-meta num">
+              {#if t.today?.tokens}{tokens(t.today.tokens)} tokens today{:else if t.today?.sessions}{t.today.sessions} {t.today.sessions === 1 ? 'session' : 'sessions'} today{:else if t.lastUsed}used {ago(t.lastUsed, clock.now)}{:else}not used yet{/if}
+            </div>
+          </div>
+        </div>
       {/each}
     </div>
   {/if}
@@ -322,6 +338,18 @@
   .q-meta {
     font-size: var(--t-xs);
     color: var(--ink-3);
+  }
+  .tool .dot {
+    width: 26px;
+    height: 26px;
+    flex: none;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 3px var(--fill-2);
+    display: grid;
+    place-items: center;
+  }
+  .tool .dot.live {
+    box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--ok) 60%, transparent);
   }
   .q.stale {
     opacity: 0.7;
