@@ -30,6 +30,12 @@ Pear Desktop and LRCLIB / Open-Meteo are reached from the frontend with fetch/We
   the window when the inside/outside state changes.
 - CPU, memory and network are read only while a page or view shows them (`system_watch` reference count).
 - The frontend clock ticks every 15 s at rest and 4 Hz only while something live is on screen.
+- No infinite CSS animations in the island. Each frame of one recomposites the whole transparent window
+  (measured 11–21% of a core for a spinner and four equalizer bars). Looping decorations step together on
+  the shared 8 fps `beat` store (~3%), which stops when none is on screen and while the island is hidden.
+  Marquees slide out and back once, then rest.
+- Settings → General → Graphics: software compositing (`--disable-gpu`) drops the GPU process, ~120 MB
+  private memory instead of ~185 MB, for ~40% more CPU during an open/close morph.
 - Fonts: Latin subsets only (~390 KB total), bundled, no network.
 
 ## Island states
@@ -46,7 +52,7 @@ last 5 minutes > idle (quota ring or battery, and the clock).
 `src/lib/stores/settings.svelte.ts` owns the schema and defaults. Rust stores the JSON, broadcasts
 `settings://changed` to both windows and reads only the keys it needs (`monitor`, `hideInFullscreen`,
 `hookPort`, `hookToken`, `approvalTimeout`, `clipboardHistory`, `clipboardMax`, `quotaClaude`, `quotaCodex`,
-`quotaMinutes`, `autostart`), each with its own default.
+`quotaMinutes`, `autostart`, and `graphics` before start-up), each with its own default.
 
 ## Commands and events
 
