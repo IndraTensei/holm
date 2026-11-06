@@ -247,9 +247,22 @@
   }
 
   let lastRect = '';
+  // Resting as a line over a maximized app: only the top edge of the screen (a flick of the
+  // pointer) opens it, so a browser tab or title bar button under the line can still be clicked.
+  const edgeOnly = $derived(lineNow && fit.line && !dropping);
+
   function reportRect() {
     if (!islandEl) return;
     const scale = s.scale || 1;
+    if (edgeOnly) {
+      const r = islandEl.getBoundingClientRect();
+      const rect = { x: r.left - 40 * scale, y: 0, width: r.width + 80 * scale, height: 1 };
+      const key = `edge:${Math.round(rect.x)},${Math.round(rect.width)}`;
+      if (key === lastRect) return;
+      lastRect = key;
+      send('island_set_rect', rect);
+      return;
+    }
     const r = islandEl.getBoundingClientRect();
     const tw = size.w * scale;
     const th = size.h * scale;
@@ -279,6 +292,7 @@
     showBubble;
     s.scale;
     style;
+    edgeOnly;
     void tick().then(reportRect);
   });
 

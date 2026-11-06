@@ -17,6 +17,8 @@ export interface Settings {
   overMaximized: 'learn' | 'line' | 'full';
   /** Apps (lower-case program names) the island rests as a line over; learned or added. */
   lineApps: string[];
+  /** Browsers rest as a line over a maximized window from the start (their tabs sit under the island). */
+  browsersAsLine: boolean;
   /** Rest as a thin line when nothing is happening. */
   tuckWhenIdle: boolean;
   /** Seconds of nothing before tucking. */
@@ -96,6 +98,7 @@ export const DEFAULTS: Settings = {
   hideInFullscreen: true,
   overMaximized: 'learn',
   lineApps: [],
+  browsersAsLine: true,
   tuckWhenIdle: true,
   tuckAfter: 20,
   respectDnd: true,

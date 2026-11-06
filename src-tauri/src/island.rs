@@ -357,7 +357,13 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
                     let s = geometry.scale;
                     let margin = 3.0;
                     let left = geometry.x as f64 + (rect[0] - margin) * s;
-                    let top = geometry.y as f64 + (rect[1] - margin).max(0.0) * s;
+                    // The island hangs from the top of the screen: the gap above it counts too, so
+                    // a pointer pushed to the edge (how the line opens over a maximized app) stays in.
+                    let top = if rect[1] <= 16.0 {
+                        geometry.y as f64
+                    } else {
+                        geometry.y as f64 + (rect[1] - margin) * s
+                    };
                     let right = geometry.x as f64 + (rect[0] + rect[2] + margin) * s;
                     let bottom = geometry.y as f64 + (rect[1] + rect[3] + margin) * s;
                     let (px, py) = (point.x as f64, point.y as f64);
