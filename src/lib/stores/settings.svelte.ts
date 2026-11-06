@@ -13,11 +13,33 @@ export interface Settings {
   hoverDelay: number;
   collapseDelay: number;
   hideInFullscreen: boolean;
-  lineWhenMaximized: boolean;
+  /** Over a maximized window: learn per app, always a thin line, or never. */
+  overMaximized: 'learn' | 'line' | 'full';
+  /** Apps (lower-case program names) the island rests as a line over; learned or added. */
+  lineApps: string[];
+  /** Browsers rest as a line over a maximized window from the start (their tabs sit under the island). */
+  browsersAsLine: boolean;
+  /** Rest as a thin line when nothing is happening. */
+  tuckWhenIdle: boolean;
+  /** Seconds of nothing before tucking. */
+  tuckAfter: number;
+  /** Hold pop-ups and chimes while Windows' Do not disturb is on. */
+  respectDnd: boolean;
   autostart: boolean;
   /** WebView2 compositing. 'software' uses ~60 MB less memory; read by Rust at start-up. */
   graphics: 'gpu' | 'software';
   hotkey: string;
+  /** Hides the island, and shows it again. */
+  hideHotkey: string;
+  // Games
+  /** "Opening Valorant" when a game comes to the front. */
+  gameIntro: boolean;
+  /** Step aside while a game is in front, even windowed. Read by Rust. */
+  smartHide: boolean;
+  /** Games that are not recognised on their own. Read by Rust. */
+  customGames: { exe: string; name: string }[];
+  /** Say how long you played when a game closes. */
+  gameRecap: boolean;
   pages: PageId[];
   // Look
   theme: string;
@@ -52,6 +74,8 @@ export interface Settings {
   quotaClaude: boolean;
   quotaCodex: boolean;
   quotaMinutes: number;
+  /** Harnesses (AI coding agents) shown on the Agents page, by id. Claude Code and Codex use quotaClaude and quotaCodex. */
+  toolsShown: Record<string, boolean>;
   // Shelf and widgets
   clipboardHistory: boolean;
   clipboardMax: number;
@@ -71,13 +95,23 @@ export const DEFAULTS: Settings = {
   offsetY: 8,
   scale: 1,
   openOn: 'hover',
-  hoverDelay: 140,
+  hoverDelay: 220,
   collapseDelay: 380,
   hideInFullscreen: true,
-  lineWhenMaximized: false,
+  overMaximized: 'learn',
+  lineApps: [],
+  browsersAsLine: true,
+  tuckWhenIdle: true,
+  tuckAfter: 20,
+  respectDnd: true,
   autostart: false,
-  graphics: 'gpu',
+  graphics: 'software',
   hotkey: 'Ctrl+Alt+Space',
+  hideHotkey: 'Ctrl+Alt+H',
+  gameIntro: true,
+  smartHide: true,
+  customGames: [],
+  gameRecap: true,
   pages: ['home', 'music', 'agents', 'system', 'shelf', 'focus'],
   theme: 'obsidian',
   customThemes: [],
@@ -97,7 +131,7 @@ export const DEFAULTS: Settings = {
   pearToken: '',
   pearClientId: '',
   lyrics: true,
-  trackToasts: true,
+  trackToasts: false,
   volumeOsd: true,
   agents: true,
   hookPort: 47821,
@@ -105,8 +139,9 @@ export const DEFAULTS: Settings = {
   agentSounds: true,
   autoOpenApprovals: true,
   quotaClaude: true,
-  quotaCodex: false,
-  quotaMinutes: 5,
+  quotaCodex: true,
+  quotaMinutes: 1,
+  toolsShown: {},
   clipboardHistory: true,
   clipboardMax: 30,
   weather: true,

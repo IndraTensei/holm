@@ -151,3 +151,50 @@ export interface MonitorInfo {
   height: number;
   scale: number;
 }
+
+/** A game in front (games.rs). */
+export interface Game {
+  name: string;
+  exe: string;
+}
+
+/** A game that closed, and how long it ran. */
+export interface GameEnded {
+  name: string;
+  exe: string;
+  durationMs: number;
+}
+
+/** The island window right now (island.rs `island_state`). */
+/** An AI coding tool found on this PC (harness_scan). */
+export interface Tool {
+  id: string;
+  name: string;
+  installed: boolean;
+  running: boolean;
+  lastUsed: number | null;
+  today: ToolToday | null;
+  /** Has plan limits (usage rings): Claude Code and Codex. */
+  plan: boolean;
+}
+
+export interface ToolToday {
+  /** Tokens sent and received today, cache reads left out; null when the tool does not log them. */
+  tokens: number | null;
+  sessions: number;
+  /** US dollars the tool itself recorded (opencode). */
+  cost: number | null;
+}
+
+/** A maximized window in front of the island's monitor and its program ("vivaldi", "T3 Code"). */
+export interface Front {
+  maximized: boolean;
+  app: string;
+}
+
+export interface IslandState {
+  maximized: boolean;
+  app: string;
+  hidden: boolean;
+  shown: boolean;
+}

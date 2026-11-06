@@ -12,15 +12,24 @@ use std::{
     time::Duration,
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::{config::Config, util};
 
 static TRIGGER: OnceLock<Mutex<Sender<()>>> = OnceLock::new();
+/// What was last sent to the windows, for a window that opens later (settings).
+static LAST: Mutex<Option<Value>> = Mutex::new(None);
 
-#[derive(Serialize, Clone, Default)]
+fn publish<T: Serialize>(app: &AppHandle, providers: &T) {
+    if let Ok(value) = serde_json::to_value(providers) {
+        *LAST.lock().unwrap_or_else(|e| e.into_inner()) = Some(value);
+    }
+    let _ = app.emit("quotas://update", providers);
+}
+
+#[derive(Serialize, Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct QuotaItem {
     label: String,
@@ -29,10 +38,10 @@ pub struct QuotaItem {
     window_minutes: Option<u32>,
 }
 
-#[derive(Serialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Provider {
-    provider: &'static str,
+    provider: String,
     ok: bool,
     plan: String,
     error: String,
@@ -41,6 +50,9 @@ pub struct Provider {
     /// The service answered 429: wait longer before asking again.
     #[serde(skip)]
     rate_limited: bool,
+    /// Seconds the service asked us to wait (Retry-After), if it said.
+    #[serde(skip)]
+    retry_after: Option<u64>,
 }
 
 /// Keeps the last good numbers on screen when a refresh fails (offline, rate limited), with the
@@ -54,6 +66,7 @@ fn keep_last(fresh: Provider, last: &mut Option<Provider>) -> Provider {
         Some(good) => Provider {
             error: fresh.error,
             rate_limited: fresh.rate_limited,
+            retry_after: fresh.retry_after,
             ..good.clone()
         },
         None => fresh,
@@ -131,7 +144,7 @@ fn codex_home() -> PathBuf {
 
 fn read_claude(agent: &ureq::Agent) -> Provider {
     let mut out = Provider {
-        provider: "claude",
+        provider: "claude".into(),
         fetched_at: util::now_ms(),
         ..Default::default()
     };
@@ -170,8 +183,13 @@ fn read_claude(agent: &ureq::Agent) -> Provider {
             return out;
         }
         429 => {
-            out.error = "Rate limited, retrying later".into();
+            out.error = "Usage service is busy, trying again later".into();
             out.rate_limited = true;
+            out.retry_after = response
+                .headers()
+                .get("retry-after")
+                .and_then(|v| v.to_str().ok())
+                .and_then(|v| v.trim().parse().ok());
             return out;
         }
         code => {
@@ -183,6 +201,12 @@ fn read_claude(agent: &ureq::Agent) -> Provider {
         out.error = "Unexpected reply".into();
         return out;
     };
+    claude_items(&root, &mut out);
+    out
+}
+
+/// Fills `out` from a usage reply: the service's, or the copy Claude Code keeps.
+fn claude_items(root: &Value, out: &mut Provider) {
     let mut add = |label: &str, percent: Option<f64>, reset: Option<i64>, window: Option<u32>| {
         if let Some(p) = percent {
             if p >= 0.0 && !out.items.iter().any(|i| i.label == label) {
@@ -244,12 +268,130 @@ fn read_claude(agent: &ureq::Agent) -> Provider {
     if !out.ok {
         out.error = "No limits reported".into();
     }
-    out
+}
+
+fn claude_plan() -> String {
+    util::read_json(&claude_home().join(".credentials.json"))
+        .get("claudeAiOauth")
+        .and_then(|o| o.get("subscriptionType"))
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string()
+}
+
+/// Claude Code keeps its last usage reply in its own config (`cachedUsageUtilization`) and
+/// refreshes it while it runs. Reading that costs nothing and asks no service, so the island reads
+/// it every check and needs the (rate limited, shared with Claude Code) service only when it is old.
+fn claude_local() -> Option<Provider> {
+    let path = std::env::var_os("CLAUDE_CONFIG_DIR")
+        .map(|d| PathBuf::from(d).join(".claude.json"))
+        .unwrap_or_else(|| util::home_dir().join(".claude.json"));
+    let config = util::read_json(&path);
+    let cached = config.get("cachedUsageUtilization")?;
+    let mut out = Provider {
+        provider: "claude".into(),
+        fetched_at: cached.get("fetchedAtMs").and_then(Value::as_i64)?,
+        plan: claude_plan(),
+        ..Default::default()
+    };
+    claude_items(cached.get("utilization")?, &mut out);
+    out.ok.then_some(out)
+}
+
+/// Codex writes its current limits into each session log as it works: the newest one is a free,
+/// local reading while Codex is in use.
+fn codex_local() -> Option<Provider> {
+    let file = newest_file(&codex_home().join("sessions"), 3)?;
+    let text = std::fs::read_to_string(file).ok()?;
+    let (o, limits) = text
+        .lines()
+        .rev()
+        .filter(|l| l.contains("\"rate_limits\""))
+        .find_map(|l| {
+            let o: Value = serde_json::from_str(l).ok()?;
+            let limits = o.get("payload")?.get("rate_limits")?.clone();
+            limits.is_object().then_some((o, limits))
+        })?;
+    let mut out = Provider {
+        provider: "codex".into(),
+        fetched_at: o
+            .get("timestamp")
+            .and_then(Value::as_str)
+            .and_then(parse_time)?,
+        plan: limits
+            .get("plan_type")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string(),
+        ..Default::default()
+    };
+    for key in ["primary", "secondary"] {
+        let w = &limits[key];
+        let Some(used) = w.get("used_percent").and_then(Value::as_f64) else {
+            continue;
+        };
+        let minutes = w
+            .get("window_minutes")
+            .and_then(Value::as_u64)
+            .map(|m| m as u32);
+        let reset = w.get("resets_at").and_then(Value::as_i64).map(|t| {
+            if t < 100_000_000_000 {
+                t * 1000
+            } else {
+                t
+            }
+        });
+        out.items.push(QuotaItem {
+            label: window_label(minutes, key == "primary"),
+            percent: used.clamp(0.0, 100.0),
+            resets_at: reset,
+            window_minutes: minutes,
+        });
+    }
+    out.ok = !out.items.is_empty();
+    out.ok.then_some(out)
+}
+
+fn newest_file(dir: &std::path::Path, depth: u32) -> Option<PathBuf> {
+    let mut best: Option<(std::time::SystemTime, PathBuf)> = None;
+    for entry in std::fs::read_dir(dir).ok()?.flatten() {
+        let Ok(meta) = entry.metadata() else { continue };
+        let found = if meta.is_dir() {
+            if depth == 0 {
+                continue;
+            }
+            newest_file(&entry.path(), depth - 1)
+                .and_then(|p| std::fs::metadata(&p).ok()?.modified().ok().map(|t| (t, p)))
+        } else {
+            meta.modified().ok().map(|t| (t, entry.path()))
+        };
+        if let Some((t, p)) = found {
+            if best.as_ref().map_or(true, |(b, _)| t > *b) {
+                best = Some((t, p));
+            }
+        }
+    }
+    best.map(|(_, p)| p)
+}
+
+/// 300 → "5-hour", 10080 → "Weekly", 43200 → "Monthly".
+fn window_label(minutes: Option<u32>, primary: bool) -> String {
+    match minutes {
+        Some(300) => "5-hour".into(),
+        Some(1440) => "Daily".into(),
+        Some(10_080) => "Weekly".into(),
+        Some(43_200) | Some(44_640) => "Monthly".into(),
+        Some(m) if m > 0 && m % 1440 == 0 => format!("{}-day", m / 1440),
+        Some(m) if m > 0 && m % 60 == 0 => format!("{}-hour", m / 60),
+        Some(m) if m > 0 => format!("{m}-minute"),
+        _ if primary => "Primary".into(),
+        _ => "Secondary".into(),
+    }
 }
 
 fn read_codex(agent: &ureq::Agent) -> Provider {
     let mut out = Provider {
-        provider: "codex",
+        provider: "codex".into(),
         fetched_at: util::now_ms(),
         ..Default::default()
     };
@@ -312,13 +454,7 @@ fn read_codex(agent: &ureq::Agent) -> Provider {
                 .and_then(Value::as_f64)
                 .map(|s| now + (s * 1000.0) as i64)
         });
-        let label = match minutes {
-            Some(300) => "5-hour".to_string(),
-            Some(10_080) => "Weekly".to_string(),
-            Some(m) if m > 0 => format!("{m}-minute"),
-            _ if field.starts_with("primary") => "Primary".to_string(),
-            _ => "Secondary".to_string(),
-        };
+        let label = window_label(minutes, field.starts_with("primary"));
         out.items.push(QuotaItem {
             label,
             percent: used.clamp(0.0, 100.0),
@@ -330,9 +466,75 @@ fn read_codex(agent: &ureq::Agent) -> Provider {
     out
 }
 
-/// Last good readings, kept in data.json so a restart shows numbers at once and does not ask
-/// the (rate limited) usage service again before the refresh interval is up.
+/// Last good readings and when each service may be asked next, kept in data.json so a restart
+/// shows the numbers at once and keeps to the backoff.
 const CACHE_KEY: &str = "quotaCache";
+/// A reading this recent needs no service call.
+const FRESH_MS: i64 = 15 * 60_000;
+/// Never ask a usage service more often than this.
+const API_EVERY_MS: i64 = 5 * 60_000;
+
+/// One provider's readings and how soon its usage service may be asked again.
+#[derive(Default)]
+struct Source {
+    last: Option<Provider>,
+    next_api: i64,
+    backoff: u64,
+}
+
+impl Source {
+    fn refresh(
+        &mut self,
+        local: Option<Provider>,
+        api: impl FnOnce() -> Provider,
+        force: bool,
+    ) -> Option<Provider> {
+        let now = util::now_ms();
+        // The tool's own copy wins whenever it is newer than what we have.
+        if let Some(p) = local {
+            if self
+                .last
+                .as_ref()
+                .map_or(true, |l| p.fetched_at > l.fetched_at)
+            {
+                self.last = Some(p);
+            }
+        }
+        let fresh = self
+            .last
+            .as_ref()
+            .is_some_and(|l| now - l.fetched_at < FRESH_MS);
+        if fresh && !force {
+            return self.last.clone();
+        }
+        // "Refresh now" still keeps to a backoff the service asked for.
+        if now >= self.next_api || (force && self.backoff <= 1) {
+            let reply = api();
+            if reply.rate_limited {
+                self.backoff = (self.backoff.max(1) * 2).min(12);
+                let wait = (API_EVERY_MS / 1000 * self.backoff as i64)
+                    .max(reply.retry_after.unwrap_or(0) as i64)
+                    .min(3600);
+                self.next_api = now + wait * 1000;
+            } else {
+                self.backoff = 1;
+                self.next_api = now + API_EVERY_MS;
+            }
+            return Some(keep_last(reply, &mut self.last));
+        }
+        // Between calls: the last reading, marked once it is getting old.
+        self.last.clone().map(|p| {
+            if now - p.fetched_at > FRESH_MS && p.error.is_empty() {
+                Provider {
+                    error: "Waiting for the next check".into(),
+                    ..p
+                }
+            } else {
+                p
+            }
+        })
+    }
+}
 
 pub fn start(app: AppHandle) {
     let (tx, rx) = mpsc::channel::<()>();
@@ -343,67 +545,80 @@ pub fn start(app: AppHandle) {
             // Give the island's frontend time to start listening.
             thread::sleep(Duration::from_secs(4));
             let agent = crate::net::agent();
-            let (mut last_claude, mut last_codex) = (None, None);
-            let mut backoff = 1u64;
+            let interval =
+                |app: &AppHandle| app.state::<Config>().u64("quotaMinutes", 1).clamp(1, 60) * 60;
 
-            let interval = |app: &AppHandle| {
-                app.state::<Config>().u64("quotaMinutes", 5).clamp(2, 60) * 60
-            };
             let cached = app.state::<Config>().data_get(CACHE_KEY);
-            let cached_at = cached.get("at").and_then(Value::as_i64).unwrap_or(0);
-            let age = (util::now_ms() - cached_at).max(0) as u64 / 1000;
-            if let Some(list) = cached.get("providers").filter(|_| age < interval(&app)) {
-                let config = app.state::<Config>();
-                let enabled: Vec<Value> = list
-                    .as_array()
-                    .into_iter()
-                    .flatten()
-                    .filter(|p| match p.get("provider").and_then(Value::as_str) {
-                        Some("claude") => config.bool("quotaClaude", true),
-                        Some("codex") => config.bool("quotaCodex", false),
-                        _ => false,
-                    })
+            let saved: Vec<Provider> = cached
+                .get("providers")
+                .and_then(|p| serde_json::from_value(p.clone()).ok())
+                .unwrap_or_default();
+            let source = |name: &str| Source {
+                last: saved
+                    .iter()
+                    .find(|p| p.provider == name && p.ok)
                     .cloned()
-                    .collect();
-                if !enabled.is_empty() {
-                    let _ = app.emit("quotas://update", &enabled);
-                    let _ = rx.recv_timeout(Duration::from_secs(interval(&app) - age));
-                    while rx.try_recv().is_ok() {}
-                }
-            }
+                    .map(|mut p| {
+                        // Readings saved by older versions carry labels like "43200-minute".
+                        if p.provider == "codex" {
+                            for (i, item) in p.items.iter_mut().enumerate() {
+                                item.label = window_label(item.window_minutes, i == 0);
+                            }
+                        }
+                        p
+                    }),
+                next_api: cached["nextApi"][name]
+                    .as_i64()
+                    .or_else(|| cached.get("nextAt").and_then(Value::as_i64))
+                    .unwrap_or(0),
+                backoff: cached["backoff"][name].as_u64().unwrap_or(1).clamp(1, 12),
+            };
+            let (mut claude, mut codex) = (source("claude"), source("codex"));
+            let (mut sent, mut stored) = (String::new(), String::new());
+            let mut force = false;
 
             loop {
                 let config = app.state::<Config>();
                 let mut providers = Vec::new();
-                if config.bool("quotaClaude", true) {
-                    providers.push(keep_last(read_claude(agent), &mut last_claude));
+                // Only tools on this PC: a missing sign-in folder means the tool is not installed.
+                if config.bool("quotaClaude", true) && claude_home().exists() {
+                    providers.extend(claude.refresh(claude_local(), || read_claude(agent), force));
                 }
-                if config.bool("quotaCodex", false) {
-                    providers.push(keep_last(read_codex(agent), &mut last_codex));
+                if config.bool("quotaCodex", true) && codex_home().join("auth.json").exists() {
+                    providers.extend(codex.refresh(codex_local(), || read_codex(agent), force));
                 }
-                if !providers.is_empty() {
-                    let _ = app.emit("quotas://update", &providers);
-                    let good: Vec<&Provider> = providers.iter().filter(|p| p.ok).collect();
-                    if !good.is_empty() {
-                        config.data_set(
-                            CACHE_KEY,
-                            serde_json::json!({ "at": util::now_ms(), "providers": good }),
-                        );
-                    }
+                // Windows hear only about changes.
+                let json = serde_json::to_string(&providers).unwrap_or_default();
+                if json != sent {
+                    publish(&app, &providers);
+                    sent = json;
                 }
-                // 429: double the wait each time (up to an hour), back to normal after a success.
-                backoff = if providers.iter().any(|p| p.rate_limited) {
-                    (backoff * 2).min(12)
-                } else {
-                    1
-                };
-                let wait = (interval(&app) * backoff).min(3600);
-                let _ = rx.recv_timeout(Duration::from_secs(wait));
-                // Collapse a burst of refresh requests into one round.
+                let good: Vec<&Provider> =
+                    [&claude.last, &codex.last].into_iter().flatten().collect();
+                let cache = serde_json::json!({
+                    "providers": good,
+                    "nextApi": { "claude": claude.next_api, "codex": codex.next_api },
+                    "backoff": { "claude": claude.backoff, "codex": codex.backoff },
+                });
+                let text = cache.to_string();
+                if text != stored {
+                    config.data_set(CACHE_KEY, cache);
+                    stored = text;
+                }
+                // A refresh request ("Refresh now", a usage toggle) wakes this early and asks now.
+                force = rx.recv_timeout(Duration::from_secs(interval(&app))).is_ok();
                 while rx.try_recv().is_ok() {}
             }
         })
         .expect("quota thread");
+}
+
+#[tauri::command]
+pub fn quotas_get() -> Value {
+    LAST.lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone()
+        .unwrap_or(Value::Array(Vec::new()))
 }
 
 #[tauri::command]

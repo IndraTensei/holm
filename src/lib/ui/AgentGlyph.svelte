@@ -8,7 +8,17 @@
   // Both loops step on the shared 8 fps beat: see stores/beat.
   const looping = $derived(status === 'working' || status === 'waiting');
   $effect(() => (looping ? beat.use() : undefined));
-  const spin = $derived(status === 'working' ? (beat.n % 12) * 30 : 0);
+  // Working: eight spokes with a fading trail, the way system spinners do it. A spinner like this
+  // is discrete by design, so one step per beat reads as smooth motion (a rotating arc stepped at
+  // the same rate looked choppy) at the same low cost.
+  const SPOKES = 8;
+  const head = $derived(status === 'working' ? beat.n % SPOKES : 0);
+  const spokes = Array.from({ length: SPOKES }, (_, i) => {
+    const a = (i / SPOKES) * Math.PI * 2 - Math.PI / 2;
+    const [c, sn] = [Math.cos(a), Math.sin(a)];
+    return { x1: 8 + c * 3.4, y1: 8 + sn * 3.4, x2: 8 + c * 6.6, y2: 8 + sn * 6.6 };
+  });
+  const fade = (i: number) => 0.18 + 0.82 * Math.pow(1 - ((head - i + SPOKES) % SPOKES) / SPOKES, 2);
   /** Waiting pulse: a ring that grows and fades over 11 beats (~1.4 s). */
   const pulse = $derived(status === 'waiting' ? (beat.n % 11) / 10 : 0);
 </script>
@@ -18,13 +28,21 @@
     <Check size={size * 0.8} strokeWidth={2.6} />
   {:else if status === 'error'}
     <X size={size * 0.8} strokeWidth={2.6} />
+  {:else if status === 'working'}
+    <svg viewBox="0 0 16 16" width={size} height={size} aria-hidden="true">
+      {#each spokes as l, i}
+        <line {...l} style="opacity:{fade(i)}" />
+      {/each}
+    </svg>
   {:else}
-    <i style="--spin:{spin}deg;--p:{pulse}"></i>
+    <i style="--p:{pulse}"></i>
   {/if}
 </span>
 
 <style>
+  /* Its own compositing layer: each beat repaints these pixels, not the whole island. */
   .glyph {
+    will-change: transform;
     position: relative;
     flex: none;
     display: grid;
@@ -36,10 +54,10 @@
     inset: 0;
     border-radius: 50%;
   }
-  .working i {
-    border: 2px solid var(--accent-soft);
-    border-top-color: var(--accent);
-    transform: rotate(var(--spin));
+  svg line {
+    stroke: var(--accent);
+    stroke-width: 1.7;
+    stroke-linecap: round;
   }
   .waiting i {
     inset: 22%;

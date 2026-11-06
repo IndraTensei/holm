@@ -8,7 +8,7 @@
 
   let { approval, more = 0, compact = false }: { approval: Approval; more?: number; compact?: boolean } = $props();
 
-  $effect(() => clock.fast());
+  $effect(() => clock.second());
 
   const left = $derived(Math.max(0, approval.expiresAt - clock.now));
   const total = $derived(Math.max(1, approval.expiresAt - approval.createdAt));

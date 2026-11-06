@@ -47,6 +47,8 @@ class System {
       onPower(b, prev);
     });
     await on<QuotaProvider[]>('quotas://update', (q) => (this.quotas = q));
+    // A window opened after the last check (settings) asks for it.
+    if (!this.quotas.length) this.quotas = (await call<QuotaProvider[]>('quotas_get').catch(() => null)) ?? [];
     await on<Clip[]>('clipboard://changed', (c) => (this.clips = c));
     await on<Volume>('volume://changed', (v) => {
       this.volume = v;

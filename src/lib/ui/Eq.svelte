@@ -23,7 +23,9 @@
 </div>
 
 <style>
+  /* Its own compositing layer: each beat repaints these pixels, not the whole island. */
   .eq {
+    will-change: transform;
     display: inline-flex;
     align-items: center;
     gap: 2.5px;

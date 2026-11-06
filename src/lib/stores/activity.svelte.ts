@@ -2,7 +2,7 @@
 // a track changed, the volume moved) and settles back. Higher priority wins; equal priority
 // replaces. Approvals are not peeks: they stay until answered (see IslandApp).
 
-export type PeekKind = 'done' | 'attention' | 'track' | 'volume' | 'charging' | 'timer' | 'shelf' | 'pear';
+export type PeekKind = 'done' | 'attention' | 'track' | 'volume' | 'charging' | 'timer' | 'shelf' | 'pear' | 'game' | 'gameover' | 'missed' | 'note';
 
 export interface Peek {
   id: number;
@@ -13,7 +13,10 @@ export interface Peek {
 }
 
 const PRIORITY: Record<PeekKind, number> = {
+  game: 100,
   attention: 90,
+  missed: 85,
+  gameover: 75,
   done: 80,
   timer: 70,
   shelf: 60,
@@ -21,14 +24,21 @@ const PRIORITY: Record<PeekKind, number> = {
   charging: 50,
   track: 30,
   volume: 20,
+  note: 40,
 };
+
+/** Pop-ups that are only nice to have: dropped while Do not disturb is on. */
+const CHATTY: PeekKind[] = ['track', 'volume', 'charging', 'pear'];
 
 class ActivityStore {
   peek = $state<Peek | null>(null);
+  /** Windows' Do not disturb is on and the user wants it respected. */
+  quiet = false;
   private seq = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
 
   show(kind: PeekKind, data: Record<string, unknown> = {}, ms = 4000): void {
+    if (this.quiet && CHATTY.includes(kind)) return;
     const priority = PRIORITY[kind];
     const current = this.peek;
     if (current && current.priority > priority && current.until > Date.now()) return;

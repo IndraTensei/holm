@@ -21,7 +21,7 @@
 <section>
   <h2 class="display">Music</h2>
   <p class="lead">
-    Anything that shows in the Windows media card works: Spotify, browsers, Media Player, Apple Music and more. Pear gets extra controls through its API Server plugin.
+    Works with no setup: Spotify, Apple Music, TIDAL, Deezer, Amazon Music, VLC, browsers (YouTube, SoundCloud, Spotify web) and anything else that shows in the Windows media card. The volume slider sets the playing app's own volume, not the whole PC's. Pear can also connect for likes, shuffle and repeat.
   </p>
 
   <Field label="Source">

@@ -1,9 +1,11 @@
-// A shared clock. It ticks fast (4 Hz) only while something live needs it (music progress,
-// lyrics, a running timer, an agent's elapsed time) and once every 15 s otherwise.
+// A shared clock. It ticks at 4 Hz only while lyrics or a progress bar need it, once a second
+// while something shows seconds (an agent's elapsed time, a running timer), and once every 15 s
+// otherwise. Every tick repaints the island, so the slowest rate that looks right wins.
 
 class Clock {
   now = $state(Date.now());
   private fastUsers = 0;
+  private secondUsers = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
@@ -18,7 +20,7 @@ class Clock {
 
   /** Slow ticks land on :00, :15, :30 and :45, so the minute on the clock flips on time. */
   private schedule(): void {
-    const step = this.fastUsers > 0 ? 250 : 15000;
+    const step = this.fastUsers > 0 ? 250 : this.secondUsers > 0 ? 1000 : 15000;
     const wait = step - (Date.now() % step) + 5;
     this.timer = setTimeout(() => {
       this.now = Date.now();
@@ -26,7 +28,17 @@ class Clock {
     }, wait);
   }
 
-  /** Call from an $effect; returns the release function. */
+  /** Once a second, for things that show seconds. Call from an $effect; returns the release function. */
+  second(): () => void {
+    this.secondUsers++;
+    if (this.secondUsers === 1) this.restart();
+    return () => {
+      this.secondUsers = Math.max(0, this.secondUsers - 1);
+      if (this.secondUsers === 0) this.restart();
+    };
+  }
+
+  /** 4 Hz, for lyrics and progress bars. Call from an $effect; returns the release function. */
   fast(): () => void {
     this.fastUsers++;
     if (this.fastUsers === 1) this.restart();
