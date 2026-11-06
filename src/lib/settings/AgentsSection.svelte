@@ -90,26 +90,7 @@
   </Field>
 
   <h3>Plan usage</h3>
-  <p class="lead">Read with the sign-ins Claude Code and Codex already keep on this PC. Nothing is stored.</p>
-  <Field label="Claude" hint="5-hour and weekly limits.">
-    <Toggle label="Claude usage" checked={s.quotaClaude} onchange={(v) => { void settings.set({ quotaClaude: v }); setTimeout(() => system.refreshQuotas(), 200); }} />
-  </Field>
-  <Field label="Codex" hint="Needs the Codex CLI signed in with ChatGPT.">
-    <Toggle label="Codex usage" checked={s.quotaCodex} onchange={(v) => { void settings.set({ quotaCodex: v }); setTimeout(() => system.refreshQuotas(), 200); }} />
-  </Field>
-  <Field label="Refresh every">
-    <Choice
-      label="Refresh every"
-      value={s.quotaMinutes}
-      options={[
-        { value: 2, label: '2 min' },
-        { value: 5, label: '5 min' },
-        { value: 15, label: '15 min' },
-      ]}
-      onchange={(v) => settings.set({ quotaMinutes: v })}
-    />
-    <button class="ghost" onclick={() => send('quotas_refresh')}>Refresh now</button>
-  </Field>
+  <p class="lead">Claude Code and Codex limits, and every other AI tool on this PC, are in AI tools.</p>
 </section>
 
 <style>

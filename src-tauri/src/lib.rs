@@ -12,6 +12,7 @@ mod agents;
 mod clipboard;
 mod config;
 mod games;
+mod harness;
 mod island;
 mod media;
 mod net;
@@ -207,6 +208,8 @@ pub fn run() {
             agents::hooks_install,
             agents::hooks_uninstall,
             quotas::quotas_refresh,
+            quotas::quotas_get,
+            harness::harness_scan,
             quiet::quiet_get,
             clipboard::clipboard_list,
             clipboard::clipboard_copy,

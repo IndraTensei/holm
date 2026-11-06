@@ -164,3 +164,13 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   removed afterwards). Found on the way: a stale faded frame of the open island after it shrank (WebView2
   partial redraw); fixed with a full repaint after changes settle, not seen again in the rerun. One hover
   counted twice in the real app (hover flicker while growing); misses within 1.5 s now count once.
+- 2026-11-06 (session 4, later): owner feedback round. (1) Vivaldi: the centre tab under the island could not
+  be clicked, because the line kept the full pill's hover area. Over a maximized app the line now opens only at
+  the top screen edge, the gap above the island counts as inside, and browsers start as a line
+  (`browsersAsLine`). Verified with pointer moves: on the tab area the tab gets the hover (Vivaldi's tab
+  preview shows), top edge opens, away returns to the line. (2) Spinner looked choppy (an arc stepped 30
+  degrees per beat): now eight spokes with a fading trail on the same 8 fps beat. (3) Settings → AI tools:
+  detection and today's usage for 15 coding tools (`harness.rs`); real scan here found Claude Code, Codex,
+  OpenCode, Antigravity, Copilot CLI and Cline; first scan 3.9 s in a debug build (Claude logs read in full
+  once), 51 ms after. (4) No AI attribution in commits or PRs from now on (owner's call); PR descriptions
+  cleaned.

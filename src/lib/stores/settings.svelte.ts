@@ -74,6 +74,8 @@ export interface Settings {
   quotaClaude: boolean;
   quotaCodex: boolean;
   quotaMinutes: number;
+  /** AI tools shown on the Agents page, by id. Claude Code and Codex use quotaClaude and quotaCodex. */
+  toolsShown: Record<string, boolean>;
   // Shelf and widgets
   clipboardHistory: boolean;
   clipboardMax: number;
@@ -137,8 +139,9 @@ export const DEFAULTS: Settings = {
   agentSounds: true,
   autoOpenApprovals: true,
   quotaClaude: true,
-  quotaCodex: false,
+  quotaCodex: true,
   quotaMinutes: 5,
+  toolsShown: {},
   clipboardHistory: true,
   clipboardMax: 30,
   weather: true,

@@ -19,6 +19,15 @@ use tauri::{AppHandle, Emitter, Manager};
 use crate::{config::Config, util};
 
 static TRIGGER: OnceLock<Mutex<Sender<()>>> = OnceLock::new();
+/// What was last sent to the windows, for a window that opens later (settings).
+static LAST: Mutex<Option<Value>> = Mutex::new(None);
+
+fn publish<T: Serialize>(app: &AppHandle, providers: &T) {
+    if let Ok(value) = serde_json::to_value(providers) {
+        *LAST.lock().unwrap_or_else(|e| e.into_inner()) = Some(value);
+    }
+    let _ = app.emit("quotas://update", providers);
+}
 
 #[derive(Serialize, Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
@@ -346,7 +355,7 @@ const CACHE_KEY: &str = "quotaCache";
 fn wants(config: &Config, provider: &str) -> bool {
     match provider {
         "claude" => config.bool("quotaClaude", true),
-        "codex" => config.bool("quotaCodex", false),
+        "codex" => config.bool("quotaCodex", true),
         _ => false,
     }
 }
@@ -402,7 +411,7 @@ pub fn start(app: AppHandle) {
                     })
                     .collect();
                 if !shown.is_empty() {
-                    let _ = app.emit("quotas://update", &shown);
+                    publish(&app, &shown);
                 }
             }
             let wait = (next_at - util::now_ms()).max(0) as u64 / 1000;
@@ -414,14 +423,15 @@ pub fn start(app: AppHandle) {
             loop {
                 let config = app.state::<Config>();
                 let mut providers = Vec::new();
-                if config.bool("quotaClaude", true) {
+                // Only tools on this PC: a missing sign-in folder means the tool is not installed.
+                if config.bool("quotaClaude", true) && claude_home().exists() {
                     providers.push(keep_last(read_claude(agent), &mut last_claude));
                 }
-                if config.bool("quotaCodex", false) {
+                if config.bool("quotaCodex", true) && codex_home().join("auth.json").exists() {
                     providers.push(keep_last(read_codex(agent), &mut last_codex));
                 }
                 if !providers.is_empty() {
-                    let _ = app.emit("quotas://update", &providers);
+                    publish(&app, &providers);
                 }
                 // 429: double the wait each time (up to an hour), back to normal after a success,
                 // and never sooner than the service asked for.
@@ -449,6 +459,14 @@ pub fn start(app: AppHandle) {
             }
         })
         .expect("quota thread");
+}
+
+#[tauri::command]
+pub fn quotas_get() -> Value {
+    LAST.lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone()
+        .unwrap_or(Value::Array(Vec::new()))
 }
 
 #[tauri::command]
