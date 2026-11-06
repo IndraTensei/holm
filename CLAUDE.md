@@ -18,7 +18,9 @@ cargo test --manifest-path src-tauri/Cargo.toml --lib
 Browser preview scenes (mock data, `src/lib/mock.ts`): `?open=music|agents|home|system|shelf|focus`,
 `?peek=done|track|volume|charging`, `?approval=1`, `?drop=1`, `?timer=1`, `?game=<name>`, `?front=<app>` (a maximized app in front), `?ended=1`, `?missed=1`, `?theme=<id>`, `?style=notch|pill|line`,
 `?music=off`, `?agents=off`, `?title=lyrics`, `#settings&section=look`, `?section=games#settings`, `?section=tools#settings`. `python3 scripts/shots.py` screenshots them
-(needs `npx vite preview --port 4173` and Playwright).
+(needs `npx vite preview --port 4173` and Playwright). `python scripts/film.py` records the promo clips from
+`npm run dev` (`?film=1` lets it play events into the preview; the page runs at 1/3 speed so headless capture
+reaches 60 fps).
 
 Type-checking the Windows backend from Linux (no Windows std available as a download): put Rust's
 `library/` source for your rustc version at `$(rustc --print sysroot)/lib/rustlib/src/rust/library`

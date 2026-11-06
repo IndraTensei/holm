@@ -12,6 +12,9 @@ function emit(event: string, payload: unknown): void {
   handlers.get(event)?.forEach((h) => h(payload));
 }
 
+// `?film=1`: scripts/film.py plays events into the preview to record the promo clips.
+if (params.has('film')) Object.assign(window, { __film: { emit } });
+
 function cover(a: string, b: string, c: string): string {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${a}'/><stop offset='1' stop-color='${b}'/></linearGradient></defs><rect width='120' height='120' fill='url(#g)'/><circle cx='84' cy='38' r='22' fill='${c}' opacity='0.85'/><rect x='14' y='78' width='70' height='8' rx='4' fill='white' opacity='0.5'/><rect x='14' y='92' width='44' height='8' rx='4' fill='white' opacity='0.3'/></svg>`;
   return `data:image/svg+xml;base64,${btoa(svg)}`;

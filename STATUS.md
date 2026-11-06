@@ -207,3 +207,12 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   pop-open fix could refuse a flick to the top edge (the page saw no pointer move before the click-through
   flip): the page now asks Rust for the real pointer (`island_cursor`). Verified on the release build: one
   jump to the top edge opens the island, the gear opens a fully drawn settings window.
+- 2026-11-06 (session 5): stack merged to main (PR #1, then PR #2 retargeted and merged). Promo video and
+  README GIF: `scripts/film.py` drives the browser preview through `?film=1` (mock event hook) and records
+  nine scenes with Chromium's screencast. Headless capture tops out near 30 fps, so the page runs at a third
+  of real speed (DevTools Animation playback rate plus Playwright's clock) and plays back 3x: ~85 fps of page
+  time, encoded at 60. Edited in Higgsfield's sandbox (Katana workflow): a Pillow + ffmpeg compositor with an
+  eased top-anchored camera, captions in Bricolage Grotesque and Geist, title and end cards with the app icon,
+  cuts on the downbeats of an ElevenLabs Music track (120 BPM, 16.86 credits), CC0 UI sounds, -14 LUFS.
+  Outputs: `promo/tensei-island-promo.mp4` (55 s, 1080p60, kept out of git) and `docs/media/demo.gif`
+  (17 s loop, 720 px, 2.7 MB) at the top of the README.
