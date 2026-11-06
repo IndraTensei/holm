@@ -151,17 +151,24 @@ fn apply_graphics_setting() {
     let path = std::path::PathBuf::from(appdata)
         .join("in.tenseitech.island")
         .join("settings.json");
-    if util::read_json(&path)
+    // Measured on the release build (i7-11700): Software and these flags together hold about
+    // 120 MB private instead of about 260 MB, at a few percent of one core more while the island
+    // is open. The flags keep Tauri's own defaults (this variable replaces them), skip the spare
+    // page process and the background downloads a local app never needs, and put both windows in
+    // one page process.
+    const LEAN: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,\
+        SpareRendererForSitePerProcess,msEdgeTranslate \
+        --disable-background-networking --disable-component-update --renderer-process-limit=1";
+    let hardware = util::read_json(&path)
         .get("graphics")
         .and_then(Value::as_str)
-        == Some("software")
-    {
-        // Keep Tauri's own defaults: this variable replaces them.
-        std::env::set_var(
-            VAR,
-            "--disable-gpu --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection",
-        );
-    }
+        == Some("gpu");
+    let args = if hardware {
+        LEAN.to_string()
+    } else {
+        format!("--disable-gpu {LEAN}")
+    };
+    std::env::set_var(VAR, args);
 }
 
 pub fn run() {
