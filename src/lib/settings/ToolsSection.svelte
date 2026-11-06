@@ -1,10 +1,11 @@
 <script lang="ts">
-  // Every AI coding tool on this PC, found on its own, with what each used today.
+  // Harnesses: every AI coding agent on this PC, found on its own, with what each used today.
   import { RefreshCw } from '@lucide/svelte';
   import Toggle from './Toggle.svelte';
   import Field from './Field.svelte';
   import Choice from './Choice.svelte';
   import Ring from '../ui/Ring.svelte';
+  import HarnessLogo from '../ui/HarnessLogo.svelte';
   import { settings } from '../stores/settings.svelte';
   import { system } from '../stores/system.svelte';
   import { tools, shown, setShown } from '../stores/tools.svelte';
@@ -16,13 +17,11 @@
   const s = $derived(settings.v);
   $effect(() => tools.use());
 
-  /** A colour per tool for its monogram: hues only, no logos. */
+  /** Each harness's accent, taken from its logo: the card's edge when shown. */
   const HUE: Record<string, number> = {
-    claude: 22, codex: 160, antigravity: 215, gemini: 250, copilot: 280, cline: 185,
-    amp: 340, qwen: 265, crush: 320, droid: 30, kiro: 270, goose: 45, aider: 120,
+    claude: 15, codex: 235, antigravity: 215, gemini: 250, copilot: 280, amp: 10, qwen: 255, kiro: 265, crush: 320, droid: 30,
   };
-  const mono = (t: Tool) => t.name.replace(/^GitHub /, '').slice(0, 2);
-  const tint = (t: Tool) => (t.id in HUE ? `hsl(${HUE[t.id]} 75% 62%)` : 'hsl(220 8% 72%)');
+  const tint = (t: Tool) => (t.id in HUE ? `hsl(${HUE[t.id]} 70% 64%)` : 'hsl(220 8% 72%)');
 
   const found = $derived(tools.installed);
   const missing = $derived(tools.list.filter((t) => !t.installed));
@@ -60,8 +59,8 @@
 </script>
 
 <section>
-  <h2 class="display">AI tools</h2>
-  <p class="lead">Every coding agent on this PC, found on its own. Usage is read from the files each tool already keeps, and nothing leaves this PC.</p>
+  <h2 class="display">Harnesses</h2>
+  <p class="lead">Every AI coding agent on this PC, found on its own. Usage is read from the files each one already keeps, and nothing leaves this PC.</p>
 
   <div class="stats">
     <div class="stat"><span class="v num">{found.length}</span><span class="k">found</span></div>
@@ -76,7 +75,7 @@
         {@const q = t.plan ? quota(t.id) : undefined}
         <article class="card" class:on={shown(t.id)} style="--tint:{tint(t)}">
           <header>
-            <span class="mono display" aria-hidden="true">{mono(t)}</span>
+            <span class="mono"><HarnessLogo id={t.id} name={t.name} size={22} /></span>
             <div class="who">
               <div class="name">{t.name}</div>
               <div class="state" class:live={t.running}><i></i>{status(t, clock.now)}</div>
@@ -103,16 +102,16 @@
       {/each}
     </div>
   {:else if tools.scannedAt}
-    <p class="empty">No AI coding tools found on this PC yet. Install one and it shows up here.</p>
+    <p class="empty">No AI coding agents found on this PC yet. Install one and it shows up here.</p>
   {:else}
-    <p class="empty">Looking for AI coding tools…</p>
+    <p class="empty">Looking for AI coding agents…</p>
   {/if}
 
   {#if missing.length}
     <h3>Also recognised</h3>
     <p class="lead">Install any of these and it appears above on the next scan.</p>
     <div class="chips">
-      {#each missing as t (t.id)}<span class="chip">{t.name}</span>{/each}
+      {#each missing as t (t.id)}<span class="chip"><HarnessLogo id={t.id} name={t.name} size={13} />{t.name}</span>{/each}
     </div>
   {/if}
 
@@ -207,11 +206,8 @@
     width: 38px;
     height: 38px;
     border-radius: 11px;
-    background: color-mix(in srgb, var(--tint) 18%, transparent);
-    color: var(--tint);
-    font-weight: 700;
-    font-size: var(--t-md);
-    letter-spacing: -0.02em;
+    background: var(--fill-2);
+    box-shadow: inset 0 0 0 1px var(--line);
   }
   .who {
     flex: 1;
@@ -284,6 +280,9 @@
     gap: 6px;
   }
   .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 5px 10px;
     border-radius: 999px;
     background: var(--fill-1);

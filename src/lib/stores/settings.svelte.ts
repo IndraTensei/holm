@@ -74,7 +74,7 @@ export interface Settings {
   quotaClaude: boolean;
   quotaCodex: boolean;
   quotaMinutes: number;
-  /** AI tools shown on the Agents page, by id. Claude Code and Codex use quotaClaude and quotaCodex. */
+  /** Harnesses (AI coding agents) shown on the Agents page, by id. Claude Code and Codex use quotaClaude and quotaCodex. */
   toolsShown: Record<string, boolean>;
   // Shelf and widgets
   clipboardHistory: boolean;

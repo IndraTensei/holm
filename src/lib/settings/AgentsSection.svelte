@@ -90,7 +90,7 @@
   </Field>
 
   <h3>Plan usage</h3>
-  <p class="lead">Claude Code and Codex limits, and every other AI tool on this PC, are in AI tools.</p>
+  <p class="lead">Claude Code and Codex limits, and every other AI coding agent on this PC, are in Harnesses.</p>
 </section>
 
 <style>
