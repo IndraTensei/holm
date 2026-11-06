@@ -346,9 +346,8 @@ pub fn start(app: AppHandle) {
             let (mut last_claude, mut last_codex) = (None, None);
             let mut backoff = 1u64;
 
-            let interval = |app: &AppHandle| {
-                app.state::<Config>().u64("quotaMinutes", 5).clamp(2, 60) * 60
-            };
+            let interval =
+                |app: &AppHandle| app.state::<Config>().u64("quotaMinutes", 5).clamp(2, 60) * 60;
             let cached = app.state::<Config>().data_get(CACHE_KEY);
             let cached_at = cached.get("at").and_then(Value::as_i64).unwrap_or(0);
             let age = (util::now_ms() - cached_at).max(0) as u64 / 1000;

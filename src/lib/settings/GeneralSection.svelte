@@ -9,7 +9,8 @@
 
   const s = $derived(settings.v);
   let monitors = $state<MonitorInfo[]>([]);
-  let recording = $state(false);
+  /** Which shortcut is listening for keys. */
+  let recording = $state<'hotkey' | 'hideHotkey' | null>(null);
   let autostart = $state(false);
 
   $effect(() => {
@@ -54,15 +55,16 @@
     if (!recording) return;
     e.preventDefault();
     if (e.key === 'Escape') {
-      recording = false;
+      recording = null;
       return;
     }
     const key = keyName(e);
     if (!key) return;
     const mods = [e.ctrlKey && 'Ctrl', e.altKey && 'Alt', e.shiftKey && 'Shift', e.metaKey && 'Super'].filter(Boolean);
     if (!mods.length) return;
-    recording = false;
-    void settings.set({ hotkey: [...mods, key].join('+') });
+    const which = recording;
+    recording = null;
+    void settings.set({ [which]: [...mods, key].join('+') });
   }
 </script>
 
@@ -92,11 +94,19 @@
     />
   </Field>
 
-  <Field label="Shortcut" hint="Opens and closes the island from anywhere. Click, then press the keys.">
-    <button class="key" class:rec={recording} onclick={() => (recording = true)} onkeydown={record} onblur={() => (recording = false)}>
-      {recording ? 'Press keys…' : s.hotkey || 'None'}
+  {#snippet shortcut(which: 'hotkey' | 'hideHotkey')}
+    <button class="key" class:rec={recording === which} onclick={() => (recording = which)} onkeydown={record} onblur={() => (recording = null)}>
+      {recording === which ? 'Press keys…' : s[which] || 'None'}
     </button>
-    {#if s.hotkey !== DEFAULTS.hotkey}<button class="link" onclick={() => settings.set({ hotkey: DEFAULTS.hotkey })}>Reset</button>{/if}
+    {#if s[which] !== DEFAULTS[which]}<button class="link" onclick={() => settings.set({ [which]: DEFAULTS[which] })}>Reset</button>{/if}
+  {/snippet}
+
+  <Field label="Shortcut" hint="Opens and closes the island from anywhere, even over a game or when it is hidden. Click, then press the keys.">
+    {@render shortcut('hotkey')}
+  </Field>
+
+  <Field label="Hide shortcut" hint="Hides the island, and brings it back.">
+    {@render shortcut('hideHotkey')}
   </Field>
 
   <Field label="Open" hint="Hovering opens after a short pause, so passing the pointer by does nothing.">

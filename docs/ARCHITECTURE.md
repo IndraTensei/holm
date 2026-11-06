@@ -9,6 +9,7 @@
           │                                           ▼
 ┌──────────────────────────── Rust (src-tauri/src) ─────────────────────────────────┐
 │ island.rs   cursor poll → click-through on/off, hover, full screen, maximized     │
+│ games.rs    front window → game intro, smart hide, play time (no extra thread)    │
 │ media.rs    GSMTC sessions (event driven) → media://state; media_control          │
 │ agents.rs   127.0.0.1:47821 HTTP hook server → agents://state|approval|done       │
 │ quotas.rs   Claude / Codex usage every N min → quotas://update                    │
@@ -52,11 +53,27 @@ last 5 minutes > idle (quota ring or battery, and the clock).
 `src/lib/stores/settings.svelte.ts` owns the schema and defaults. Rust stores the JSON, broadcasts
 `settings://changed` to both windows and reads only the keys it needs (`monitor`, `hideInFullscreen`,
 `hookPort`, `hookToken`, `approvalTimeout`, `clipboardHistory`, `clipboardMax`, `quotaClaude`, `quotaCodex`,
-`quotaMinutes`, `autostart`, and `graphics` before start-up), each with its own default.
+`quotaMinutes`, `autostart`, `gameIntro`, `smartHide`, `customGames`, and `graphics` before start-up), each with
+its own default.
+
+## Games
+
+`island.rs` checks the foreground window on every poll tick (a single cheap call) and hands it to
+`games::Tracker` only when it changes, plus once a second to notice exits. A game is a known exe, an exe from
+`customGames`, or a window covering 60% of the monitor whose exe sits in a store library folder (Steam, Epic,
+Riot, Rockstar, EA, Ubisoft, Xbox, GOG, Battle.net), named after its folder. Processes are opened with
+`PROCESS_QUERY_LIMITED_INFORMATION` only and closed at once; when anti-cheat refuses even that, the window
+title is matched against the known names and the window's existence stands in for the process.
+
+On the first front appearance of a game process: `game://launch`, and `intro_until` keeps the island up for
+4.6 s over full screen. While a game is in front and `smartHide` is on, the island is hidden. The open shortcut
+calls `island_summon(true)`, which shows it over anything until it closes (`island_summon(false)`). When the
+process exits: `game://ended` with the play time (the frontend skips sessions under a minute).
 
 ## Commands and events
 
 Commands: see `invoke_handler` in `src-tauri/src/lib.rs`. Events:
-`settings://changed`, `island://hover|toggle|fullscreen|maximized|placed|hidden`, `media://state`,
+`settings://changed`, `island://hover|toggle|fullscreen|maximized|placed|hidden|shown`,
+`game://launch|ended|active`, `media://state`,
 `agents://state|approval|done|attention|error`, `quotas://update`, `system://stats`, `power://changed`,
 `clipboard://changed`, `volume://changed`. Types are mirrored in `src/lib/types.ts`.

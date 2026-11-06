@@ -151,3 +151,16 @@ export interface MonitorInfo {
   height: number;
   scale: number;
 }
+
+/** A game in front (games.rs). */
+export interface Game {
+  name: string;
+  exe: string;
+}
+
+/** A game that closed, and how long it ran. */
+export interface GameEnded {
+  name: string;
+  exe: string;
+  durationMs: number;
+}

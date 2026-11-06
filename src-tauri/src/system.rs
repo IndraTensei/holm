@@ -187,6 +187,8 @@ pub fn system_watch(on: bool) {
     if on {
         WATCHERS.fetch_add(1, Ordering::Relaxed);
     } else {
+        // `try_update` is the new name, but it needs a newer Rust than rust-version.
+        #[allow(deprecated)]
         let _ = WATCHERS.fetch_update(Ordering::Relaxed, Ordering::Relaxed, |n| {
             Some(n.saturating_sub(1))
         });

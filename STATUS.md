@@ -10,9 +10,12 @@ NSIS installer 1.9 MB, portable zip 2.3 MB). The CI build has run on a real Wind
 100% scale) and the core paths work: placement, click-through, hover, shortcut, full-screen hide, Pear,
 Claude Code hooks, volume peek. 🧪 below means not yet seen on real Windows.
 
-The dev PC has Node and WebView2 but no Rust or MSVC Build Tools (installing them needs admin), so builds
-come from CI: push a branch, `gh workflow run build.yml --ref <branch>`, `gh run download <id>`, run
-`TenseiIsland.exe` from the portable zip. The measuring method used this session is in the session log.
+Local dev on this PC uses Rust's GNU toolchain (rustup, `x86_64-pc-windows-gnu`, no admin) plus MinGW from
+winget (`BrechtSanders.WinLibs.POSIX.UCRT`, for `dlltool`): put `%USERPROFILE%\.cargo\bin` and WinLibs'
+`mingw64\bin` on PATH, then `npx tauri dev` and `cargo clippy` work. Two gaps: `cargo test` builds but the test
+binary will not start (`STATUS_ENTRYPOINT_NOT_FOUND`, a manifest problem with GNU), and the linker warns about
+merging manifests. CI's MSVC build is the one that ships and the one that runs tests. For a release-like build:
+push a branch, `gh workflow run build.yml --ref <branch>`, `gh run download <id>`.
 
 **Open decision for the owner:** the default for Settings → General → Graphics (see Known risks).
 
@@ -48,20 +51,25 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 | Look | 15 themes + custom theme editor, 13 bundled fonts, motion presets, size | ✅ (browser) |
 | Build | GitHub Actions: check, clippy, test, NSIS installer + portable zip, release on `v*` tag | ✅ green on main and branches (~20 min); `v*` release not run |
 | Perf | Looping decorations on a shared 8 fps beat; Graphics setting (hardware or software) | ✅ measured, see log |
+| Games | Intro ("Opening Grand Theft Auto V") with the open/hide keys, then smart hide while in front | ✅ verified with stand-in games; real games 🧪 |
+| Games | Recognition: known exes, store library folders, user list (Settings → Games); title fallback | ✅ known and custom verified; store folders and anti-cheat fallback 🧪 |
+| Games | Open shortcut summons the island over a game; hide shortcut (Ctrl+Alt+H); play time on quit | ✅ verified |
 
 ## Next steps, in order
 
-1. Merge the `perf/stepped-loops` PR once CI is green; choose the Graphics default (hardware for now).
-2. Finish the 🧪 items by hand: tray menu, settings window, an Allow/Deny prompt (ask `claude` to run
+1. Merge PR #1 (`perf/stepped-loops`), then PR #2 (`feat/game-mode`, stacked on it); choose the Graphics
+   default (hardware for now).
+2. Real games: launch GTA V, Valorant (Vanguard: checks the title fallback), a Steam game (library folder
+   detection), something in exclusive full screen (the intro may not draw over it). Tune the exe list.
+3. Finish the 🧪 items by hand: tray menu, settings window, an Allow/Deny prompt (ask `claude` to run
    `npm install` without bypass mode), the done peek and chime, Spotify and a YouTube tab, each Pear control,
    line style with a maximized window, a second monitor, 125–150% scaling.
-3. Install the setup .exe for a clean user; check Start with Windows.
-4. Remaining always-on cost: ~3% of a core while an agent works (8 fps beat plus the 4 Hz clock). Next: tick
+4. Install the setup .exe for a clean user; check Start with Windows.
+5. Remaining always-on cost: ~3% of a core while an agent works (8 fps beat plus the 4 Hz clock). Next: tick
    the agent's elapsed time at 1 Hz (it only shows seconds) and try 6 fps.
-5. Memory: ~185 MB (hardware) or ~120 MB (software) private across 7 WebView2 processes. Next ideas: shrink
+6. Memory: ~185 MB (hardware) or ~120 MB (software) private across 7 WebView2 processes. Next ideas: shrink
    the window to the island while compact (less to composite; risk of flicker on resize), and find out what
    the second renderer is for.
-6. Local builds: install Rust (rustup) and VS Build Tools (C++ workload, needs admin) to use `npx tauri dev`.
 7. Then the ⬜ items: Codex live activity (tail `~/.codex/sessions/**/rollout-*.jsonl`, or Codex `notify`),
    drag-out from the shelf (`tauri-plugin-drag`), GPU/temperature readings (PDH counters), Windows toast for
    agent completion when the island is hidden, Bluetooth device name, calendar (ICS) on Home, self-update
@@ -107,3 +115,11 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   ~3%. Tried WebView2 flags through `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`: `--disable-gpu` gave 120 MB vs
   185 MB, so added Settings → General → Graphics (Rust applies it before start-up). Quotas: last good numbers
   kept on failure, cached across restarts, 429 back-off. Branch `perf/stepped-loops`.
+- 2026-11-06 (session 3): game mode. New `games.rs`: front-window based detection (known exes, store library
+  folders, user list, title fallback for anti-cheat), intro peek `GameIntro.svelte`, smart hide, `island_summon`
+  for the open shortcut over games and full screen, hide shortcut, play time when a game closes, Settings →
+  Games. Window visibility is now applied only on change (`refresh`, `island://shown`). Set up local Rust (GNU)
+  and verified end to end in `npx tauri dev` with stand-in games: copies of powershell.exe named `GTA5.exe` (full
+  screen, 70 s) and `questy.exe` (custom list, windowed, 16 s) running a WinForms window. Intro within ~1.7 s of
+  launch, hidden after it, summon/close hands focus back to the game, back on quit, play-time card only for the
+  70 s run, Ctrl+Alt+H hides and shows.
