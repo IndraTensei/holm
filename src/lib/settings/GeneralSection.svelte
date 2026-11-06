@@ -82,7 +82,7 @@
     />
   </Field>
 
-  <Field label="Graphics" hint="Software drawing uses about 60 MB less memory; hardware opens and closes the island a little more smoothly. Takes effect the next time Tensei Island starts.">
+  <Field label="Graphics" hint="Software (the default) uses about half the memory; Hardware costs about 100 MB more and a little less processor while the island is open. Takes effect the next time Tensei Island starts.">
     <Choice
       label="Graphics"
       value={s.graphics}

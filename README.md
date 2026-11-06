@@ -35,23 +35,23 @@ More screens in [docs/screenshots](docs/screenshots) (browser preview with sampl
 ## Performance
 
 Measured on the optimized build: Windows 11 Pro (build 26200), Intel Core i7-11700 (8 cores, 16 threads),
-GeForce GTX 1660 Super, 16 GB, 1920×1080 at 100%, WebView2 156, Graphics set to Hardware (the default).
-CPU is the island plus its WebView2 processes, as a share of one core and of the whole processor.
+GeForce GTX 1660 Super, 16 GB, 1920×1080 at 100%, WebView2 156, default settings (Graphics: Software).
+Figures are the island plus its WebView2 processes; CPU is a share of one core.
 
-| State | CPU, one core | CPU, whole PC | Memory (private) |
-| --- | --- | --- | --- |
-| First 10 seconds after start | 7.5% | 0.5% | 210 MB |
-| Resting as a line, music playing | 1.9% | 0.1% | 236 MB |
-| Resting as the pill, music playing (equalizer moving) | 3.7% | 0.2% | 251 MB |
-| Open, with an agent working and music playing (the most it does) | about 28% | 1.7% | 320 MB |
+| State | CPU, one core | Memory (private) |
+| --- | --- | --- |
+| At rest | 0.3% | 116 MB |
+| Open, with an agent working (spinner moving) | 8% | 143 MB |
+| Open, with the settings window open too | | 156 MB |
 
-- The open island costs the most because it is a large see-through window redrawn on every update; it only
-  runs while your pointer is on it.
-- Loops (equalizer, spinner) step together at 8 frames a second instead of 60, and stop when nothing is
-  moving, the island is hidden, or a game or full-screen app is in front.
-- Memory is mostly WebView2. Task Manager's working set reads higher (about 450 MB) because pages shared
-  between those processes are counted once per process. Settings → General → Graphics → Software saves about
-  65 MB, at a little more CPU when opening and closing.
+- With Graphics → Hardware it holds about 100 MB more (225 to 260 MB) and uses a little less processor while
+  open (5% in the same state).
+- Task Manager's working set reads higher (about 400 MB) because memory shared between the WebView2 processes
+  is counted once per process; private memory above is what the island actually holds.
+- Loops (equalizer, spinner) step together at 8 frames a second instead of 60 and sit on their own small
+  layers; clocks tick once a second unless lyrics need more; nothing moves while the island is hidden or a game
+  or full-screen app is in front.
+- WebView2 runs lean: no spare page process, no background downloads, one page process for both windows.
 - Network: nothing unless turned on. Plan usage is read from the copy Claude Code and Codex keep on the PC,
   and their usage services are asked at most every 5 minutes, only when that copy is old.
 - Install size: about 2 MB installer, 5 MB on disk, plus the WebView2 runtime that Windows already has.
@@ -61,9 +61,8 @@ CPU is the island plus its WebView2 processes, as a share of one core and of the
 - Windows 10 version 1809 or later, or Windows 11, 64-bit (x64).
 - Microsoft Edge WebView2 Runtime: built into Windows 11 and present on most Windows 10 PCs; the installer
   fetches it if missing.
-- About 250 to 350 MB of free memory for the island (4 GB of RAM works, 8 GB recommended), and any 64-bit
-  dual-core processor.
-- A DirectX 11 graphics card for Hardware graphics; on older or virtual machines choose Software graphics.
+- About 150 MB of free memory for the island (4 GB of RAM works), and any 64-bit dual-core processor.
+- No particular graphics card: drawing is in software by default (Hardware in Settings needs DirectX 11).
 - Internet only for the optional parts: lyrics, weather, plan usage.
 
 ## Install

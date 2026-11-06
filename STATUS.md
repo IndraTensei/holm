@@ -193,3 +193,11 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   3.7%, open with agent and music ~28% (large see-through surface; next: cut the open island's repaints),
   private memory 236 to 320 MB. The first AI tools scan peaked at 560 MB because it read whole logs: Claude
   logs are now streamed line by line with only the needed fields parsed (not re-measured yet).
+- 2026-11-06 (session 4, later): open island and memory. Music page ran layout at 60 fps while playing (the
+  progress bar transitioned its width every tick): now a stepped transform (41 to 5 ms of work a second).
+  Elapsed times tick at 1 Hz (clock.second), spinner and equalizer on their own layers. Open island with an
+  agent working: 28% of a core before (hardware, with music), now 5% hardware or 8% software. Memory per
+  process: GPU process 112 MB, page 88, browser 42, spare page 19. New default Graphics = Software plus lean
+  WebView2 flags (no spare renderer, no background networking or component updates, one renderer for both
+  windows): 116 MB private at rest (was 259), 156 MB with settings open; settings verified to render. Also
+  Home: long titles ellipsize (grid columns could not shrink), usage rings one line each, "Clear in" spacing.

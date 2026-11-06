@@ -105,7 +105,7 @@ export const DEFAULTS: Settings = {
   tuckAfter: 20,
   respectDnd: true,
   autostart: false,
-  graphics: 'gpu',
+  graphics: 'software',
   hotkey: 'Ctrl+Alt+Space',
   hideHotkey: 'Ctrl+Alt+H',
   gameIntro: true,
