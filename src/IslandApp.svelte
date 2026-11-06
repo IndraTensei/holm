@@ -18,12 +18,13 @@
   import { focus, shelf, note, weather } from './lib/stores/widgets.svelte';
   import { clock } from './lib/stores/clock.svelte';
   import { beat } from './lib/stores/beat.svelte';
-  import { inTauri, on, send, focusWindow, onFileDrop, registerHotkey } from './lib/bridge';
+  import { fit } from './lib/stores/fit.svelte';
+  import { inTauri, on, send, call, focusWindow, onFileDrop, registerHotkeys } from './lib/bridge';
   import { findTheme, themeVars, applyVars, accentFromArt } from './lib/themes';
   import { artColor } from './lib/artColor';
   import { motionFor } from './lib/motion';
   import { chime } from './lib/sound';
-  import type { Live } from './lib/types';
+  import type { Front, Game, GameEnded, IslandState, Live } from './lib/types';
 
   type Mode = 'compact' | 'peek' | 'approval' | 'drop' | 'expanded';
 
@@ -33,7 +34,6 @@
   let page = $state<PageId>('home');
   let hover = $state(false);
   let dropping = $state(false);
-  let maximized = $state(false);
   let size = $state({ w: 176, h: 34 });
   let islandEl = $state<HTMLDivElement>();
   let bubbleEl = $state<HTMLButtonElement>();
@@ -70,7 +70,34 @@
     return 'compact';
   });
 
-  const style = $derived(s.style === 'line' || (maximized && s.lineWhenMaximized) ? 'line' : s.style);
+  // Rest as a thin line after a while with nothing going on; anything live, a peek or the
+  // pointer brings the island back.
+  let tucked = $state(false);
+  $effect(() => {
+    if (!(s.tuckWhenIdle && live === 'idle' && mode === 'compact' && !hover)) {
+      tucked = false;
+      return;
+    }
+    const timer = setTimeout(() => (tucked = true), Math.max(3, s.tuckAfter) * 1000);
+    return () => clearTimeout(timer);
+  });
+
+  const style = $derived(s.style === 'line' || tucked || fit.line ? 'line' : s.style);
+
+  // WebView2 in a transparent window can keep showing an old frame outside the area it last
+  // redrew (seen as a faded copy of the open island after it shrank to a line). Once a change
+  // has settled, repaint the whole surface once.
+  $effect(() => {
+    void viewKey;
+    void style;
+    const timer = setTimeout(() => {
+      const root = document.documentElement;
+      root.style.opacity = '0.999';
+      requestAnimationFrame(() => requestAnimationFrame(() => (root.style.opacity = '')));
+    }, motion.duration + 150);
+    return () => clearTimeout(timer);
+  });
+
   const lineNow = $derived(style === 'line' && mode === 'compact');
   const notch = $derived(style === 'notch');
 
@@ -114,22 +141,83 @@
     else if (target) page = target;
     if (!s.pages.includes(page)) page = s.pages[0] ?? 'home';
     openedBy = by;
+    if (!expanded) fit.opened(by);
     expanded = true;
     activity.dismiss();
   }
 
+  // Brought back with the shortcut over a game, full screen or a hidden island.
+  let summoned = false;
+
   function close() {
+    if (expanded) fit.closed();
     expanded = false;
     pinned = false;
     if (inTauri && document.hasFocus()) send('island_release_focus');
+    if (summoned) {
+      summoned = false;
+      send('island_summon', { on: false });
+    }
   }
 
-  function toggle() {
-    if (expanded) close();
-    else {
-      open('hotkey');
-      void focusWindow();
-    }
+  async function toggle() {
+    if (expanded) return close();
+    summoned = true;
+    await call('island_summon', { on: true }).catch(() => {});
+    open('hotkey');
+    void focusWindow();
+  }
+
+  // While a game is in front (the island is hidden) or Windows' Do not disturb is on, agent
+  // news waits here without chimes, and shows as one card afterwards.
+  let inGame: Game | null = null;
+  let quiet = false;
+  let heldBy: 'game' | 'quiet' = 'game';
+  let missed: { project: string; text: string }[] = [];
+
+  function holding(): boolean {
+    if (inGame) heldBy = 'game';
+    else if (quiet) heldBy = 'quiet';
+    return Boolean(inGame || quiet);
+  }
+
+  let dndOn = $state(false);
+  $effect(() => setQuiet(dndOn && s.respectDnd));
+
+  function setQuiet(on: boolean) {
+    quiet = on;
+    activity.quiet = quiet;
+    if (!quiet && !inGame) flushMissed();
+  }
+
+  function flushMissed() {
+    if (!missed.length) return;
+    const title = heldBy === 'game' ? 'While you were playing' : 'While Do not disturb was on';
+    const data = { title, items: missed.slice(-4), count: missed.length };
+    missed = [];
+    // Let the play-time card have its moment first.
+    if (activity.peek?.kind === 'gameover') setTimeout(() => activity.show('missed', data, 8000), 5000);
+    else activity.show('missed', data, 8000);
+  }
+
+  let hidden = false;
+  function toggleHidden() {
+    send('island_set_hidden', { hidden: !hidden });
+  }
+
+  // Where the pointer last moved inside this window. Opening on hover needs it over the island
+  // itself (or the gap above it, or the top edge over a line), not merely inside the hover area.
+  let pointer: { x: number; y: number } | null = null;
+
+  function overIsland(): boolean {
+    if (!pointer || !islandEl) return false;
+    if (edgeOnly) return pointer.y <= 6;
+    const pad = 6;
+    return [islandEl, bubbleEl].some((el) => {
+      if (!el) return false;
+      const r = el.getBoundingClientRect();
+      return pointer!.x >= r.left - pad && pointer!.x <= r.right + pad && pointer!.y <= r.bottom + pad;
+    });
   }
 
   let enterTimer: ReturnType<typeof setTimeout> | undefined;
@@ -140,7 +228,21 @@
     clearTimeout(enterTimer);
     clearTimeout(leaveTimer);
     if (next) {
-      if (!expanded && s.openOn === 'hover' && mode !== 'approval') enterTimer = setTimeout(() => hover && open('hover'), s.hoverDelay);
+      if (!expanded && s.openOn === 'hover' && mode !== 'approval')
+        enterTimer = setTimeout(async () => {
+          if (!hover) return;
+          // Where the pointer really is (no move may have reached this window yet).
+          const at = await call<[number, number] | null>('island_cursor').catch(() => null);
+          if (at) pointer = { x: at[0], y: at[1] };
+          if (!hover || expanded) return;
+          if (overIsland()) open('hover');
+          else {
+            // The hover area Rust holds is bigger than the island (measured mid-animation, say):
+            // do not open, and send the real one again.
+            lastRect = '';
+            reportRect();
+          }
+        }, s.hoverDelay);
     } else if (expanded && !pinned) {
       leaveTimer = setTimeout(() => {
         const typing = document.activeElement instanceof HTMLTextAreaElement || document.activeElement instanceof HTMLInputElement;
@@ -174,9 +276,22 @@
   }
 
   let lastRect = '';
+  // Resting as a line over a maximized app: only the top edge of the screen (a flick of the
+  // pointer) opens it, so a browser tab or title bar button under the line can still be clicked.
+  const edgeOnly = $derived(lineNow && fit.line && !dropping);
+
   function reportRect() {
     if (!islandEl) return;
     const scale = s.scale || 1;
+    if (edgeOnly) {
+      const r = islandEl.getBoundingClientRect();
+      const rect = { x: r.left - 40 * scale, y: 0, width: r.width + 80 * scale, height: 1 };
+      const key = `edge:${Math.round(rect.x)},${Math.round(rect.width)}`;
+      if (key === lastRect) return;
+      lastRect = key;
+      send('island_set_rect', rect);
+      return;
+    }
     const r = islandEl.getBoundingClientRect();
     const tw = size.w * scale;
     const th = size.h * scale;
@@ -206,7 +321,13 @@
     showBubble;
     s.scale;
     style;
+    edgeOnly;
     void tick().then(reportRect);
+    // Measured at once the island may still be mid-animation (an open island shrinking back), and
+    // transitionend does not always come (an interrupted transition): measure again once settled,
+    // or a stale, bigger hover area opens the island with the pointer well below it.
+    const settled = setTimeout(reportRect, motion.duration + 80);
+    return () => clearTimeout(settled);
   });
 
   // ------------------------------------------------------------ theme
@@ -230,7 +351,8 @@
 
   // ------------------------------------------------------------ live things that need a fast clock
 
-  $effect(() => (live === 'agent' || live === 'timer' || (s.compactTitle === 'lyrics' && media.now?.playing) ? clock.fast() : undefined));
+  $effect(() => (s.compactTitle === 'lyrics' && media.now?.playing ? clock.fast() : undefined));
+  $effect(() => (live === 'agent' || live === 'timer' ? clock.second() : undefined));
   $effect(() => {
     media.now?.key;
     s.lyrics;
@@ -248,8 +370,11 @@
   });
 
   $effect(() => {
-    const hk = s.hotkey;
-    if (settings.ready) void registerHotkey(hk, toggle);
+    const list = [
+      { accelerator: s.hotkey, handler: () => void toggle() },
+      { accelerator: s.hideHotkey, handler: toggleHidden },
+    ];
+    if (settings.ready) void registerHotkeys(list);
   });
 
   // ------------------------------------------------------------ start
@@ -261,14 +386,16 @@
       await media.start();
       await agents.start({
         done: (d) => {
+          if (holding()) return void missed.push({ project: d.project, text: 'is done' });
           activity.show('done', d as unknown as Record<string, unknown>, 7000);
           if (settings.v.agentSounds) chime('done');
         },
         approval: () => {
           if (expanded) page = 'agents';
-          if (settings.v.agentSounds) chime('ask');
+          if (settings.v.agentSounds && !quiet) chime('ask');
         },
         attention: (a) => {
+          if (holding()) return void missed.push({ project: a.project, text: 'needs you' });
           activity.show('attention', a, 6000);
           if (settings.v.agentSounds) chime('ask');
         },
@@ -282,6 +409,7 @@
         },
       );
       await shelf.load();
+      await fit.load();
       await note.load();
       weather.start();
       focus.onFinish = (phase) => {
@@ -289,13 +417,38 @@
         chime('timer');
       };
       stops.push(await on<boolean>('island://hover', setHover));
-      // The window can be hidden behind WebView2's back (full screen, tray): stop looping then.
-      let fullscreen = false;
-      let hidden = false;
-      stops.push(await on<boolean>('island://fullscreen', (v) => beat.pause((fullscreen = v) || hidden)));
-      stops.push(await on<boolean>('island://hidden', (v) => beat.pause(fullscreen || (hidden = v))));
+      // Rust hides the window behind WebView2's back (games, full screen, tray): stop looping then.
+      stops.push(await on<boolean>('island://shown', (v) => beat.pause(!v)));
+      stops.push(await on<boolean>('island://hidden', (v) => (hidden = v)));
+      stops.push(await on<boolean>('island://quiet', (v) => (dndOn = v)));
+      dndOn = Boolean(await call<boolean>('quiet_get').catch(() => false));
+      // Changes are events; the state before this window finished loading is asked for once.
+      const state = await call<IslandState>('island_state').catch(() => null);
+      if (state) {
+        fit.set(state);
+        hidden = state.hidden;
+        beat.pause(!state.shown);
+      }
+      stops.push(
+        await on<Game>('game://launch', (g) => {
+          if (expanded && !pinned) close();
+          activity.show('game', { ...g }, 4200);
+        }),
+      );
+      stops.push(
+        await on<Game | null>('game://active', (g) => {
+          inGame = g && settings.v.smartHide ? g : null;
+          if (!inGame && !quiet) flushMissed();
+        }),
+      );
+      stops.push(
+        await on<GameEnded>('game://ended', (e) => {
+          // Short visits (a crash at start, a quick look) are not worth a recap.
+          if (settings.v.gameRecap && e.durationMs >= 60_000) activity.show('gameover', { ...e }, 5000);
+        }),
+      );
       stops.push(await on('island://toggle', toggle));
-      stops.push(await on<boolean>('island://maximized', (v) => (maximized = v)));
+      stops.push(await on<Front>('island://maximized', (v) => fit.set(v)));
       stops.push(await on('island://placed', () => ((lastRect = ''), reportRect())));
       stops.push(
         await onFileDrop((e) => {
@@ -336,8 +489,17 @@
     if (peek === 'charging') activity.show('charging', { percent: 78 }, 1e9);
     if (q.get('drop')) dropping = true;
     if (q.get('timer')) focus.start('focus', 25);
+    const game = q.get('game');
+    if (game) setTimeout(() => activity.show('game', { name: game, exe: 'game.exe' }, 1e9), 300);
+    if (q.get('missed'))
+      activity.show('missed', { title: 'While you were playing', items: [{ project: 'meetbot', text: 'is done' }, { project: 'tensei-island', text: 'needs you' }], count: 2 }, 1e9);
+    const front = q.get('front');
+    if (front) fit.set({ maximized: true, app: front });
+    if (q.get('ended')) activity.show('gameover', { name: 'Valorant', exe: 'valorant.exe', durationMs: 4_320_000 }, 1e9);
   }
 </script>
+
+<svelte:window onpointermove={(e) => (pointer = { x: e.clientX, y: e.clientY })} onpointerdown={() => expanded && fit.used()} onwheel={() => expanded && fit.used()} onkeydown={() => expanded && fit.used()} />
 
 <div
   class="stage"
@@ -489,7 +651,7 @@
     border-top-right-radius: 0;
   }
   .island.music .halo {
-    opacity: 0.55;
+    opacity: 0.3;
   }
   .island.expanded .halo {
     opacity: 0;

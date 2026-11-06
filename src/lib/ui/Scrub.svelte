@@ -43,7 +43,7 @@
     if (e.key === 'ArrowLeft') onseek(Math.max(0, value - 5));
   }}
 >
-  <div class="rail"><div class="fill" style="width:{pct}%"></div></div>
+  <div class="rail"><div class="fill" style="transform:scaleX({pct / 100})"></div></div>
 </div>
 
 <style>
@@ -70,11 +70,13 @@
   .dragging .rail {
     height: 7px;
   }
+  /* Stepped with the 4 Hz clock, never transitioned: a transition restarted every tick ran at
+     60 fps for as long as music played (a 0.4 px step is invisible). A transform needs no layout. */
   .fill {
     height: 100%;
     background: var(--ink);
     border-radius: 3px;
-    transition: width 0.25s linear;
+    transform-origin: left;
   }
   .dragging .fill {
     transition: none;

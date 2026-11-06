@@ -29,6 +29,13 @@
   const wd = $derived(w ? describeWeather(w.code) : null);
   const now = $derived(media.now);
   const agent = $derived(agents.focus ?? agents.sessions[0] ?? null);
+  // At most three rings, so the row never wraps: Claude's 5-hour and weekly, then Codex's first.
+  const quotaItems = $derived(
+    system.quotas
+      .filter((p) => p.ok)
+      .flatMap((p) => p.items.slice(0, p.provider === 'claude' ? 2 : 1).map((q) => ({ provider: p.provider, q })))
+      .slice(0, 3),
+  );
 
   async function toggle(kind: 'wifi' | 'bluetooth', on: boolean) {
     radioError = (await system.setRadio(kind, on)) ?? '';
@@ -55,7 +62,7 @@
           {:else}<CloudLightning size={18} />{/if}
         </span>
         <span class="w-temp num">{Math.round(w.temp)}°</span>
-        <span class="w-text">{wd.label}{#if w.city} in {w.city}{/if}<br /><span class="num">{Math.round(w.high)}° / {Math.round(w.low)}°</span></span>
+        <span class="w-text">{wd.label}{w.city ? ` in ${w.city}` : ''}<br /><span class="num">{Math.round(w.high)}° / {Math.round(w.low)}°</span></span>
       </div>
     {/if}
 
@@ -114,19 +121,18 @@
     {/if}
 
     {#if system.quotas.some((q) => q.ok)}
-      <div class="quota">
-        {#each system.quotas.filter((q) => q.ok) as p (p.provider)}
-          {#each p.items.slice(0, 2) as q}
-            <div class="q">
-              <Ring value={q.percent} size={34} stroke={3.2}>
-                <span class="q-num num">{Math.round(q.percent)}</span>
-              </Ring>
-              <div class="q-text">
-                <span>{p.provider === 'claude' ? 'Claude' : 'Codex'} {q.label.toLowerCase()}</span>
-                {#if q.resetsAt}<span class="num">resets in {until(q.resetsAt, clock.now)}</span>{/if}
-              </div>
+      <div class="quota" style="--n:{quotaItems.length}">
+        {#each quotaItems as { provider, q } (provider + q.label)}
+          {@const name = provider === 'claude' ? 'Claude' : 'Codex'}
+          <div class="q" title="{name} {q.label.toLowerCase()}: {Math.round(q.percent)}% used{q.resetsAt ? `, resets in ${until(q.resetsAt, clock.now)}` : ''}">
+            <Ring value={q.percent} size={30} stroke={3}>
+              <span class="q-num num">{Math.round(q.percent)}</span>
+            </Ring>
+            <div class="q-text">
+              <span>{provider === 'claude' ? q.label : name}</span>
+              <span class="num">{q.resetsAt ? until(q.resetsAt, clock.now) : `${Math.round(q.percent)}% used`}</span>
             </div>
-          {/each}
+          </div>
         {/each}
       </div>
     {/if}
@@ -140,7 +146,8 @@
 <style>
   .home {
     display: grid;
-    grid-template-columns: 1fr 1.15fr;
+    /* minmax(0, …): a long title or command ellipsizes instead of widening the column. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
     gap: 22px;
     padding: 4px 4px 2px;
   }
@@ -228,6 +235,7 @@
     color: var(--warn);
   }
   .right {
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -277,14 +285,16 @@
     padding-right: 6px;
   }
   .quota {
-    display: flex;
-    gap: 18px;
+    display: grid;
+    grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    gap: 10px;
     padding: 8px 4px 0;
   }
   .q {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 8px;
+    min-width: 0;
   }
   .q-num {
     font-size: 10.5px;
@@ -293,8 +303,14 @@
   .q-text {
     display: flex;
     flex-direction: column;
+    min-width: 0;
     font-size: var(--t-xs);
     color: var(--ink-3);
+  }
+  .q-text span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .q-text span:first-child {
     color: var(--ink);

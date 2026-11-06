@@ -1,6 +1,7 @@
 <script lang="ts">
   // A moment of news: the island grows, says one thing, and settles back.
-  import { Check, BatteryCharging, Volume2, VolumeX, FolderDown, Timer, MessageCircleQuestion, Plug } from '@lucide/svelte';
+  import { Check, BatteryCharging, Volume2, VolumeX, FolderDown, Timer, MessageCircleQuestion, Plug, Gamepad2, Bell, PanelTopClose } from '@lucide/svelte';
+  import GameIntro from './GameIntro.svelte';
   import Art from '../ui/Art.svelte';
   import Eq from '../ui/Eq.svelte';
   import type { Peek } from '../stores/activity.svelte';
@@ -10,7 +11,28 @@
   const d = $derived(peek.data as Record<string, any>);
 </script>
 
-{#if peek.kind === 'done'}
+{#if peek.kind === 'game'}
+  <GameIntro name={d.name} />
+{:else if peek.kind === 'gameover'}
+  <div class="peek">
+    <span class="badge accent"><Gamepad2 size={16} strokeWidth={2.4} /></span>
+    <div class="text">
+      <div class="title display one">{d.name}</div>
+      <div class="sub">Played for {duration(d.durationMs)}</div>
+    </div>
+  </div>
+{:else if peek.kind === 'missed'}
+  <div class="peek wide">
+    <span class="badge accent"><Bell size={16} strokeWidth={2.4} /></span>
+    <div class="text">
+      <div class="title display">{d.title ?? 'While you were away'}</div>
+      {#each d.items as item}
+        <div class="sub"><b>{item.project}</b> {item.text}</div>
+      {/each}
+      {#if d.count > d.items.length}<div class="sub">and {d.count - d.items.length} more</div>{/if}
+    </div>
+  </div>
+{:else if peek.kind === 'done'}
   <div class="peek wide">
     <span class="badge ok"><Check size={16} strokeWidth={2.8} /></span>
     <div class="text">
@@ -63,6 +85,14 @@
     <FolderDown size={17} />
     <span class="label">{d.count} {d.count === 1 ? 'file' : 'files'} added to the shelf</span>
   </div>
+{:else if peek.kind === 'note'}
+  <div class="peek">
+    <PanelTopClose size={17} />
+    <div>
+      <div class="title">{d.title}</div>
+      {#if d.sub}<div class="sub">{d.sub}</div>{/if}
+    </div>
+  </div>
 {:else if peek.kind === 'pear'}
   <div class="peek slim">
     <Plug size={17} />
@@ -105,6 +135,10 @@
     margin-top: 2px;
     font-size: var(--t-sm);
     color: var(--ink-2);
+  }
+  .sub b {
+    font-weight: 600;
+    color: var(--ink);
   }
   .one {
     overflow: hidden;

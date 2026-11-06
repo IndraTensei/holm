@@ -216,6 +216,36 @@ export async function call<T>(cmd: string, args?: Record<string, unknown>): Prom
         return [{ index: 0, name: '\\\\.\\DISPLAY1', primary: true, width: 2560, height: 1440, scale: 1.25 }];
       case 'autostart_get':
         return false;
+      case 'island_cursor':
+        return null;
+      case 'island_state':
+        return { maximized: false, app: '', hidden: false, shown: true };
+      case 'app_volume_get':
+        return { level: 0.7, muted: false };
+      case 'app_volume_set':
+      case 'app_volume_mute':
+        return true;
+      case 'quotas_get':
+        return [];
+      case 'harness_scan': {
+        const now = Date.now();
+        return [
+          { id: 'claude', name: 'Claude Code', installed: true, running: true, lastUsed: now - 20_000, today: { tokens: 1_284_000, sessions: 3, cost: null }, plan: true },
+          { id: 'codex', name: 'Codex', installed: true, running: false, lastUsed: now - 3 * 3600_000, today: { tokens: 412_500, sessions: 2, cost: null }, plan: true },
+          { id: 'opencode', name: 'OpenCode', installed: true, running: false, lastUsed: now - 26 * 3600_000, today: null, plan: false },
+          { id: 'antigravity', name: 'Antigravity', installed: true, running: false, lastUsed: now - 50 * 60_000, today: { tokens: null, sessions: 1, cost: null }, plan: false },
+          { id: 'cline', name: 'Cline', installed: true, running: false, lastUsed: now - 9 * 86400_000, today: null, plan: false },
+          { id: 'copilot', name: 'GitHub Copilot CLI', installed: true, running: false, lastUsed: now - 4 * 86400_000, today: null, plan: false },
+          { id: 'gemini', name: 'Gemini CLI', installed: false, running: false, lastUsed: null, today: null, plan: false },
+          { id: 'cursor', name: 'Cursor Agent', installed: false, running: false, lastUsed: null, today: null, plan: false },
+          { id: 'amp', name: 'Amp', installed: false, running: false, lastUsed: null, today: null, plan: false },
+        ];
+      }
+      case 'quiet_get':
+        return false;
+      case 'island_summon':
+      case 'island_set_hidden':
+        return null;
       default:
         return null;
     }

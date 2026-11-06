@@ -12,6 +12,8 @@ Third-party components bundled in the app:
 - Tauri and its plugins (MIT or Apache-2.0)
 - Svelte (MIT)
 - Lucide icons via @lucide/svelte (ISC)
+- Harness logos from LobeHub Icons (MIT, https://github.com/lobehub/lobe-icons), in src/assets/harness.
+  The marks are trademarks of their owners and are shown only to name the tools.
 - Typefaces under the SIL Open Font License 1.1, via Fontsource: Geist, Geist Mono, Inter,
   Bricolage Grotesque, Manrope, Plus Jakarta Sans, Space Grotesk, Outfit, Sora, DM Sans, Fraunces,
   Instrument Serif, JetBrains Mono

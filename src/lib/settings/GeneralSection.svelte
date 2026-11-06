@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ArrowUp, ArrowDown } from '@lucide/svelte';
+  import { ArrowUp, ArrowDown, X } from '@lucide/svelte';
   import Field from './Field.svelte';
   import Toggle from './Toggle.svelte';
   import Choice from './Choice.svelte';
@@ -9,7 +9,8 @@
 
   const s = $derived(settings.v);
   let monitors = $state<MonitorInfo[]>([]);
-  let recording = $state(false);
+  /** Which shortcut is listening for keys. */
+  let recording = $state<'hotkey' | 'hideHotkey' | null>(null);
   let autostart = $state(false);
 
   $effect(() => {
@@ -54,15 +55,16 @@
     if (!recording) return;
     e.preventDefault();
     if (e.key === 'Escape') {
-      recording = false;
+      recording = null;
       return;
     }
     const key = keyName(e);
     if (!key) return;
     const mods = [e.ctrlKey && 'Ctrl', e.altKey && 'Alt', e.shiftKey && 'Shift', e.metaKey && 'Super'].filter(Boolean);
     if (!mods.length) return;
-    recording = false;
-    void settings.set({ hotkey: [...mods, key].join('+') });
+    const which = recording;
+    recording = null;
+    void settings.set({ [which]: [...mods, key].join('+') });
   }
 </script>
 
@@ -80,7 +82,7 @@
     />
   </Field>
 
-  <Field label="Graphics" hint="Software drawing uses about 60 MB less memory; hardware opens and closes the island a little more smoothly. Takes effect the next time Tensei Island starts.">
+  <Field label="Graphics" hint="Software (the default) uses about half the memory; Hardware costs about 100 MB more and a little less processor while the island is open. Takes effect the next time Tensei Island starts.">
     <Choice
       label="Graphics"
       value={s.graphics}
@@ -92,11 +94,19 @@
     />
   </Field>
 
-  <Field label="Shortcut" hint="Opens and closes the island from anywhere. Click, then press the keys.">
-    <button class="key" class:rec={recording} onclick={() => (recording = true)} onkeydown={record} onblur={() => (recording = false)}>
-      {recording ? 'Press keys…' : s.hotkey || 'None'}
+  {#snippet shortcut(which: 'hotkey' | 'hideHotkey')}
+    <button class="key" class:rec={recording === which} onclick={() => (recording = which)} onkeydown={record} onblur={() => (recording = null)}>
+      {recording === which ? 'Press keys…' : s[which] || 'None'}
     </button>
-    {#if s.hotkey !== DEFAULTS.hotkey}<button class="link" onclick={() => settings.set({ hotkey: DEFAULTS.hotkey })}>Reset</button>{/if}
+    {#if s[which] !== DEFAULTS[which]}<button class="link" onclick={() => settings.set({ [which]: DEFAULTS[which] })}>Reset</button>{/if}
+  {/snippet}
+
+  <Field label="Shortcut" hint="Opens and closes the island from anywhere, even over a game or when it is hidden. Click, then press the keys.">
+    {@render shortcut('hotkey')}
+  </Field>
+
+  <Field label="Hide shortcut" hint="Hides the island, and brings it back.">
+    {@render shortcut('hideHotkey')}
   </Field>
 
   <Field label="Open" hint="Hovering opens after a short pause, so passing the pointer by does nothing.">
@@ -108,12 +118,58 @@
     <span class="num val">{s.hoverDelay} ms</span>
   </Field>
 
-  <Field label="Hide during full screen" hint="Games, videos and presentations are never covered.">
-    <Toggle label="Hide during full screen" checked={s.hideInFullscreen} onchange={(v) => settings.set({ hideInFullscreen: v })} />
+  <h3>Behaviour</h3>
+  <p class="lead">How much the island asks for your attention day to day.</p>
+
+  <Field label="Rest as a thin line when idle" hint="With no music, agents or timers, the island tucks into a line after a while. Pointing at it brings it back.">
+    <Toggle label="Rest as a thin line when idle" checked={s.tuckWhenIdle} onchange={(v) => settings.set({ tuckWhenIdle: v })} />
   </Field>
 
-  <Field label="Thin line when a window is maximized" hint="Keeps the top of maximized apps clear; hover still opens it.">
-    <Toggle label="Thin line when maximized" checked={s.lineWhenMaximized} onchange={(v) => settings.set({ lineWhenMaximized: v })} />
+  {#if s.tuckWhenIdle}
+    <Field label="Tuck after" hint="How long nothing has to happen first.">
+      <input type="range" min="5" max="120" step="5" value={s.tuckAfter} oninput={(e) => settings.set({ tuckAfter: Number((e.target as HTMLInputElement).value) })} />
+      <span class="num val">{s.tuckAfter} s</span>
+    </Field>
+  {/if}
+
+  <Field label="Over a maximized window" hint="Learn: stays full until it keeps opening by accident over an app (a browser's tabs), then rests as a thin line over that app only. Hover still opens the line.">
+    <Choice
+      label="Over a maximized window"
+      value={s.overMaximized}
+      options={[
+        { value: 'learn', label: 'Learn' },
+        { value: 'line', label: 'Thin line' },
+        { value: 'full', label: 'Full' },
+      ]}
+      onchange={(v) => void settings.set({ overMaximized: v })}
+    />
+  </Field>
+
+  {#if s.overMaximized === 'learn'}
+    <Field label="Browsers start as a line" hint="Their tabs sit right under the island. As a line over a maximized app, the island opens only when you push the pointer to the very top edge.">
+      <Toggle label="Browsers start as a line" checked={s.browsersAsLine} onchange={(v) => settings.set({ browsersAsLine: v })} />
+    </Field>
+  {/if}
+
+  {#if s.overMaximized === 'learn' && s.lineApps.length}
+    <Field label="A thin line over" hint="Learned from use. Remove an app to give it the full island again.">
+      <ul class="apps">
+        {#each s.lineApps as app (app)}
+          <li>
+            <span>{app}</span>
+            <button aria-label="Give {app} the full island" onclick={() => settings.set({ lineApps: s.lineApps.filter((a) => a !== app) })}><X size={13} /></button>
+          </li>
+        {/each}
+      </ul>
+    </Field>
+  {/if}
+
+  <Field label="Respect Do not disturb" hint="While Windows' Do not disturb is on: no song, volume or charging pop-ups and no chimes. Agent news waits and shows when it is off.">
+    <Toggle label="Respect Do not disturb" checked={s.respectDnd} onchange={(v) => settings.set({ respectDnd: v })} />
+  </Field>
+
+  <Field label="Hide during full screen" hint="Games, videos and presentations are never covered.">
+    <Toggle label="Hide during full screen" checked={s.hideInFullscreen} onchange={(v) => settings.set({ hideInFullscreen: v })} />
   </Field>
 
   {#if monitors.length > 1}
@@ -144,6 +200,36 @@
 </section>
 
 <style>
+  .apps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .apps li {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 28px;
+    padding: 0 4px 0 10px;
+    border-radius: 8px;
+    background: var(--fill-1);
+    font-size: var(--t-sm);
+  }
+  .apps button {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    color: var(--ink-3);
+  }
+  .apps button:hover {
+    background: var(--fill-2);
+    color: var(--ink);
+  }
   .key {
     min-width: 150px;
     height: 32px;

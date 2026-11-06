@@ -9,11 +9,15 @@
 compile_error!("Tensei Island targets Windows 10/11 only.");
 
 mod agents;
+mod appvolume;
 mod clipboard;
 mod config;
+mod games;
+mod harness;
 mod island;
 mod media;
 mod net;
+mod quiet;
 mod quotas;
 mod radios;
 mod shell;
@@ -72,7 +76,11 @@ pub fn on_settings_changed(app: &AppHandle, patch: &Value) {
 }
 
 fn toggle_hidden(app: &AppHandle) {
-    let hidden = !island::user_hidden(app);
+    set_hidden(app, !island::user_hidden(app));
+}
+
+/// Hides or shows the island on request (tray, hide shortcut) and keeps the tray label in step.
+pub fn set_hidden(app: &AppHandle, hidden: bool) {
     island::set_user_hidden(app, hidden);
     if let Some(items) = app.try_state::<Mutex<TrayItems>>() {
         if let Ok(items) = items.lock() {
@@ -143,13 +151,24 @@ fn apply_graphics_setting() {
     let path = std::path::PathBuf::from(appdata)
         .join("in.tenseitech.island")
         .join("settings.json");
-    if util::read_json(&path).get("graphics").and_then(Value::as_str) == Some("software") {
-        // Keep Tauri's own defaults: this variable replaces them.
-        std::env::set_var(
-            VAR,
-            "--disable-gpu --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection",
-        );
-    }
+    // Measured on the release build (i7-11700): Software and these flags together hold about
+    // 120 MB private instead of about 260 MB, at a few percent of one core more while the island
+    // is open. The flags keep Tauri's own defaults (this variable replaces them), skip the spare
+    // page process and the background downloads a local app never needs, and put both windows in
+    // one page process.
+    const LEAN: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,\
+        SpareRendererForSitePerProcess,msEdgeTranslate \
+        --disable-background-networking --disable-component-update --renderer-process-limit=1";
+    let hardware = util::read_json(&path)
+        .get("graphics")
+        .and_then(Value::as_str)
+        == Some("gpu");
+    let args = if hardware {
+        LEAN.to_string()
+    } else {
+        format!("--disable-gpu {LEAN}")
+    };
+    std::env::set_var(VAR, args);
 }
 
 pub fn run() {
@@ -169,6 +188,7 @@ pub fn run() {
             system::start(handle.clone());
             agents::start(handle.clone());
             quotas::start(handle.clone());
+            quiet::start(handle.clone());
             clipboard::start(handle.clone());
             volume::start(handle.clone());
             Ok(())
@@ -181,6 +201,9 @@ pub fn run() {
             island::island_set_rect,
             island::island_release_focus,
             island::island_set_hidden,
+            island::island_summon,
+            island::island_state,
+            island::island_cursor,
             island::monitors_list,
             island::open_settings,
             media::media_control,
@@ -194,6 +217,12 @@ pub fn run() {
             agents::hooks_install,
             agents::hooks_uninstall,
             quotas::quotas_refresh,
+            quotas::quotas_get,
+            harness::harness_scan,
+            appvolume::app_volume_get,
+            appvolume::app_volume_set,
+            appvolume::app_volume_mute,
+            quiet::quiet_get,
             clipboard::clipboard_list,
             clipboard::clipboard_copy,
             clipboard::clipboard_clear,
