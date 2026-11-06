@@ -1,4 +1,4 @@
-//! Tensei Island: a lean Dynamic Island for Windows.
+//! Holm: a lean Dynamic Island for Windows.
 //!
 //! Rust owns everything that touches Windows (window placement and click-through, media
 //! sessions, system readings, agent hooks, clipboard, radios, volume). The Svelte frontend in
@@ -6,7 +6,7 @@
 //! commands registered below and the events each module emits (see docs/ARCHITECTURE.md).
 
 #[cfg(not(windows))]
-compile_error!("Tensei Island targets Windows 10/11 only.");
+compile_error!("Holm targets Windows 10/11 only.");
 
 mod agents;
 mod appvolume;
@@ -52,7 +52,7 @@ pub fn open_settings_window(app: &AppHandle) -> tauri::Result<()> {
         "settings",
         WebviewUrl::App("index.html#settings".into()),
     )
-    .title("Tensei Island · Settings")
+    .title("Holm · Settings")
     .inner_size(940.0, 680.0)
     .min_inner_size(800.0, 560.0)
     .center()
@@ -95,13 +95,13 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     let open = MenuItem::with_id(app, "open", "Open island", true, None::<&str>)?;
     let settings = MenuItem::with_id(app, "settings", "Settings…", true, None::<&str>)?;
     let hide = MenuItem::with_id(app, "hide", "Hide island", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit Tensei Island", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Holm", true, None::<&str>)?;
     let separator = PredefinedMenuItem::separator(app)?;
     let menu = Menu::with_items(app, &[&open, &settings, &hide, &separator, &quit])?;
     app.manage(Mutex::new(TrayItems { hide: hide.clone() }));
 
     let mut builder = TrayIconBuilder::with_id("main")
-        .tooltip("Tensei Island")
+        .tooltip("Holm")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {
@@ -149,7 +149,7 @@ fn apply_graphics_setting() {
     };
     // Same folder as Config (app_config_dir = %APPDATA%\<identifier>).
     let path = std::path::PathBuf::from(appdata)
-        .join("in.tenseitech.island")
+        .join(IDENTIFIER)
         .join("settings.json");
     // Measured on the release build (i7-11700): Software and these flags together hold about
     // 120 MB private instead of about 260 MB, at a few percent of one core more while the island
@@ -171,7 +171,31 @@ fn apply_graphics_setting() {
     std::env::set_var(VAR, args);
 }
 
+/// tauri.conf.json's identifier, which names the settings folder.
+const IDENTIFIER: &str = "in.tenseitech.holm";
+/// The identifier before the rename to Holm.
+const LEGACY_IDENTIFIER: &str = "in.tenseitech.island";
+
+/// Settings and data from before the rename are copied into the new folder once, the first time
+/// Holm starts with no settings of its own. The old folder is left as it was.
+fn migrate_legacy_settings() {
+    let Some(appdata) = std::env::var_os("APPDATA") else {
+        return;
+    };
+    let root = std::path::PathBuf::from(appdata);
+    let (old, new) = (root.join(LEGACY_IDENTIFIER), root.join(IDENTIFIER));
+    if new.join("settings.json").exists() || !old.join("settings.json").exists() {
+        return;
+    }
+    let _ = std::fs::create_dir_all(&new);
+    for name in ["settings.json", "data.json"] {
+        let _ = std::fs::copy(old.join(name), new.join(name));
+    }
+}
+
 pub fn run() {
+    migrate_legacy_settings();
+    shell::migrate_legacy_autostart();
     apply_graphics_setting();
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -240,5 +264,5 @@ pub fn run() {
             net::fetch_json,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running Tensei Island");
+        .expect("error while running Holm");
 }

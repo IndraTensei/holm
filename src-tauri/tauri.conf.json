@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Tensei Island",
+  "productName": "Holm",
   "version": "0.1.0",
-  "identifier": "in.tenseitech.island",
+  "identifier": "in.tenseitech.holm",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "island",
-        "title": "Tensei Island",
+        "title": "Holm",
         "url": "index.html",
         "width": 760,
         "height": 560,

@@ -1,6 +1,8 @@
 # Status and handoff
 
-Last updated: 2026-11-06 (second session: first run on Windows 11, from the CI build).
+The app was called Tensei Island until session 6; it is now **Holm** (repo `IndraTensei/holm`).
+
+Last updated: 2026-11-06 (session 6: renamed to Holm, new logo, 4K promo).
 Read this first, then CLAUDE.md, then docs/ARCHITECTURE.md.
 
 ## Where things stand
@@ -102,7 +104,7 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   `window.hide()/show()` and re-check focus stealing.
 - **Hook field names.** `UserPromptSubmit` and `PreToolUse` parse correctly from live Claude Code. Not seen live
   yet: `notification_type`, `last_assistant_message` and the `PermissionRequest` input. Check one real payload (`island.log`
-  sits next to settings.json in `%APPDATA%\in.tenseitech.island`).
+  sits next to settings.json in `%APPDATA%\in.tenseitech.holm`).
 - **Windows 11 24H2 Wi-Fi name** needs location access for desktop apps; without it the chip says "Wi-Fi".
 - **Claude usage endpoint** is not a public API and rate-limits hard (five restarts in a few minutes got a 429).
   Readings are now cached in data.json and kept through failures; repeated 429s back off up to an hour.
@@ -216,3 +218,15 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   cuts on the downbeats of an ElevenLabs Music track (120 BPM, 16.86 credits), CC0 UI sounds, -14 LUFS.
   Outputs: `promo/tensei-island-promo.mp4` (55 s, 1080p60, kept out of git) and `docs/media/demo.gif`
   (17 s loop, 720 px, 2.7 MB) at the top of the README.
+- 2026-11-06 (session 6): renamed to **Holm** (a holm is a small island in a river). Product name, window titles,
+  exe (`holm.exe`), crate (`holm`, `holm_lib`), identifier `in.tenseitech.holm`, CI artifact and portable zip,
+  docs. Upgrades keep working: on first start Holm copies `settings.json` and `data.json` from
+  `%APPDATA%\in.tenseitech.island` when it has none of its own, moves the "TenseiIsland" Run value (start with
+  Windows) to "Holm" with the new exe path, and still recognises Claude Code hooks marked `src=tensei-island`.
+  New logo, "Notch H": a solid H whose counters are the island's notch shape, in Periwinkle `#6F7FF7`, with a
+  Bricolage Grotesque wordmark; files and usage notes in `docs/brand/`, app icons regenerated (a pixel-grid cut
+  for 32 px and below), mark in the settings sidebar, README header, favicon. Promo pixelation found and fixed:
+  headless screencast frames are CSS-sized (960 px) whatever the device scale, so the old clips were upscaled
+  twice. `scripts/film.py` now takes 4K screenshots (CDP clip with scale) at 1/8 page speed; the compositor crops
+  the 4K frames, so every zoom is sharp. Also fixed "Â·" mojibake in the old end card. Outputs: `promo/holm-promo.mp4`
+  (55 s, 1080p60, same soundtrack, kept out of git) and a new `docs/media/demo.gif` (720 px, 3.3 MB).

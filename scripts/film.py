@@ -2,14 +2,15 @@
 
 Usage: python scripts/film.py [base_url] [out_dir] [clip ...]
 Needs the preview (npm run dev, :1420), Playwright and ffmpeg on PATH. Each clip becomes
-<out_dir>/<clip>.mp4 at 60 fps, from Chromium's screencast frames and their own timestamps.
-Headless screencast tops out near 30 fps, so the page runs at half speed while it is filmed
+<out_dir>/<clip>.mp4 at 60 fps, from 4K screenshots and their own timestamps.
+A 4K screenshot takes about 110 ms, so the page runs at an eighth of its speed while it is filmed
 (animations through the DevTools Animation domain, timers through Playwright's clock) and the clip
-is played back twice as fast.
+is played back eight times as fast. Filmed at 4K (FILM_PX) so the edit can zoom in sharply.
 Not part of the app: mock data only (src/lib/mock.ts, `?film=1`).
 """
 import asyncio
 import base64
+import os
 import shutil
 import subprocess
 import sys
@@ -22,12 +23,14 @@ from playwright.async_api import async_playwright
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:1420/"
 OUT = Path(sys.argv[2] if len(sys.argv) > 2 else "film")
 ONLY = set(sys.argv[3:])
-W, H = 960, 540  # CSS px; each scene is filmed at 1920 px wide
-SLOW = 3  # filmed at 1/SLOW speed, played back at SLOW×
+W, H = 960, 540  # CSS px
+# Filmed at 3840 px wide (4K), so the edit can zoom in on the island without upscaling.
+PX = int(os.environ.get("FILM_PX", "3840"))
+SLOW = 8  # filmed at 1/SLOW speed, played back at SLOW×
 TICK = 1000 / 60  # page time per step, ms
 PAGE_MS = [0.0, 0]  # page time so far: exact, and as whole milliseconds handed to the clock
 
-# A desktop-like backdrop, plus a drawn pointer (the screencast has no cursor of its own).
+# A desktop-like backdrop, plus a drawn pointer (screenshots have no cursor of its own).
 STAGE = """
 html { background: radial-gradient(1100px 620px at 18% 12%, #35558a 0%, transparent 60%),
   radial-gradient(900px 520px at 88% 4%, #7b4a82 0%, transparent 58%),
@@ -77,7 +80,7 @@ window.F = {
   },
   session(status, extra = {}) {
     const now = Date.now();
-    return { id: 's1', agent: 'claude', project: 'tensei-island', cwd: 'D:\\\\code\\\\tensei-island', status,
+    return { id: 's1', agent: 'claude', project: 'holm', cwd: 'D:\\\\code\\\\holm', status,
       activity: status === 'working' ? { verb: 'Editing', target: 'island.rs', tool: 'Edit', kind: 'edit' } : null,
       prompt: 'Make the hover area follow the island while it animates', message: '', turnStartedAt: now - 96000,
       updatedAt: now, tools: 12, edited: ['island.rs', 'IslandApp.svelte'], subagents: 0,
@@ -88,14 +91,14 @@ window.F = {
   agents(status, approvals = []) { F.emit('agents://state', { sessions: [F.session(status)], approvals }); },
   approval() {
     const now = Date.now();
-    const a = { id: 'a1', sessionId: 's1', project: 'tensei-island', tool: 'Bash', title: 'Running cargo build --release',
+    const a = { id: 'a1', sessionId: 's1', project: 'holm', tool: 'Bash', title: 'Running cargo build --release',
       detail: 'cargo build --release', createdAt: now, expiresAt: now + 60000 };
     F.agents('waiting', [a]);
     F.emit('agents://approval', a);
   },
   done() {
     F.emit('agents://state', { sessions: [F.session('done', { message: 'The hover area now follows the island while it animates. Tests pass.' })], approvals: [] });
-    F.emit('agents://done', { sessionId: 's1', project: 'tensei-island', message: 'The hover area now follows the island while it animates. Tests pass.',
+    F.emit('agents://done', { sessionId: 's1', project: 'holm', message: 'The hover area now follows the island while it animates. Tests pass.',
       durationMs: 154000, tools: 18, edited: ['island.rs', 'IslandApp.svelte', 'fit.svelte.ts'] });
   },
   theme(id) { F.emit('settings://changed', { theme: id }); },
@@ -104,20 +107,28 @@ window.F = {
 
 
 class Clip:
-    def __init__(self, page, cdp):
-        self.page, self.cdp, self.frames = page, cdp, []
+    def __init__(self, page, cdp, viewport):
+        self.page, self.cdp, self.frames, self.viewport = page, cdp, [], viewport
 
     async def start(self):
-        self.cdp.on("Page.screencastFrame", self._frame)
-        await self.cdp.send("Page.startScreencast", {"format": "jpeg", "quality": 95, "everyNthFrame": 1})
+        # Screenshots, not Page.startScreencast: headless screencast frames (and plain screenshots
+        # from a raw CDP session) come at CSS size whatever the device scale; a clip with a scale
+        # renders at the full 3840 px.
+        self.running = True
+        self.task = asyncio.ensure_future(self._capture())
 
-    def _frame(self, p):
-        self.frames.append((p["metadata"]["timestamp"], p["data"]))
-        asyncio.ensure_future(self.cdp.send("Page.screencastFrameAck", {"sessionId": p["sessionId"]}))
+    async def _capture(self):
+        w, h = self.viewport
+        shot = {"format": "jpeg", "quality": 93, "clip": {"x": 0, "y": 0, "width": w, "height": h, "scale": PX / w}}
+        while self.running:
+            t = time.time()
+            data = (await self.cdp.send("Page.captureScreenshot", shot))["data"]
+            self.frames.append(((t + time.time()) / 2, data))
 
     async def stop(self, name: str):
         end = time.time()
-        await self.cdp.send("Page.stopScreencast")
+        self.running = False
+        await self.task
         work = OUT / name
         shutil.rmtree(work, ignore_errors=True)
         work.mkdir(parents=True)
@@ -131,7 +142,7 @@ class Clip:
         (work / "list.txt").write_text("\n".join(lines))
         subprocess.run(
             ["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(work / "list.txt"),
-             "-vf", f"setpts=PTS/{SLOW},fps=60,scale=1920:1080:flags=lanczos,format=yuv420p", "-c:v", "libx264", "-preset", "slow",
+             "-vf", f"setpts=PTS/{SLOW},fps=60,scale={PX}:{PX * 9 // 16}:flags=lanczos,format=yuv420p", "-c:v", "libx264", "-preset", "slow",
              "-crf", "12", str(OUT / f"{name}.mp4")],
             check=True,
         )
@@ -143,7 +154,7 @@ class Clip:
 
 
 async def island_center(page):
-    box = await page.locator('[aria-label="Tensei Island"]').bounding_box()
+    box = await page.locator('[aria-label="Holm"]').bounding_box()
     return box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
 
 
@@ -175,7 +186,7 @@ async def leave(page):
 async def scene(browser, name, query, act, viewport=(W, H)):
     if ONLY and name not in ONLY:
         return
-    ctx = await browser.new_context(viewport={"width": viewport[0], "height": viewport[1]}, device_scale_factor=1920 / viewport[0])
+    ctx = await browser.new_context(viewport={"width": viewport[0], "height": viewport[1]}, device_scale_factor=PX / viewport[0])
     page = await ctx.new_page()
     # A fixed evening on today's date, so the Home clock and countdowns read naturally.
     await page.clock.install(time=datetime.now().replace(hour=19, minute=42, second=0, microsecond=0))
@@ -191,7 +202,7 @@ async def scene(browser, name, query, act, viewport=(W, H)):
     await page.clock.pause_at((await page.evaluate("Date.now()") + 20) / 1000)  # seconds in Python
     await cdp.send("Animation.enable")
     await cdp.send("Animation.setPlaybackRate", {"playbackRate": 1 / SLOW})
-    clip = Clip(page, cdp)
+    clip = Clip(page, cdp, viewport)
     await clip.start()
     await act(page)
     await clip.stop(name)

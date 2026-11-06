@@ -22,7 +22,7 @@ impl Config {
         let dir = app
             .path()
             .app_config_dir()
-            .unwrap_or_else(|_| util::home_dir().join(".tensei-island"));
+            .unwrap_or_else(|_| util::home_dir().join(".holm"));
         let _ = std::fs::create_dir_all(&dir);
         Self {
             settings: Mutex::new(read_json(&dir.join("settings.json"))),

@@ -7,7 +7,7 @@ const target = document.getElementById('app')!;
 
 if (isSettings) {
   const { default: SettingsApp } = await import('./SettingsApp.svelte');
-  document.title = 'Tensei Island · Settings';
+  document.title = 'Holm · Settings';
   mount(SettingsApp, { target });
 } else {
   const { default: IslandApp } = await import('./IslandApp.svelte');

@@ -1,4 +1,9 @@
-# Tensei Island
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/holm-logo-dark.svg">
+    <img alt="Holm" src="docs/brand/holm-logo.svg" width="260">
+  </picture>
+</h1>
 
 A Dynamic Island for Windows 10 and 11 that stays small. It sits at the top of the screen and shows what is
 going on: the song that is playing (Spotify, Pear, browsers, any player in the Windows media card), what Claude
@@ -8,7 +13,7 @@ it; it closes when you move away.
 Built with Tauri and Svelte on the WebView2 runtime that Windows already has: a few MB to install, no bundled
 browser, nothing running in the background that does not need to.
 
-![Tensei Island: music, hover to open, an agent asking for approval, then done](docs/media/demo.gif)
+![Holm: music, hover to open, an agent asking for approval, then done](docs/media/demo.gif)
 
 ## What it does
 
@@ -68,7 +73,7 @@ Figures are the island plus its WebView2 processes; CPU is a share of one core.
 ## Install
 
 Download the setup .exe (or the portable zip) from the latest GitHub release or the latest Actions run, and run
-it. Settings and data live in `%APPDATA%\in.tenseitech.island`.
+it. Settings and data live in `%APPDATA%\in.tenseitech.holm`.
 
 ### Connect Pear Desktop
 In Pear: Plugins → API Server → on. In the island: Settings → Music → Connect Pear, then Allow in Pear's dialog.
