@@ -8,13 +8,13 @@
 use std::{
     collections::{HashMap, HashSet},
     fs,
-    io::{Read, Seek, SeekFrom},
+    io::{BufRead, BufReader, Seek, SeekFrom},
     path::{Path, PathBuf},
     sync::Mutex,
     time::UNIX_EPOCH,
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use windows::Win32::{
     Foundation::CloseHandle,
@@ -314,52 +314,39 @@ fn claude_today(since: i64) -> Today {
             if f.seek(SeekFrom::Start(from)).is_err() {
                 continue;
             }
-            let mut buf = Vec::with_capacity((meta.len() - from) as usize);
-            if f.read_to_end(&mut buf).is_err() {
-                continue;
-            }
-            // Only whole lines: a line still being written is read next time.
-            let end = buf
-                .iter()
-                .rposition(|&b| b == b'\n')
-                .map(|i| i + 1)
-                .unwrap_or(0);
-            day.offsets.insert(path.clone(), from + end as u64);
-            for line in buf[..end].split(|&b| b == b'\n') {
+            // Line by line, one buffer: a day's log can be tens of megabytes.
+            let mut reader = BufReader::with_capacity(64 * 1024, f);
+            let mut line = Vec::new();
+            let mut pos = from;
+            loop {
+                line.clear();
+                match reader.read_until(b'\n', &mut line) {
+                    // Only whole lines: one still being written is read next time.
+                    Ok(n) if n > 0 && line.last() == Some(&b'\n') => pos += n as u64,
+                    _ => break,
+                }
                 // Cheap filter before parsing: only replies carry usage.
-                if line.len() < 20 || !contains(line, b"\"usage\"") {
+                if line.len() < 20 || !contains(&line, b"\"usage\"") {
                     continue;
                 }
-                let Ok(o) = serde_json::from_slice::<Value>(line) else {
+                // Only the fields needed; the message content is skipped, not built.
+                let Ok(entry) = serde_json::from_slice::<LogLine>(&line) else {
                     continue;
                 };
-                let at = o
-                    .get("timestamp")
-                    .and_then(Value::as_str)
-                    .and_then(parse_time)
-                    .unwrap_or(0);
-                if at < since {
-                    continue;
-                }
-                let Some(msg) = o.get("message") else {
+                let at = entry.timestamp.as_deref().and_then(parse_time).unwrap_or(0);
+                let Some(msg) = entry.message else { continue };
+                let (Some(id), Some(u)) = (msg.id, msg.usage) else {
                     continue;
                 };
-                let id = msg
-                    .get("id")
-                    .and_then(Value::as_str)
-                    .unwrap_or("")
-                    .to_string();
-                if id.is_empty() || !day.seen.insert(id) {
+                if at < since || !day.seen.insert(id) {
                     continue;
                 }
-                let u = &msg["usage"];
-                let n = |k: &str| u.get(k).and_then(Value::as_u64).unwrap_or(0);
-                day.tokens +=
-                    n("input_tokens") + n("output_tokens") + n("cache_creation_input_tokens");
-                if let Some(s) = o.get("sessionId").and_then(Value::as_str) {
-                    day.sessions.insert(s.to_string());
+                day.tokens += u.input_tokens + u.output_tokens + u.cache_creation_input_tokens;
+                if let Some(session) = entry.session_id {
+                    day.sessions.insert(session);
                 }
             }
+            day.offsets.insert(path.clone(), pos);
         }
     }
     Today {
@@ -367,6 +354,30 @@ fn claude_today(since: i64) -> Today {
         sessions: day.sessions.len() as u32,
         cost: None,
     }
+}
+
+#[derive(Deserialize)]
+struct LogLine {
+    timestamp: Option<String>,
+    #[serde(rename = "sessionId")]
+    session_id: Option<String>,
+    message: Option<LogMessage>,
+}
+
+#[derive(Deserialize)]
+struct LogMessage {
+    id: Option<String>,
+    usage: Option<LogUsage>,
+}
+
+#[derive(Deserialize)]
+struct LogUsage {
+    #[serde(default)]
+    input_tokens: u64,
+    #[serde(default)]
+    output_tokens: u64,
+    #[serde(default)]
+    cache_creation_input_tokens: u64,
 }
 
 fn contains(hay: &[u8], needle: &[u8]) -> bool {
