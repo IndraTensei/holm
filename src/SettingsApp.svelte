@@ -19,7 +19,7 @@
     { id: 'look', label: 'Look', icon: Palette },
     { id: 'music', label: 'Music', icon: Music2 },
     { id: 'agents', label: 'Agents', icon: Bot },
-    { id: 'tools', label: 'AI tools', icon: Cpu },
+    { id: 'tools', label: 'Harnesses', icon: Cpu },
     { id: 'games', label: 'Games', icon: Gamepad2 },
     { id: 'widgets', label: 'Shelf and widgets', icon: LayoutGrid },
     { id: 'about', label: 'About', icon: Info },

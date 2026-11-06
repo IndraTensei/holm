@@ -2,6 +2,7 @@
   import { Copy, Check, Trash2, Plug } from '@lucide/svelte';
   import AgentGlyph from '../ui/AgentGlyph.svelte';
   import Ring from '../ui/Ring.svelte';
+  import HarnessLogo from '../ui/HarnessLogo.svelte';
   import ApprovalCard from '../views/ApprovalCard.svelte';
   import { agents } from '../stores/agents.svelte';
   import { system } from '../stores/system.svelte';
@@ -16,7 +17,7 @@
   let hooks = $state<HookStatus | null>(null);
 
   $effect(() => (agents.working.length ? clock.second() : undefined));
-  // Other AI tools the owner chose to see (Settings → AI tools): what each did today.
+  // Other harnesses the owner chose to see (Settings → Harnesses): what each did today.
   $effect(() => tools.use());
   const quotas = $derived(system.quotas.filter((q) => shown(q.provider)));
   const others = $derived(tools.installed.filter((t) => !t.plan && shown(t.id)));
@@ -135,7 +136,7 @@
       {/each}
       {#each others as t (t.id)}
         <div class="q tool" class:stale={!t.running}>
-          <span class="dot" class:live={t.running}></span>
+          <span class="dot" class:live={t.running}><HarnessLogo id={t.id} name={t.name} size={14} /></span>
           <div>
             <div class="q-label">{t.name}</div>
             <div class="q-meta num">

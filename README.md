@@ -18,9 +18,9 @@ browser, nothing running in the background that does not need to.
 - **Pear Desktop**: also likes, dislikes and exact progress through Pear's API Server plugin.
 - **Claude Code**: live activity per session (reading, editing, running), Allow or Deny permission requests from
   the island, a chime and a summary when it finishes, and your 5-hour and weekly limits as a ring.
-- **AI tools**: finds the coding agents on your PC (Claude Code, Codex, OpenCode, Antigravity, Gemini CLI,
+- **Harnesses**: finds the AI coding agents on your PC (Claude Code, Codex, OpenCode, Antigravity, Gemini CLI,
   Copilot CLI, Cline, Cursor Agent, Amp and more), shows which are running and what each used today, read
-  from the files each tool already keeps.
+  from the files each one already keeps, each with its own logo.
 - **Games**: an intro when a game starts, out of the way while you play, a hotkey to bring it back, and the
   agent news you missed when you are done.
 - **Calm by default**: rests as a thin line when idle and over browser tabs, never opens mid-drag, respects

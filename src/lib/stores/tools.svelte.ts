@@ -1,5 +1,5 @@
 // AI coding tools found on this PC and what each used today (Rust: harness.rs). Scanned only
-// while something that shows them is on screen: the Agents page or the AI tools settings.
+// while something that shows them is on screen: the Agents page or Settings → Harnesses.
 import { call } from '../bridge';
 import { settings } from './settings.svelte';
 import type { Tool } from '../types';
