@@ -21,7 +21,7 @@
 │ volume.rs   Core Audio callback → volume://changed; volume_set/mute               │
 │ radios.rs   Windows.Devices.Radios + WLAN SSID                                     │
 │ shell.rs    autostart (HKCU Run), open/reveal paths, open allowed URLs            │
-│ config.rs   settings.json + data.json in %APPDATA%\in.tenseitech.island           │
+│ config.rs   settings.json + data.json in %APPDATA%\in.tenseitech.holm             │
 └───────────────────────────────────────────────────────────────────────────────────┘
 Pear Desktop and LRCLIB / Open-Meteo are reached from the frontend with fetch/WebSocket.
 ```

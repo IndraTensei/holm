@@ -121,7 +121,7 @@ class Pear {
   async authorize(): Promise<void> {
     let id = settings.v.pearClientId;
     if (!id) {
-      id = `tensei-island-${Math.random().toString(36).slice(2, 8)}`;
+      id = `holm-${Math.random().toString(36).slice(2, 8)}`;
       await settings.set({ pearClientId: id });
     }
     this.status = 'connecting';

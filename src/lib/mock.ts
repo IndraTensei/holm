@@ -201,7 +201,7 @@ export async function call<T>(cmd: string, args?: Record<string, unknown>): Prom
       case 'volume_get':
         return { level: 0.42, muted: false };
       case 'radios_get':
-        return { allowed: true, wifi: true, bluetooth: false, ssid: 'Tensei-5G', signal: 82 };
+        return { allowed: true, wifi: true, bluetooth: false, ssid: 'Backwater-5G', signal: 82 };
       case 'data_get':
         if (args?.key === 'note') return 'Ask Vizta about the scrim schedule\nShip island v0.1';
         if (args?.key === 'shelf')

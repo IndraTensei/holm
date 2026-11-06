@@ -81,7 +81,7 @@ pub fn start(app: AppHandle) {
 }
 
 unsafe fn run() {
-    let class = wide("TenseiIslandClipboard");
+    let class = wide("HolmClipboard");
     let instance = GetModuleHandleW(None).unwrap_or_default();
     let wc = WNDCLASSW {
         lpfnWndProc: Some(wndproc),

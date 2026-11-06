@@ -17,7 +17,9 @@ use windows::{
 use crate::util::wide;
 
 const RUN_KEY: &str = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
-const VALUE: &str = "TenseiIsland";
+const VALUE: &str = "Holm";
+/// The Run value written before the rename to Holm.
+const LEGACY_VALUE: &str = "TenseiIsland";
 
 fn run_key(access: windows::Win32::System::Registry::REG_SAM_FLAGS) -> Option<HKEY> {
     let path = wide(RUN_KEY);
@@ -35,15 +37,35 @@ fn run_key(access: windows::Win32::System::Registry::REG_SAM_FLAGS) -> Option<HK
 }
 
 pub fn autostart_enabled() -> bool {
+    run_value_exists(VALUE)
+}
+
+fn run_value_exists(value: &str) -> bool {
     let Some(key) = run_key(KEY_QUERY_VALUE) else {
         return false;
     };
-    let name = wide(VALUE);
+    let name = wide(value);
     let status = unsafe { RegQueryValueExW(key, PCWSTR(name.as_ptr()), None, None, None, None) };
     unsafe {
         let _ = RegCloseKey(key);
     }
     status == ERROR_SUCCESS
+}
+
+/// Before the rename the Run value was "TenseiIsland" and pointed at tensei-island.exe: if it is
+/// there, start with Windows stays on under the new name and path.
+pub fn migrate_legacy_autostart() {
+    if !run_value_exists(LEGACY_VALUE) {
+        return;
+    }
+    if let Some(key) = run_key(KEY_SET_VALUE) {
+        let name = wide(LEGACY_VALUE);
+        unsafe {
+            let _ = RegDeleteValueW(key, PCWSTR(name.as_ptr()));
+            let _ = RegCloseKey(key);
+        }
+    }
+    let _ = set_autostart(true);
 }
 
 pub fn set_autostart(on: bool) -> Result<(), String> {
