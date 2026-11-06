@@ -68,7 +68,8 @@ title is matched against the known names and the window's existence stands in fo
 On the first front appearance of a game process: `game://launch`, and `intro_until` keeps the island up for
 4.6 s over full screen. While a game is in front and `smartHide` is on, the island is hidden. The open shortcut
 calls `island_summon(true)`, which shows it over anything until it closes (`island_summon(false)`). When the
-process exits: `game://ended` with the play time (the frontend skips sessions under a minute).
+process exits: `game://ended` with the play time (the frontend skips sessions under a minute). While a game hides the island, the frontend holds
+agent done/attention news (no chime) and shows it as one "While you were playing" card on `game://active` null.
 
 ## Commands and events
 

@@ -139,6 +139,20 @@
     void focusWindow();
   }
 
+  // While a game is in front the island is hidden: agent news waits here, without chimes,
+  // and shows as one card when the player comes back.
+  let inGame: Game | null = null;
+  let missed: { project: string; text: string }[] = [];
+
+  function flushMissed() {
+    if (!missed.length) return;
+    const data = { items: missed.slice(-4), count: missed.length };
+    missed = [];
+    // Let the play-time card have its moment first.
+    if (activity.peek?.kind === 'gameover') setTimeout(() => activity.show('missed', data, 8000), 5000);
+    else activity.show('missed', data, 8000);
+  }
+
   let hidden = false;
   function toggleHidden() {
     send('island_set_hidden', { hidden: !hidden });
@@ -276,6 +290,7 @@
       await media.start();
       await agents.start({
         done: (d) => {
+          if (inGame) return void missed.push({ project: d.project, text: 'is done' });
           activity.show('done', d as unknown as Record<string, unknown>, 7000);
           if (settings.v.agentSounds) chime('done');
         },
@@ -284,6 +299,7 @@
           if (settings.v.agentSounds) chime('ask');
         },
         attention: (a) => {
+          if (inGame) return void missed.push({ project: a.project, text: 'needs you' });
           activity.show('attention', a, 6000);
           if (settings.v.agentSounds) chime('ask');
         },
@@ -311,6 +327,12 @@
         await on<Game>('game://launch', (g) => {
           if (expanded && !pinned) close();
           activity.show('game', { ...g }, 4200);
+        }),
+      );
+      stops.push(
+        await on<Game | null>('game://active', (g) => {
+          inGame = g && settings.v.smartHide ? g : null;
+          if (!inGame) flushMissed();
         }),
       );
       stops.push(
@@ -363,6 +385,8 @@
     if (q.get('timer')) focus.start('focus', 25);
     const game = q.get('game');
     if (game) setTimeout(() => activity.show('game', { name: game, exe: 'game.exe' }, 1e9), 300);
+    if (q.get('missed'))
+      activity.show('missed', { items: [{ project: 'meetbot', text: 'is done' }, { project: 'tensei-island', text: 'needs you' }], count: 2 }, 1e9);
     if (q.get('ended')) activity.show('gameover', { name: 'Valorant', exe: 'valorant.exe', durationMs: 4_320_000 }, 1e9);
   }
 </script>

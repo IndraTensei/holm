@@ -1,6 +1,6 @@
 <script lang="ts">
   // A moment of news: the island grows, says one thing, and settles back.
-  import { Check, BatteryCharging, Volume2, VolumeX, FolderDown, Timer, MessageCircleQuestion, Plug, Gamepad2 } from '@lucide/svelte';
+  import { Check, BatteryCharging, Volume2, VolumeX, FolderDown, Timer, MessageCircleQuestion, Plug, Gamepad2, Bell } from '@lucide/svelte';
   import GameIntro from './GameIntro.svelte';
   import Art from '../ui/Art.svelte';
   import Eq from '../ui/Eq.svelte';
@@ -19,6 +19,17 @@
     <div class="text">
       <div class="title display one">{d.name}</div>
       <div class="sub">Played for {duration(d.durationMs)}</div>
+    </div>
+  </div>
+{:else if peek.kind === 'missed'}
+  <div class="peek wide">
+    <span class="badge accent"><Bell size={16} strokeWidth={2.4} /></span>
+    <div class="text">
+      <div class="title display">While you were playing</div>
+      {#each d.items as item}
+        <div class="sub"><b>{item.project}</b> {item.text}</div>
+      {/each}
+      {#if d.count > d.items.length}<div class="sub">and {d.count - d.items.length} more</div>{/if}
     </div>
   </div>
 {:else if peek.kind === 'done'}
@@ -116,6 +127,10 @@
     margin-top: 2px;
     font-size: var(--t-sm);
     color: var(--ink-2);
+  }
+  .sub b {
+    font-weight: 600;
+    color: var(--ink);
   }
   .one {
     overflow: hidden;
