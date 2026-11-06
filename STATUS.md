@@ -78,6 +78,16 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 
 ## Known risks and things to watch
 
+- **Windows Defender flagged the installed build** (PR #2 CI build, installed with the setup .exe) as
+  `Trojan:Win32/Bearfoos.A!ml` on its second launch and quarantined it. `!ml` is a cloud machine-learning verdict,
+  not a signature: on-demand scans of the same code (portable exe), PR #1, v0.1.0 and the local debug build all
+  come back clean. Likely causes: an unsigned, never-seen-before exe whose behaviour looks spyware-shaped to a
+  model (reads the Claude Code OAuth file and calls an API with it, clipboard listener, HKCU Run autostart,
+  foreground window/process queries, global hotkeys, edits ~/.claude/settings.json). Release blocker. Fixes,
+  best first: sign releases (Azure Trusted Signing or an OV certificate); submit each release to Microsoft as a
+  false positive (microsoft.com/wdsi/filesubmission, developer account); consider making the Claude usage ring
+  opt-in so a fresh install does not read the credentials file.
+
 - **Click-through** works as built. While the cursor is on the island the whole 760×560 window takes clicks;
   it gives them back within ~15 ms of leaving the island's rectangle.
 - **Animations are expensive here.** Every animation frame makes WebView2 recomposite the whole transparent
@@ -125,3 +135,5 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   launch, hidden after it, summon/close hands focus back to the game, back on quit, play-time card only for the
   70 s run, Ctrl+Alt+H hides and shows. Agent done/attention news during a game is held without a chime and
   shown as one "While you were playing" card afterwards (verified with a synthetic Stop hook mid-game).
+  The PR #2 CI build installed silently (setup.exe /S, per-user, Start menu entry) and passed the same game test,
+  then Defender quarantined it on relaunch (see Known risks). Island left stopped pending the owner's decision.
