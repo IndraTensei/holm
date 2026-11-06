@@ -1,0 +1,19 @@
+Tensei Island
+Copyright 2026 Ashish John Thomas (Tensei Tech)
+
+This product includes ideas and approaches adapted from:
+
+- BrimDeck (https://github.com/MoFeng2223/BrimDeck), Apache License 2.0.
+  The Claude and Codex plan-usage requests and response parsing in src-tauri/src/quotas.rs are a Rust
+  re-implementation of BrimDeck's UsageService and QuotaParser logic.
+
+Third-party components bundled in the app:
+
+- Tauri and its plugins (MIT or Apache-2.0)
+- Svelte (MIT)
+- Lucide icons via @lucide/svelte (ISC)
+- Typefaces under the SIL Open Font License 1.1, via Fontsource: Geist, Geist Mono, Inter,
+  Bricolage Grotesque, Manrope, Plus Jakarta Sans, Space Grotesk, Outfit, Sora, DM Sans, Fraunces,
+  Instrument Serif, JetBrains Mono
+
+Services used at run time when turned on: LRCLIB (lyrics), Open-Meteo (weather), Pear Desktop API Server.

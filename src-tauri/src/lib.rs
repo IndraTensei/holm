@@ -1,0 +1,189 @@
+//! Tensei Island: a lean Dynamic Island for Windows.
+//!
+//! Rust owns everything that touches Windows (window placement and click-through, media
+//! sessions, system readings, agent hooks, clipboard, radios, volume). The Svelte frontend in
+//! ../src draws the island and the settings window and talks to these modules through the
+//! commands registered below and the events each module emits (see docs/ARCHITECTURE.md).
+
+#[cfg(not(windows))]
+compile_error!("Tensei Island targets Windows 10/11 only.");
+
+mod agents;
+mod clipboard;
+mod config;
+mod island;
+mod media;
+mod net;
+mod quotas;
+mod radios;
+mod shell;
+mod system;
+mod util;
+mod volume;
+
+use std::sync::Mutex;
+
+use serde_json::Value;
+use tauri::{
+    menu::{Menu, MenuItem, PredefinedMenuItem},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder, Wry,
+};
+
+use config::Config;
+
+struct TrayItems {
+    hide: MenuItem<Wry>,
+}
+
+pub fn open_settings_window(app: &AppHandle) -> tauri::Result<()> {
+    if let Some(window) = app.get_webview_window("settings") {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+        return Ok(());
+    }
+    WebviewWindowBuilder::new(
+        app,
+        "settings",
+        WebviewUrl::App("index.html#settings".into()),
+    )
+    .title("Tensei Island · Settings")
+    .inner_size(940.0, 680.0)
+    .min_inner_size(800.0, 560.0)
+    .center()
+    .resizable(true)
+    .decorations(true)
+    .visible(true)
+    .build()?;
+    Ok(())
+}
+
+/// Reacts to the settings that Rust applies itself; the frontend applies the rest.
+pub fn on_settings_changed(app: &AppHandle, patch: &Value) {
+    if patch.get("monitor").is_some() {
+        island::reposition(app);
+    }
+    if let Some(on) = patch.get("autostart").and_then(Value::as_bool) {
+        if let Err(err) = shell::set_autostart(on) {
+            util::log(app.state::<Config>().dir(), &format!("autostart: {err}"));
+        }
+    }
+}
+
+fn toggle_hidden(app: &AppHandle) {
+    let hidden = !island::user_hidden(app);
+    island::set_user_hidden(app, hidden);
+    if let Some(items) = app.try_state::<Mutex<TrayItems>>() {
+        if let Ok(items) = items.lock() {
+            let _ = items
+                .hide
+                .set_text(if hidden { "Show island" } else { "Hide island" });
+        }
+    }
+}
+
+fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
+    let open = MenuItem::with_id(app, "open", "Open island", true, None::<&str>)?;
+    let settings = MenuItem::with_id(app, "settings", "Settings…", true, None::<&str>)?;
+    let hide = MenuItem::with_id(app, "hide", "Hide island", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Tensei Island", true, None::<&str>)?;
+    let separator = PredefinedMenuItem::separator(app)?;
+    let menu = Menu::with_items(app, &[&open, &settings, &hide, &separator, &quit])?;
+    app.manage(Mutex::new(TrayItems { hide: hide.clone() }));
+
+    let mut builder = TrayIconBuilder::with_id("main")
+        .tooltip("Tensei Island")
+        .menu(&menu)
+        .show_menu_on_left_click(false)
+        .on_menu_event(|app, event| match event.id.as_ref() {
+            "open" => {
+                if island::user_hidden(app) {
+                    toggle_hidden(app);
+                }
+                let _ = app.emit("island://toggle", ());
+            }
+            "settings" => {
+                let _ = open_settings_window(app);
+            }
+            "hide" => toggle_hidden(app),
+            "quit" => app.exit(0),
+            _ => {}
+        })
+        .on_tray_icon_event(|tray, event| {
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            } = event
+            {
+                let _ = open_settings_window(tray.app_handle());
+            }
+        });
+    if let Some(icon) = app.default_window_icon() {
+        builder = builder.icon(icon.clone());
+    }
+    builder.build(app)?;
+    Ok(())
+}
+
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            // Starting the app again opens its settings instead of a second island.
+            let _ = open_settings_window(app);
+        }))
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .setup(|app| {
+            let handle = app.handle().clone();
+            app.manage(Config::load(&handle));
+            island::setup(&handle)?;
+            setup_tray(&handle)?;
+            media::start(handle.clone());
+            system::start(handle.clone());
+            agents::start(handle.clone());
+            quotas::start(handle.clone());
+            clipboard::start(handle.clone());
+            volume::start(handle.clone());
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            config::settings_get,
+            config::settings_patch,
+            config::data_get,
+            config::data_set,
+            island::island_set_rect,
+            island::island_release_focus,
+            island::island_set_hidden,
+            island::monitors_list,
+            island::open_settings,
+            media::media_control,
+            media::media_refresh,
+            system::system_watch,
+            system::power_get,
+            agents::agents_state,
+            agents::agents_decide,
+            agents::agents_clear,
+            agents::hooks_status,
+            agents::hooks_install,
+            agents::hooks_uninstall,
+            quotas::quotas_refresh,
+            clipboard::clipboard_list,
+            clipboard::clipboard_copy,
+            clipboard::clipboard_clear,
+            radios::radios_get,
+            radios::radio_set,
+            volume::volume_get,
+            volume::volume_set,
+            volume::volume_mute,
+            shell::autostart_get,
+            shell::autostart_set,
+            shell::open_path,
+            shell::reveal_path,
+            shell::open_url,
+            shell::path_exists,
+            net::fetch_json,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running Tensei Island");
+}
