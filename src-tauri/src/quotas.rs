@@ -12,7 +12,7 @@ use std::{
     time::Duration,
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -20,7 +20,7 @@ use crate::{config::Config, util};
 
 static TRIGGER: OnceLock<Mutex<Sender<()>>> = OnceLock::new();
 
-#[derive(Serialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct QuotaItem {
     label: String,
@@ -29,10 +29,10 @@ pub struct QuotaItem {
     window_minutes: Option<u32>,
 }
 
-#[derive(Serialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Provider {
-    provider: &'static str,
+    provider: String,
     ok: bool,
     plan: String,
     error: String,
@@ -41,6 +41,9 @@ pub struct Provider {
     /// The service answered 429: wait longer before asking again.
     #[serde(skip)]
     rate_limited: bool,
+    /// Seconds the service asked us to wait (Retry-After), if it said.
+    #[serde(skip)]
+    retry_after: Option<u64>,
 }
 
 /// Keeps the last good numbers on screen when a refresh fails (offline, rate limited), with the
@@ -54,6 +57,7 @@ fn keep_last(fresh: Provider, last: &mut Option<Provider>) -> Provider {
         Some(good) => Provider {
             error: fresh.error,
             rate_limited: fresh.rate_limited,
+            retry_after: fresh.retry_after,
             ..good.clone()
         },
         None => fresh,
@@ -131,7 +135,7 @@ fn codex_home() -> PathBuf {
 
 fn read_claude(agent: &ureq::Agent) -> Provider {
     let mut out = Provider {
-        provider: "claude",
+        provider: "claude".into(),
         fetched_at: util::now_ms(),
         ..Default::default()
     };
@@ -170,8 +174,13 @@ fn read_claude(agent: &ureq::Agent) -> Provider {
             return out;
         }
         429 => {
-            out.error = "Rate limited, retrying later".into();
+            out.error = "Usage service is busy, trying again later".into();
             out.rate_limited = true;
+            out.retry_after = response
+                .headers()
+                .get("retry-after")
+                .and_then(|v| v.to_str().ok())
+                .and_then(|v| v.trim().parse().ok());
             return out;
         }
         code => {
@@ -249,7 +258,7 @@ fn read_claude(agent: &ureq::Agent) -> Provider {
 
 fn read_codex(agent: &ureq::Agent) -> Provider {
     let mut out = Provider {
-        provider: "codex",
+        provider: "codex".into(),
         fetched_at: util::now_ms(),
         ..Default::default()
     };
@@ -330,9 +339,17 @@ fn read_codex(agent: &ureq::Agent) -> Provider {
     out
 }
 
-/// Last good readings, kept in data.json so a restart shows numbers at once and does not ask
-/// the (rate limited) usage service again before the refresh interval is up.
+/// Last good readings and when the next check is due, kept in data.json so a restart shows the
+/// numbers at once and keeps to the refresh interval and any backoff, even after a failed check.
 const CACHE_KEY: &str = "quotaCache";
+
+fn wants(config: &Config, provider: &str) -> bool {
+    match provider {
+        "claude" => config.bool("quotaClaude", true),
+        "codex" => config.bool("quotaCodex", false),
+        _ => false,
+    }
+}
 
 pub fn start(app: AppHandle) {
     let (tx, rx) = mpsc::channel::<()>();
@@ -343,32 +360,55 @@ pub fn start(app: AppHandle) {
             // Give the island's frontend time to start listening.
             thread::sleep(Duration::from_secs(4));
             let agent = crate::net::agent();
-            let (mut last_claude, mut last_codex) = (None, None);
-            let mut backoff = 1u64;
-
             let interval =
                 |app: &AppHandle| app.state::<Config>().u64("quotaMinutes", 5).clamp(2, 60) * 60;
+
             let cached = app.state::<Config>().data_get(CACHE_KEY);
-            let cached_at = cached.get("at").and_then(Value::as_i64).unwrap_or(0);
-            let age = (util::now_ms() - cached_at).max(0) as u64 / 1000;
-            if let Some(list) = cached.get("providers").filter(|_| age < interval(&app)) {
+            let saved: Vec<Provider> = cached
+                .get("providers")
+                .and_then(|p| serde_json::from_value(p.clone()).ok())
+                .unwrap_or_default();
+            let find = |name: &str| saved.iter().find(|p| p.provider == name && p.ok).cloned();
+            let (mut last_claude, mut last_codex) = (find("claude"), find("codex"));
+            let mut backoff = cached
+                .get("backoff")
+                .and_then(Value::as_u64)
+                .unwrap_or(1)
+                .clamp(1, 12);
+            // Older caches only kept the time of the last good reading.
+            let next_at = cached
+                .get("nextAt")
+                .and_then(Value::as_i64)
+                .unwrap_or_else(|| {
+                    cached.get("at").and_then(Value::as_i64).unwrap_or(0)
+                        + interval(&app) as i64 * 1000
+                });
+
+            {
                 let config = app.state::<Config>();
-                let enabled: Vec<Value> = list
-                    .as_array()
+                // Readings older than one interval are shown dimmed with their age until the next check.
+                let old = util::now_ms() - interval(&app) as i64 * 1000;
+                let shown: Vec<Provider> = [&last_claude, &last_codex]
                     .into_iter()
                     .flatten()
-                    .filter(|p| match p.get("provider").and_then(Value::as_str) {
-                        Some("claude") => config.bool("quotaClaude", true),
-                        Some("codex") => config.bool("quotaCodex", false),
-                        _ => false,
+                    .filter(|p| wants(&config, &p.provider))
+                    .map(|p| Provider {
+                        error: if p.fetched_at < old {
+                            "Waiting for the next check".into()
+                        } else {
+                            String::new()
+                        },
+                        ..p.clone()
                     })
-                    .cloned()
                     .collect();
-                if !enabled.is_empty() {
-                    let _ = app.emit("quotas://update", &enabled);
-                    let _ = rx.recv_timeout(Duration::from_secs(interval(&app) - age));
-                    while rx.try_recv().is_ok() {}
+                if !shown.is_empty() {
+                    let _ = app.emit("quotas://update", &shown);
                 }
+            }
+            let wait = (next_at - util::now_ms()).max(0) as u64 / 1000;
+            if wait > 0 {
+                let _ = rx.recv_timeout(Duration::from_secs(wait.min(3600)));
+                while rx.try_recv().is_ok() {}
             }
 
             loop {
@@ -382,21 +422,27 @@ pub fn start(app: AppHandle) {
                 }
                 if !providers.is_empty() {
                     let _ = app.emit("quotas://update", &providers);
-                    let good: Vec<&Provider> = providers.iter().filter(|p| p.ok).collect();
-                    if !good.is_empty() {
-                        config.data_set(
-                            CACHE_KEY,
-                            serde_json::json!({ "at": util::now_ms(), "providers": good }),
-                        );
-                    }
                 }
-                // 429: double the wait each time (up to an hour), back to normal after a success.
-                backoff = if providers.iter().any(|p| p.rate_limited) {
-                    (backoff * 2).min(12)
-                } else {
-                    1
-                };
-                let wait = (interval(&app) * backoff).min(3600);
+                // 429: double the wait each time (up to an hour), back to normal after a success,
+                // and never sooner than the service asked for.
+                let limited = providers.iter().any(|p| p.rate_limited);
+                backoff = if limited { (backoff * 2).min(12) } else { 1 };
+                let asked = providers
+                    .iter()
+                    .filter_map(|p| p.retry_after)
+                    .max()
+                    .unwrap_or(0);
+                let wait = (interval(&app) * backoff).max(asked).min(3600);
+                let good: Vec<&Provider> =
+                    [&last_claude, &last_codex].into_iter().flatten().collect();
+                config.data_set(
+                    CACHE_KEY,
+                    serde_json::json!({
+                        "providers": good,
+                        "nextAt": util::now_ms() + wait as i64 * 1000,
+                        "backoff": backoff,
+                    }),
+                );
                 let _ = rx.recv_timeout(Duration::from_secs(wait));
                 // Collapse a burst of refresh requests into one round.
                 while rx.try_recv().is_ok() {}
