@@ -5,7 +5,7 @@
   import { clock } from '../stores/clock.svelte';
   import { clockTime } from '../format';
 
-  $effect(() => (focus.running ? clock.fast() : undefined));
+  $effect(() => (focus.running ? clock.second() : undefined));
 
   const presets = [15, 25, 50];
   const remaining = $derived(focus.remaining(clock.now));

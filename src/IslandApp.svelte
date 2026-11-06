@@ -347,7 +347,8 @@
 
   // ------------------------------------------------------------ live things that need a fast clock
 
-  $effect(() => (live === 'agent' || live === 'timer' || (s.compactTitle === 'lyrics' && media.now?.playing) ? clock.fast() : undefined));
+  $effect(() => (s.compactTitle === 'lyrics' && media.now?.playing ? clock.fast() : undefined));
+  $effect(() => (live === 'agent' || live === 'timer' ? clock.second() : undefined));
   $effect(() => {
     media.now?.key;
     s.lyrics;
