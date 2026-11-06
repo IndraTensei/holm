@@ -145,6 +145,12 @@
     />
   </Field>
 
+  {#if s.overMaximized === 'learn'}
+    <Field label="Browsers start as a line" hint="Their tabs sit right under the island. As a line over a maximized app, the island opens only when you push the pointer to the very top edge.">
+      <Toggle label="Browsers start as a line" checked={s.browsersAsLine} onchange={(v) => settings.set({ browsersAsLine: v })} />
+    </Field>
+  {/if}
+
   {#if s.overMaximized === 'learn' && s.lineApps.length}
     <Field label="A thin line over" hint="Learned from use. Remove an app to give it the full island again.">
       <ul class="apps">

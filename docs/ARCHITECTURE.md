@@ -70,6 +70,10 @@ Calm by default, each adjustable in Settings → General → Behaviour:
   a miss, and three misses over one app within three days (no real use in between) add the app to `lineApps`,
   with a one-time note. Rust reports the front app with `island://maximized` {maximized, app}; the counting is
   in `stores/fit.svelte.ts`, misses in data.json `lineMisses`. Settings → General lists learned apps.
+  Browsers start as a line (`browsersAsLine`). While resting as a line over a maximized app the hover area is
+  only the top screen edge above the line, so a tab or title bar button under it gets the click; pushing the
+  pointer to the edge opens the island. The gap between the screen top and the island always counts as
+  inside, so the opened island does not close with the pointer still at the edge.
 - After each view or style change settles, the whole surface is repainted once: WebView2 in a transparent
   window can otherwise keep a stale frame outside the area it last redrew (a faded copy of the open island).
 - Windows Do not disturb (`quiet.rs`): song, volume and charging pop-ups are dropped, chimes are silent, and

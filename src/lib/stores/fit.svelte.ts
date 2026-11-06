@@ -5,7 +5,11 @@
 // the island was in the way (a browser tab, a title bar button). Three misses over one app
 // within three days, with no real use in between, and the island rests as a line over that app
 // only; hover still opens it. Real use over an app clears its misses. Settings → General lists
-// the learned apps and can undo each one.
+// the learned apps and can undo each one. Browsers start as a line (their tabs sit right under
+// the island), unless "browsersAsLine" is off.
+//
+// While resting as a line over a maximized app, only the very top edge of the screen opens the
+// island (see IslandApp's reportRect), so tabs and title bar buttons under it stay clickable.
 import { call, send } from '../bridge';
 import { settings } from './settings.svelte';
 import { activity } from './activity.svelte';
@@ -15,6 +19,7 @@ const QUICK_MS = 2000;
 const WINDOW_MS = 3 * 24 * 3600_000;
 const STRIKES = 3;
 const SAME_MS = 1500;
+const BROWSERS = ['vivaldi', 'chrome', 'msedge', 'firefox', 'brave', 'opera', 'opera_gx', 'arc', 'zen', 'librewolf', 'waterfox', 'floorp', 'thorium', 'chromium', 'helium', 'comet', 'dia'];
 
 /** "T3 Code" → "t3 code": the key in `lineApps` and the misses. */
 export const appKey = (app: string) => app.trim().toLowerCase();
@@ -38,7 +43,8 @@ class Fit {
   get line(): boolean {
     const mode = settings.v.overMaximized;
     if (!this.maximized || mode === 'full') return false;
-    return mode === 'line' || settings.v.lineApps.includes(appKey(this.app));
+    const key = appKey(this.app);
+    return mode === 'line' || settings.v.lineApps.includes(key) || (settings.v.browsersAsLine && BROWSERS.includes(key));
   }
 
   opened(by: 'hover' | 'click' | 'hotkey'): void {
