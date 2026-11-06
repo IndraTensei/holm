@@ -1,0 +1,68 @@
+[package]
+name = "tensei-island"
+version = "0.1.0"
+description = "A lean Dynamic Island for Windows"
+authors = ["Ashish John Thomas <ashishthomas012@gmail.com>"]
+edition = "2021"
+rust-version = "1.80"
+
+[lib]
+name = "tensei_island_lib"
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-single-instance = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
+tiny_http = "0.12"
+# Windows' own TLS (SChannel) keeps the binary small: no bundled crypto library.
+ureq = { version = "3", default-features = false, features = ["native-tls-no-default", "json", "gzip"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = [
+  "Foundation",
+  "Foundation_Collections",
+  "Media_Control",
+  "Storage_Streams",
+  "Devices_Radios",
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_UI_WindowsAndMessaging",
+  "Win32_UI_Shell",
+  "Win32_UI_HiDpi",
+  "Win32_System_Com",
+  "Win32_System_Threading",
+  "Win32_System_SystemInformation",
+  "Win32_System_Power",
+  "Win32_System_DataExchange",
+  "Win32_System_Memory",
+  "Win32_System_Ole",
+  "Win32_System_Registry",
+  "Win32_System_LibraryLoader",
+  "Win32_NetworkManagement_IpHelper",
+  "Win32_NetworkManagement_Ndis",
+  "Win32_NetworkManagement_WiFi",
+  "Win32_Networking_WinSock",
+  "Win32_Media_Audio",
+  "Win32_Media_Audio_Endpoints",
+  "Win32_Security",
+] }
+windows-core = "0.62"
+windows-future = "0.3"
+
+[profile.release]
+# Small, fast binary: the island idles most of the time.
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true
+
+[profile.dev]
+debug = 1
