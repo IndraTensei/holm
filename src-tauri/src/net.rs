@@ -23,7 +23,7 @@ pub fn agent() -> &'static ureq::Agent {
             .tls_config(tls)
             .timeout_global(Some(Duration::from_secs(15)))
             .http_status_as_error(false)
-            .user_agent("TenseiIsland/0.1 (https://github.com/IndraTensei)")
+            .user_agent("Holm/0.1 (https://github.com/IndraTensei/holm)")
             .build()
             .into()
     })

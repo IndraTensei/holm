@@ -492,7 +492,7 @@
     const game = q.get('game');
     if (game) setTimeout(() => activity.show('game', { name: game, exe: 'game.exe' }, 1e9), 300);
     if (q.get('missed'))
-      activity.show('missed', { title: 'While you were playing', items: [{ project: 'meetbot', text: 'is done' }, { project: 'tensei-island', text: 'needs you' }], count: 2 }, 1e9);
+      activity.show('missed', { title: 'While you were playing', items: [{ project: 'meetbot', text: 'is done' }, { project: 'holm', text: 'needs you' }], count: 2 }, 1e9);
     const front = q.get('front');
     if (front) fit.set({ maximized: true, app: front });
     if (q.get('ended')) activity.show('gameover', { name: 'Valorant', exe: 'valorant.exe', durationMs: 4_320_000 }, 1e9);
@@ -512,7 +512,7 @@
     style="width:{size.w}px;height:{size.h}px;--r:{radius}px"
     role="button"
     tabindex="-1"
-    aria-label="Tensei Island"
+    aria-label="Holm"
     onpointerenter={() => !inTauri && setHover(true)}
     onpointerleave={() => !inTauri && setHover(false)}
     onclick={() => (mode === 'compact' || mode === 'peek') && open('click')}

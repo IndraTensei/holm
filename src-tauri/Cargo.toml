@@ -1,5 +1,5 @@
 [package]
-name = "tensei-island"
+name = "holm"
 version = "0.1.0"
 description = "A lean Dynamic Island for Windows"
 authors = ["Ashish John Thomas <ashishthomas012@gmail.com>"]
@@ -7,7 +7,7 @@ edition = "2021"
 rust-version = "1.80"
 
 [lib]
-name = "tensei_island_lib"
+name = "holm_lib"
 crate-type = ["rlib"]
 
 [build-dependencies]

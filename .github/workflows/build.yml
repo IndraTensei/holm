@@ -47,14 +47,14 @@ jobs:
         run: |
           $version = (Get-Content package.json | ConvertFrom-Json).version
           New-Item -ItemType Directory -Force out | Out-Null
-          Copy-Item src-tauri/target/release/tensei-island.exe out/TenseiIsland.exe
-          Compress-Archive -Path out/TenseiIsland.exe -DestinationPath "TenseiIsland-$version-portable-x64.zip" -Force
+          Copy-Item src-tauri/target/release/holm.exe out/Holm.exe
+          Compress-Archive -Path out/Holm.exe -DestinationPath "Holm-$version-portable-x64.zip" -Force
           Get-ChildItem src-tauri/target/release/bundle/nsis/*.exe | ForEach-Object { Copy-Item $_ . }
           Get-ChildItem *.exe, *.zip | Format-Table Name, Length
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tensei-island-windows
+          name: holm-windows
           path: |
             *-setup.exe
             *-portable-x64.zip

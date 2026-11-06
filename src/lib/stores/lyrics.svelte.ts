@@ -15,7 +15,7 @@ interface Entry {
   instrumental: boolean;
 }
 
-const CACHE_KEY = 'tensei.lyrics.v1';
+const CACHE_KEY = 'holm.lyrics.v1';
 const MAX_CACHE = 150;
 
 function parseLrc(lrc: string): LyricLine[] {
