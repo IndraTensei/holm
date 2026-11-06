@@ -229,8 +229,12 @@
     clearTimeout(leaveTimer);
     if (next) {
       if (!expanded && s.openOn === 'hover' && mode !== 'approval')
-        enterTimer = setTimeout(() => {
+        enterTimer = setTimeout(async () => {
           if (!hover) return;
+          // Where the pointer really is (no move may have reached this window yet).
+          const at = await call<[number, number] | null>('island_cursor').catch(() => null);
+          if (at) pointer = { x: at[0], y: at[1] };
+          if (!hover || expanded) return;
           if (overIsland()) open('hover');
           else {
             // The hover area Rust holds is bigger than the island (measured mid-animation, say):
