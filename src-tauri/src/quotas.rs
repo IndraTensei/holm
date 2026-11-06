@@ -38,6 +38,26 @@ pub struct Provider {
     error: String,
     items: Vec<QuotaItem>,
     fetched_at: i64,
+    /// The service answered 429: wait longer before asking again.
+    #[serde(skip)]
+    rate_limited: bool,
+}
+
+/// Keeps the last good numbers on screen when a refresh fails (offline, rate limited), with the
+/// error alongside so the Agents page can say why they are not fresh.
+fn keep_last(fresh: Provider, last: &mut Option<Provider>) -> Provider {
+    if fresh.ok {
+        *last = Some(fresh.clone());
+        return fresh;
+    }
+    match last {
+        Some(good) => Provider {
+            error: fresh.error,
+            rate_limited: fresh.rate_limited,
+            ..good.clone()
+        },
+        None => fresh,
+    }
 }
 
 /// Days since 1970-01-01 for a civil date (Howard Hinnant's algorithm).
@@ -151,6 +171,7 @@ fn read_claude(agent: &ureq::Agent) -> Provider {
         }
         429 => {
             out.error = "Rate limited, retrying later".into();
+            out.rate_limited = true;
             return out;
         }
         code => {
@@ -309,28 +330,75 @@ fn read_codex(agent: &ureq::Agent) -> Provider {
     out
 }
 
+/// Last good readings, kept in data.json so a restart shows numbers at once and does not ask
+/// the (rate limited) usage service again before the refresh interval is up.
+const CACHE_KEY: &str = "quotaCache";
+
 pub fn start(app: AppHandle) {
     let (tx, rx) = mpsc::channel::<()>();
     let _ = TRIGGER.set(Mutex::new(tx));
     thread::Builder::new()
         .name("quotas".into())
         .spawn(move || {
+            // Give the island's frontend time to start listening.
             thread::sleep(Duration::from_secs(4));
             let agent = crate::net::agent();
+            let (mut last_claude, mut last_codex) = (None, None);
+            let mut backoff = 1u64;
+
+            let interval = |app: &AppHandle| {
+                app.state::<Config>().u64("quotaMinutes", 5).clamp(2, 60) * 60
+            };
+            let cached = app.state::<Config>().data_get(CACHE_KEY);
+            let cached_at = cached.get("at").and_then(Value::as_i64).unwrap_or(0);
+            let age = (util::now_ms() - cached_at).max(0) as u64 / 1000;
+            if let Some(list) = cached.get("providers").filter(|_| age < interval(&app)) {
+                let config = app.state::<Config>();
+                let enabled: Vec<Value> = list
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .filter(|p| match p.get("provider").and_then(Value::as_str) {
+                        Some("claude") => config.bool("quotaClaude", true),
+                        Some("codex") => config.bool("quotaCodex", false),
+                        _ => false,
+                    })
+                    .cloned()
+                    .collect();
+                if !enabled.is_empty() {
+                    let _ = app.emit("quotas://update", &enabled);
+                    let _ = rx.recv_timeout(Duration::from_secs(interval(&app) - age));
+                    while rx.try_recv().is_ok() {}
+                }
+            }
+
             loop {
                 let config = app.state::<Config>();
                 let mut providers = Vec::new();
                 if config.bool("quotaClaude", true) {
-                    providers.push(read_claude(agent));
+                    providers.push(keep_last(read_claude(agent), &mut last_claude));
                 }
                 if config.bool("quotaCodex", false) {
-                    providers.push(read_codex(agent));
+                    providers.push(keep_last(read_codex(agent), &mut last_codex));
                 }
                 if !providers.is_empty() {
                     let _ = app.emit("quotas://update", &providers);
+                    let good: Vec<&Provider> = providers.iter().filter(|p| p.ok).collect();
+                    if !good.is_empty() {
+                        config.data_set(
+                            CACHE_KEY,
+                            serde_json::json!({ "at": util::now_ms(), "providers": good }),
+                        );
+                    }
                 }
-                let minutes = config.u64("quotaMinutes", 5).clamp(2, 60);
-                let _ = rx.recv_timeout(Duration::from_secs(minutes * 60));
+                // 429: double the wait each time (up to an hour), back to normal after a success.
+                backoff = if providers.iter().any(|p| p.rate_limited) {
+                    (backoff * 2).min(12)
+                } else {
+                    1
+                };
+                let wait = (interval(&app) * backoff).min(3600);
+                let _ = rx.recv_timeout(Duration::from_secs(wait));
                 // Collapse a burst of refresh requests into one round.
                 while rx.try_recv().is_ok() {}
             }
