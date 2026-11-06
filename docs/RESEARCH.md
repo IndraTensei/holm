@@ -1,6 +1,6 @@
 # Research notes
 
-What was learned from the two reference apps and from Pear Desktop, and how it shaped Tensei Island.
+What was learned from the two reference apps and from Pear Desktop, and how it shaped Holm.
 
 ## BrimDeck (open source, Apache-2.0)
 
@@ -19,7 +19,7 @@ What was learned from the two reference apps and from Pear Desktop, and how it s
   `GET https://chatgpt.com/backend-api/wham/usage` with `ChatGPT-Account-Id`. Response `rate_limit.primary_window`
   / `secondary_window` (`used_percent`, `limit_window_seconds`, `reset_at` or `reset_after_seconds`).
 - Lyrics: LRCLIB (`/api/get`, `/api/search`).
-- Taken into Tensei Island: the quota endpoints and parsing (rewritten in Rust, credited in NOTICE), the
+- Taken into Holm: the quota endpoints and parsing (rewritten in Rust, credited in NOTICE), the
   Notch / Pill / Line styles, hide-in-full-screen and line-when-maximized ideas, LRCLIB. Not taken: the
   Chinese-player patches (they modify other apps' `libcef.dll`), the WPF code itself.
 
@@ -41,11 +41,11 @@ reused, and the licence and payment flow were not touched.
   phone transfer over QR, clipboard history, a quick note, focus timer and focus guard for distracting sites,
   Wi-Fi and Bluetooth toggles, battery / CPU / RAM, a game mode, Ctrl+Alt+T to open and Ctrl+Alt+1–6 for pages,
   self-update with signed app-only patches.
-- Taken into Tensei Island (re-implemented from the feature list, original design and code): agent live
+- Taken into Holm (re-implemented from the feature list, original design and code): agent live
   activity and approvals (through Claude Code's HTTP hooks instead of a bundled helper), completion chime and
   peek, quota ring, file shelf, clipboard history, note, focus timer, Wi-Fi / Bluetooth toggles, global shortcut.
   Not taken: the mascot and its branding, phone transfer, focus guard, Spotify device switching (see STATUS).
-- The size difference is the main lesson: Electron ships its own Chromium. Tensei Island uses Tauri, which uses
+- The size difference is the main lesson: Electron ships its own Chromium. Holm uses Tauri, which uses
   the WebView2 runtime that Windows 10/11 already has, so the installer is a few MB.
 
 ## Pear Desktop (YouTube Music desktop app, open source)

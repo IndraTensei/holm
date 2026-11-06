@@ -25,7 +25,9 @@ use crate::{
 };
 
 pub const DEFAULT_PORT: u16 = 47821;
-const MARK: &str = "src=tensei-island";
+const MARK: &str = "src=holm";
+/// Hooks installed before the rename to Holm carry this marker; they are still ours.
+const LEGACY_MARK: &str = "src=tensei-island";
 const EVENTS: [&str; 12] = [
     "SessionStart",
     "UserPromptSubmit",
@@ -260,7 +262,7 @@ fn handle(app: AppHandle, agents: Arc<Agents>, secret: &str, mut request: tiny_h
             Some(false) => json!({
                 "hookSpecificOutput": {
                     "hookEventName": "PermissionRequest",
-                    "decision": { "behavior": "deny", "message": "Denied from Tensei Island." }
+                    "decision": { "behavior": "deny", "message": "Denied from Holm." }
                 }
             })
             .to_string(),
@@ -651,7 +653,7 @@ fn is_ours(handler: &Value) -> bool {
         handler
             .get(*k)
             .and_then(Value::as_str)
-            .is_some_and(|v| v.contains(MARK))
+            .is_some_and(|v| v.contains(MARK) || v.contains(LEGACY_MARK))
     })
 }
 
@@ -751,7 +753,7 @@ pub fn hooks_install(config: State<'_, Config>, mode: String) -> Result<HookStat
     let path = claude_settings_path();
     let mut settings = read_claude_settings(&path)?;
     if path.exists() {
-        let backup = path.with_extension("json.tensei-backup");
+        let backup = path.with_extension("json.holm-backup");
         if !backup.exists() {
             let _ = std::fs::copy(&path, &backup);
         }

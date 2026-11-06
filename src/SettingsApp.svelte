@@ -48,7 +48,10 @@
 
 <div class="app">
   <aside>
-    <div class="brand display">Tensei Island</div>
+    <div class="brand display">
+      <svg viewBox="0 0 208 208" width="20" height="20" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M56 0 H152 C196 0 208 12 208 56 V152 C208 196 196 208 152 208 H56 C12 208 0 196 0 152 V56 C0 12 12 0 56 0 Z M52 0 A16 16 0 0 1 68 16 V44 A36 36 0 0 0 140 44 V16 A16 16 0 0 1 156 0 Z M52 208 A16 16 0 0 0 68 192 V164 A36 36 0 0 1 140 164 V192 A16 16 0 0 0 156 208 Z" /></svg>
+      Holm
+    </div>
     <nav>
       {#each sections as sec (sec.id)}
         {@const Icon = sec.icon}
@@ -93,10 +96,17 @@
     border-right: 1px solid var(--line);
   }
   .brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
     padding: 0 10px 18px;
     font-size: var(--t-lg);
     font-weight: 700;
     letter-spacing: -0.02em;
+  }
+  .brand svg {
+    color: var(--accent);
+    flex: none;
   }
   nav {
     display: flex;

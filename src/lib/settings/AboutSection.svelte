@@ -4,7 +4,7 @@
 
 <section>
   <h2 class="display">About</h2>
-  <p class="lead">Tensei Island 0.1.0, a lean Dynamic Island for Windows 10 and 11. Built by Ashish John Thomas at Tensei Tech.</p>
+  <p class="lead">Holm 0.1.0, a lean Dynamic Island for Windows 10 and 11. Built by Ashish John Thomas at Tensei Tech.</p>
 
   <h3>What it talks to</h3>
   <ul class="facts">
