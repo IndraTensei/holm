@@ -15,6 +15,7 @@ mod games;
 mod island;
 mod media;
 mod net;
+mod quiet;
 mod quotas;
 mod radios;
 mod shell;
@@ -178,6 +179,7 @@ pub fn run() {
             system::start(handle.clone());
             agents::start(handle.clone());
             quotas::start(handle.clone());
+            quiet::start(handle.clone());
             clipboard::start(handle.clone());
             volume::start(handle.clone());
             Ok(())
@@ -191,6 +193,7 @@ pub fn run() {
             island::island_release_focus,
             island::island_set_hidden,
             island::island_summon,
+            island::island_state,
             island::monitors_list,
             island::open_settings,
             media::media_control,
@@ -204,6 +207,7 @@ pub fn run() {
             agents::hooks_install,
             agents::hooks_uninstall,
             quotas::quotas_refresh,
+            quiet::quiet_get,
             clipboard::clipboard_list,
             clipboard::clipboard_copy,
             clipboard::clipboard_clear,

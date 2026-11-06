@@ -26,6 +26,7 @@ use windows::Win32::{
     },
     UI::{
         HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI},
+        Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON},
         Shell::{
             SHQueryUserNotificationState, QUNS_PRESENTATION_MODE, QUNS_RUNNING_D3D_FULL_SCREEN,
         },
@@ -42,6 +43,10 @@ use crate::{config::Config, games, util, util::Hwnd};
 
 /// How long the island stays up over a game for its intro before stepping aside.
 const INTRO_MS: i64 = 4600;
+
+/// For this long after start, focus that lands on the island without being asked for (no hover,
+/// no shortcut) goes back to the window that had it: starting at sign-in must not steal focus.
+const STARTUP_GUARD_MS: u64 = 5000;
 
 pub const WIN_W: f64 = 760.0;
 pub const WIN_H: f64 = 560.0;
@@ -308,7 +313,14 @@ pub fn setup(app: &AppHandle) -> tauri::Result<()> {
     island.place(monitor);
     let _ = window.set_ignore_cursor_events(true);
     // The first reveal goes through Tauri so the WebView2 controller is marked visible too;
-    // later full-screen hide/show cycles use ShowWindow without activation.
+    // later full-screen hide/show cycles use ShowWindow without activation. That first show (and
+    // WebView2 finishing its load) can take focus: the poll gives it back (see STARTUP_GUARD_MS).
+    let before = unsafe { GetForegroundWindow() };
+    if before != island.hwnd.get() {
+        island
+            .previous_foreground
+            .store(before.0 as isize, Ordering::Relaxed);
+    }
     let _ = window.show();
     island.keep_on_top();
     app.manage(island.clone());
@@ -321,6 +333,8 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
         .name("island-poll".into())
         .spawn(move || {
             let mut inside = false;
+            // What the frontend was last told; lags `inside` while a drag passes over.
+            let mut hover_sent = false;
             let mut elapsed: u64 = 0;
             let mut near = false;
             let mut tracker = games::Tracker::default();
@@ -360,8 +374,21 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
                                     .store(foreground.0 as isize, Ordering::Relaxed);
                             }
                         }
+                        // Click-through follows the cursor at once, so a dragged file can land.
                         let _ = island.window.set_ignore_cursor_events(!inside);
-                        let _ = app.emit("island://hover", inside);
+                    }
+                    // Dragging a window or a tab across the top of the screen should not open
+                    // the island: arriving with the button down counts only once it is released.
+                    // Once open, pressing inside (a click) never closes it.
+                    let button = unsafe { GetAsyncKeyState(VK_LBUTTON.0 as i32) } < 0;
+                    let want = if hover_sent {
+                        inside
+                    } else {
+                        inside && !button
+                    };
+                    if want != hover_sent {
+                        hover_sent = want;
+                        let _ = app.emit("island://hover", want);
                     }
                 }
 
@@ -426,6 +453,18 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
                         island.keep_on_top();
                     }
                 }
+                if elapsed < STARTUP_GUARD_MS
+                    && foreground == island.hwnd.get()
+                    && !inside
+                    && !island.summoned.load(Ordering::Relaxed)
+                {
+                    let previous = HWND(island.previous_foreground.load(Ordering::Relaxed)
+                        as *mut core::ffi::c_void);
+                    if !previous.0.is_null() && unsafe { IsWindow(Some(previous)) }.as_bool() {
+                        let _ = unsafe { SetForegroundWindow(previous) };
+                    }
+                }
+
                 // Cheap (a few atomics) and catches the end of a game intro on time.
                 island.refresh(&app);
             }
@@ -473,6 +512,25 @@ pub fn island_release_focus(island: State<'_, Arc<Island>>) {
         if !previous.0.is_null() && IsWindow(Some(previous)).as_bool() {
             let _ = SetForegroundWindow(previous);
         }
+    }
+}
+
+/// What the window state is right now. Events only report changes, and the frontend can start
+/// after the first ones went out (slow first load), so it asks once at start.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IslandState {
+    maximized: bool,
+    hidden: bool,
+    shown: bool,
+}
+
+#[tauri::command]
+pub fn island_state(island: State<'_, Arc<Island>>) -> IslandState {
+    IslandState {
+        maximized: island.maximized.load(Ordering::Relaxed),
+        hidden: island.user_hidden.load(Ordering::Relaxed),
+        shown: island.shown.load(Ordering::Relaxed),
     }
 }
 

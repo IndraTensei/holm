@@ -55,6 +55,8 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 | Games | Recognition: known exes, store library folders, user list (Settings → Games); title fallback | ✅ known and custom verified; store folders and anti-cheat fallback 🧪 |
 | Games | Open shortcut summons the island over a game; hide shortcut (Ctrl+Alt+H); play time on quit | ✅ verified |
 | Games | Agent news while playing is held (no chime) and shown as "While you were playing" after | ✅ verified |
+| Daily | No focus stealing at start; hover never opens mid-drag; tuck to a line when idle or behind a maximized window | ✅ verified (dev build) |
+| Daily | Respect Windows Do not disturb: chatty pop-ups dropped, chimes off, agent news held | ✅ verified by flipping the registry value; real toggle 🧪 |
 
 ## Next steps, in order
 
@@ -137,3 +139,14 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   shown as one "While you were playing" card afterwards (verified with a synthetic Stop hook mid-game).
   The PR #2 CI build installed silently (setup.exe /S, per-user, Start menu entry) and passed the same game test,
   then Defender quarantined it on relaunch (see Known risks). Island left stopped pending the owner's decision.
+- 2026-11-06 (session 4): daily-use pass. Found and fixed: the island took focus on start (also why it never
+  saw a maximized window in front), and the frontend missed state events sent before it loaded (now
+  `island_state` at start). Added drag-safe hover, tuck when idle, line behind maximized windows by default,
+  Do not disturb (`quiet.rs`), calmer defaults (hover 220 ms, no song pop-ups, softer glow), Settings →
+  General → Behaviour. Verified in `npx tauri dev`: focus stays with the user's window through a restart; line
+  over a maximized window; plain hover opens from the line; a press held over the island does not open it and
+  release does (test pressed only inside its own verified-foreground window: an earlier version of that test
+  pressed into the owner's browser because a background script cannot take focus, so never inject clicks
+  without checking what is under the cursor); Do not disturb holds a done event and shows it after; tuck after
+  20 s in the browser preview. Higgsfield: "Katana" is a claude.ai feature behind the Higgsfield MCP connector
+  (https://mcp.higgsfield.ai/mcp), not in the CLI; the video is planned as code-made motion of the real UI.

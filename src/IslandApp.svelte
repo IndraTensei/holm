@@ -23,7 +23,7 @@
   import { artColor } from './lib/artColor';
   import { motionFor } from './lib/motion';
   import { chime } from './lib/sound';
-  import type { Game, GameEnded, Live } from './lib/types';
+  import type { Game, GameEnded, IslandState, Live } from './lib/types';
 
   type Mode = 'compact' | 'peek' | 'approval' | 'drop' | 'expanded';
 
@@ -70,7 +70,19 @@
     return 'compact';
   });
 
-  const style = $derived(s.style === 'line' || (maximized && s.lineWhenMaximized) ? 'line' : s.style);
+  // Rest as a thin line after a while with nothing going on; anything live, a peek or the
+  // pointer brings the island back.
+  let tucked = $state(false);
+  $effect(() => {
+    if (!(s.tuckWhenIdle && live === 'idle' && mode === 'compact' && !hover)) {
+      tucked = false;
+      return;
+    }
+    const timer = setTimeout(() => (tucked = true), Math.max(3, s.tuckAfter) * 1000);
+    return () => clearTimeout(timer);
+  });
+
+  const style = $derived(s.style === 'line' || tucked || (maximized && s.lineWhenMaximized) ? 'line' : s.style);
   const lineNow = $derived(style === 'line' && mode === 'compact');
   const notch = $derived(style === 'notch');
 
@@ -139,14 +151,32 @@
     void focusWindow();
   }
 
-  // While a game is in front the island is hidden: agent news waits here, without chimes,
-  // and shows as one card when the player comes back.
+  // While a game is in front (the island is hidden) or Windows' Do not disturb is on, agent
+  // news waits here without chimes, and shows as one card afterwards.
   let inGame: Game | null = null;
+  let quiet = false;
+  let heldBy: 'game' | 'quiet' = 'game';
   let missed: { project: string; text: string }[] = [];
+
+  function holding(): boolean {
+    if (inGame) heldBy = 'game';
+    else if (quiet) heldBy = 'quiet';
+    return Boolean(inGame || quiet);
+  }
+
+  let dndOn = $state(false);
+  $effect(() => setQuiet(dndOn && s.respectDnd));
+
+  function setQuiet(on: boolean) {
+    quiet = on;
+    activity.quiet = quiet;
+    if (!quiet && !inGame) flushMissed();
+  }
 
   function flushMissed() {
     if (!missed.length) return;
-    const data = { items: missed.slice(-4), count: missed.length };
+    const title = heldBy === 'game' ? 'While you were playing' : 'While Do not disturb was on';
+    const data = { title, items: missed.slice(-4), count: missed.length };
     missed = [];
     // Let the play-time card have its moment first.
     if (activity.peek?.kind === 'gameover') setTimeout(() => activity.show('missed', data, 8000), 5000);
@@ -290,16 +320,16 @@
       await media.start();
       await agents.start({
         done: (d) => {
-          if (inGame) return void missed.push({ project: d.project, text: 'is done' });
+          if (holding()) return void missed.push({ project: d.project, text: 'is done' });
           activity.show('done', d as unknown as Record<string, unknown>, 7000);
           if (settings.v.agentSounds) chime('done');
         },
         approval: () => {
           if (expanded) page = 'agents';
-          if (settings.v.agentSounds) chime('ask');
+          if (settings.v.agentSounds && !quiet) chime('ask');
         },
         attention: (a) => {
-          if (inGame) return void missed.push({ project: a.project, text: 'needs you' });
+          if (holding()) return void missed.push({ project: a.project, text: 'needs you' });
           activity.show('attention', a, 6000);
           if (settings.v.agentSounds) chime('ask');
         },
@@ -323,6 +353,15 @@
       // Rust hides the window behind WebView2's back (games, full screen, tray): stop looping then.
       stops.push(await on<boolean>('island://shown', (v) => beat.pause(!v)));
       stops.push(await on<boolean>('island://hidden', (v) => (hidden = v)));
+      stops.push(await on<boolean>('island://quiet', (v) => (dndOn = v)));
+      dndOn = Boolean(await call<boolean>('quiet_get').catch(() => false));
+      // Changes are events; the state before this window finished loading is asked for once.
+      const state = await call<IslandState>('island_state').catch(() => null);
+      if (state) {
+        maximized = state.maximized;
+        hidden = state.hidden;
+        beat.pause(!state.shown);
+      }
       stops.push(
         await on<Game>('game://launch', (g) => {
           if (expanded && !pinned) close();
@@ -332,7 +371,7 @@
       stops.push(
         await on<Game | null>('game://active', (g) => {
           inGame = g && settings.v.smartHide ? g : null;
-          if (!inGame) flushMissed();
+          if (!inGame && !quiet) flushMissed();
         }),
       );
       stops.push(
@@ -386,7 +425,7 @@
     const game = q.get('game');
     if (game) setTimeout(() => activity.show('game', { name: game, exe: 'game.exe' }, 1e9), 300);
     if (q.get('missed'))
-      activity.show('missed', { items: [{ project: 'meetbot', text: 'is done' }, { project: 'tensei-island', text: 'needs you' }], count: 2 }, 1e9);
+      activity.show('missed', { title: 'While you were playing', items: [{ project: 'meetbot', text: 'is done' }, { project: 'tensei-island', text: 'needs you' }], count: 2 }, 1e9);
     if (q.get('ended')) activity.show('gameover', { name: 'Valorant', exe: 'valorant.exe', durationMs: 4_320_000 }, 1e9);
   }
 </script>
@@ -541,7 +580,7 @@
     border-top-right-radius: 0;
   }
   .island.music .halo {
-    opacity: 0.55;
+    opacity: 0.3;
   }
   .island.expanded .halo {
     opacity: 0;
