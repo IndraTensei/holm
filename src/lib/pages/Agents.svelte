@@ -110,11 +110,11 @@
       {#each system.quotas as p (p.provider)}
         {#if p.ok}
           {#each p.items.slice(0, 3) as q}
-            <div class="q">
+            <div class="q" class:stale={p.error} title={p.error ? `${p.error}. Last updated ${ago(p.fetchedAt, clock.now)}.` : undefined}>
               <Ring value={q.percent} size={26} stroke={3} />
               <div>
                 <div class="q-label">{p.provider === 'claude' ? 'Claude' : 'Codex'} {q.label.toLowerCase()}</div>
-                <div class="q-meta num">{Math.round(q.percent)}% used{#if q.resetsAt}, resets in {until(q.resetsAt, clock.now)}{/if}</div>
+                <div class="q-meta num">{Math.round(q.percent)}% used{#if p.error}, updated {ago(p.fetchedAt, clock.now)}{:else if q.resetsAt}, resets in {until(q.resetsAt, clock.now)}{/if}</div>
               </div>
             </div>
           {/each}
@@ -322,6 +322,9 @@
   .q-meta {
     font-size: var(--t-xs);
     color: var(--ink-3);
+  }
+  .q.stale {
+    opacity: 0.7;
   }
   .empty {
     padding: 18px 8px 10px;

@@ -1,16 +1,20 @@
 # Status and handoff
 
-Last updated: 2026-11-06 (first build session, Claude in a Linux sandbox).
+Last updated: 2026-11-06 (second session: first run on Windows 11, from the CI build).
 Read this first, then CLAUDE.md, then docs/ARCHITECTURE.md.
 
 ## Where things stand
 
-Version 0.1.0. All planned v0.1 features are written. Nothing has run on Windows yet: the sandbox had no
-Windows machine and could not download the .NET SDK or Rust's Windows std. Rust was type-checked and
-clippy-clean against `x86_64-pc-windows-msvc` (std built from source, see CLAUDE.md); the frontend
-type-checks, builds, and was reviewed in headless Chrome with mock data (`scripts/shots.py`).
+Version 0.1.0. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
+NSIS installer 1.9 MB, portable zip 2.3 MB). The CI build has run on a real Windows 11 desktop (1920×1080,
+100% scale) and the core paths work: placement, click-through, hover, shortcut, full-screen hide, Pear,
+Claude Code hooks, volume peek. 🧪 below means not yet seen on real Windows.
 
-**First job for whoever picks this up on Windows: `npm ci && npx tauri dev`, then walk the checklist below.**
+The dev PC has Node and WebView2 but no Rust or MSVC Build Tools (installing them needs admin), so builds
+come from CI: push a branch, `gh workflow run build.yml --ref <branch>`, `gh run download <id>`, run
+`TenseiIsland.exe` from the portable zip. The measuring method used this session is in the session log.
+
+**Open decision for the owner:** the default for Settings → General → Graphics (see Known risks).
 
 ## Feature checklist
 
@@ -18,23 +22,23 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 
 | Area | Feature | State |
 | --- | --- | --- |
-| Window | Transparent, top-centre, DPI-aware placement, multi-monitor choice | ✅ 🧪 |
-| Window | Click-through outside the island (cursor poll + `set_ignore_cursor_events`) | ✅ 🧪 highest risk |
-| Window | Hide during full screen, line style when maximized, keep on top | ✅ 🧪 |
-| Window | Tray menu, single instance, settings window, global shortcut (Ctrl+Alt+Space) | ✅ 🧪 |
+| Window | Transparent, top-centre, DPI-aware placement, multi-monitor choice | ✅ one monitor at 100%; multi-monitor and 125–150% 🧪 |
+| Window | Click-through outside the island (cursor poll + `set_ignore_cursor_events`) | ✅ flips in ~15 ms; clicks outside reach the app below |
+| Window | Hide during full screen, line style when maximized, keep on top | ✅ full-screen hide and return ~0.4 s, no focus stolen; line style 🧪 |
+| Window | Tray menu, single instance, settings window, global shortcut (Ctrl+Alt+Space) | ✅ shortcut opens with focus, closes and returns focus; tray 🧪 |
 | Window | Start with Windows (HKCU Run) | ✅ 🧪 |
 | Island | Notch / Pill / Line, spring morph, compact → peek → approval → drop → expanded | ✅ (browser) |
 | Island | Second live activity bubble | ✅ (browser) |
-| Music | Windows media sessions (Spotify, browsers, any SMTC app), art, timeline, controls | ✅ 🧪 |
-| Music | Pear Desktop API: auth, WebSocket, like/dislike, volume, shuffle, repeat, seek | ✅ 🧪 (needs Pear with API Server on) |
+| Music | Windows media sessions (Spotify, browsers, any SMTC app), art, timeline, controls | ✅ seen with Pear; Spotify and browsers 🧪 |
+| Music | Pear Desktop API: auth, WebSocket, like/dislike, volume, shuffle, repeat, seek | ✅ connected, live track shown; each control 🧪 |
 | Music | Synced lyrics (LRCLIB) with tap-to-seek, compact lyric line | ✅ (browser with sample lyrics) |
 | Music | Accent colour from album art | ✅ (browser) |
-| Music | Volume peek from Core Audio callback, system volume slider | ✅ 🧪 |
-| Agents | Claude Code HTTP hook server, sessions, activity log, completion peek + chime | ✅ 🧪 |
+| Music | Volume peek from Core Audio callback, system volume slider | ✅ peek verified; slider 🧪 |
+| Agents | Claude Code HTTP hook server, sessions, activity log, completion peek + chime | ✅ HTTP hooks accepted; session, live tool and log right; done peek 🧪 |
 | Agents | Allow / Deny permission requests from the island | ✅ 🧪 |
-| Agents | One-click hook install/uninstall in `~/.claude/settings.json` (backup kept) | ✅ 🧪 |
+| Agents | One-click hook install/uninstall in `~/.claude/settings.json` (backup kept) | ✅ install worked (12 events); uninstall 🧪 |
 | Agents | Codex live activity | ⬜ (quota only; see next steps) |
-| Usage | Claude 5-hour / weekly ring, Codex windows | ✅ 🧪 |
+| Usage | Claude 5-hour / weekly ring, Codex windows | ✅ Claude ring shown; last good numbers kept on 429 and cached across restarts; Codex 🧪 |
 | System | CPU, memory, network, battery with sparklines; charging peek | ✅ 🧪 |
 | System | GPU, temperatures, per-core | ⬜ |
 | Shelf | File drop onto the island, open, show in folder | ✅ 🧪 |
@@ -42,19 +46,22 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 | Shelf | Clipboard history (text, private copies skipped), quick note | ✅ 🧪 |
 | Widgets | Focus timer, weather (Open-Meteo + city search), Wi-Fi / Bluetooth toggles + SSID | ✅ 🧪 |
 | Look | 15 themes + custom theme editor, 13 bundled fonts, motion presets, size | ✅ (browser) |
-| Build | GitHub Actions: check, clippy, test, NSIS installer + portable zip, release on `v*` tag | ✅ (not run yet) |
+| Build | GitHub Actions: check, clippy, test, NSIS installer + portable zip, release on `v*` tag | ✅ green on main and branches (~20 min); `v*` release not run |
+| Perf | Looping decorations on a shared 8 fps beat; Graphics setting (hardware or software) | ✅ measured, see log |
 
 ## Next steps, in order
 
-1. **First run on Windows** (`npx tauri dev`). Check: island visible at top centre; hovering opens it; clicks
-   outside the island reach the apps below; it hides in a full-screen video; tray and Ctrl+Alt+Space work.
-2. Play Spotify or a YouTube tab: art, title, progress, controls, volume peek.
-3. Open Pear Desktop, turn on Plugins → API Server, click Connect Pear (Music page or Settings → Music).
-4. Settings → Agents → Connect Claude Code; start `claude` in a terminal; check activity, an Allow/Deny prompt
-   (e.g. ask it to run `npm install`), and the done peek. If HTTP hooks are not accepted by the installed
-   Claude Code, switch Hook type to curl and connect again.
-5. Push to GitHub (`IndraTensei/tensei-island`), let the workflow build, install the setup .exe on a clean user.
-6. Measure: idle CPU (target ≈0%), memory of the WebView2 processes (target under 120 MB total), installer size.
+1. Merge the `perf/stepped-loops` PR once CI is green; choose the Graphics default (hardware for now).
+2. Finish the 🧪 items by hand: tray menu, settings window, an Allow/Deny prompt (ask `claude` to run
+   `npm install` without bypass mode), the done peek and chime, Spotify and a YouTube tab, each Pear control,
+   line style with a maximized window, a second monitor, 125–150% scaling.
+3. Install the setup .exe for a clean user; check Start with Windows.
+4. Remaining always-on cost: ~3% of a core while an agent works (8 fps beat plus the 4 Hz clock). Next: tick
+   the agent's elapsed time at 1 Hz (it only shows seconds) and try 6 fps.
+5. Memory: ~185 MB (hardware) or ~120 MB (software) private across 7 WebView2 processes. Next ideas: shrink
+   the window to the island while compact (less to composite; risk of flicker on resize), and find out what
+   the second renderer is for.
+6. Local builds: install Rust (rustup) and VS Build Tools (C++ workload, needs admin) to use `npx tauri dev`.
 7. Then the ⬜ items: Codex live activity (tail `~/.codex/sessions/**/rollout-*.jsonl`, or Codex `notify`),
    drag-out from the shelf (`tauri-plugin-drag`), GPU/temperature readings (PDH counters), Windows toast for
    agent completion when the island is hidden, Bluetooth device name, calendar (ICS) on Home, self-update
@@ -62,16 +69,21 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 
 ## Known risks and things to watch
 
-- **Click-through.** `set_ignore_cursor_events` toggles `WS_EX_TRANSPARENT`; if WebView2 still eats clicks in
-  transparent areas, fall back to resizing the window to the island's rectangle (shape anchored top centre).
+- **Click-through** works as built. While the cursor is on the island the whole 760×560 window takes clicks;
+  it gives them back within ~15 ms of leaving the island's rectangle.
+- **Animations are expensive here.** Every animation frame makes WebView2 recomposite the whole transparent
+  window. No `infinite` CSS animations or long transitions on the resting island: use the `beat` store.
+- **Graphics default (owner's call).** Software compositing saves ~65 MB and was no worse at rest, but costs
+  ~40% more CPU per open/close and may look less smooth. Hardware stays the default until someone decides.
 - **Show without focus.** Full-screen hide uses `ShowWindow(SW_HIDE / SW_SHOWNOACTIVATE)` directly on the HWND,
   outside tao's state tracking. If tao re-shows or re-hides the window unexpectedly, route through
   `window.hide()/show()` and re-check focus stealing.
-- **Hook field names.** Parsing is tolerant, but `notification_type`, `last_assistant_message` and the
-  `PermissionRequest` input were taken from the docs and not seen live. Check one real payload (`island.log`
+- **Hook field names.** `UserPromptSubmit` and `PreToolUse` parse correctly from live Claude Code. Not seen live
+  yet: `notification_type`, `last_assistant_message` and the `PermissionRequest` input. Check one real payload (`island.log`
   sits next to settings.json in `%APPDATA%\in.tenseitech.island`).
 - **Windows 11 24H2 Wi-Fi name** needs location access for desktop apps; without it the chip says "Wi-Fi".
-- **Claude usage endpoint** is not a public API; it can change. Errors show in the Agents page instead of numbers.
+- **Claude usage endpoint** is not a public API and rate-limits hard (five restarts in a few minutes got a 429).
+  Readings are now cached in data.json and kept through failures; repeated 429s back off up to an hour.
 - **Pear on another PC.** The CSP allows `127.0.0.1` and `localhost` only; a LAN host needs a CSP entry.
 - Hook token and Pear token live in `settings.json` in the user's AppData (plain text, local only).
 - No licence chosen yet (owner's decision). Third-party notices are in NOTICE.
@@ -84,3 +96,14 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   20 UI states + 4 settings pages screenshotted and reviewed (fixed lyric scroll, volume overflow, idle ring
   reading as a spinner, log/prompt styling clash). Lyrics and weather go through a Rust `fetch_json` command
   with a host allowlist so CORS cannot break them; first window reveal goes through Tauri's `show()`.
+- 2026-11-06 (session 2, Windows 11 desktop): the CI run on main was already green, so the portable build was
+  run directly. Checked with Win32 probes (PowerShell with user32 through Add-Type, screenshots cropped to the
+  island): placement, click-through timing, hover open, Ctrl+Alt+Space with focus hand-back, full-screen hide
+  and return, volume peek, Pear live track, Claude Code HTTP hooks (installed earlier by the owner) feeding the
+  Agents page. Found 13–29% of a core at rest with music playing and an agent working: WebView2's GPU process
+  recompositing the transparent window for infinite CSS animations. Added the shared 8 fps `beat` store
+  (equalizer, agent spinner and pulse), a one-shot marquee, and a paused beat while hidden. Measured on the CI
+  build with a synthetic `UserPromptSubmit` hook (session `perf-probe`) keeping the spinner on: 11–21% down to
+  ~3%. Tried WebView2 flags through `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`: `--disable-gpu` gave 120 MB vs
+  185 MB, so added Settings → General → Graphics (Rust applies it before start-up). Quotas: last good numbers
+  kept on failure, cached across restarts, 429 back-off. Branch `perf/stepped-loops`.
