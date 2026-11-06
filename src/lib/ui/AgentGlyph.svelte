@@ -40,7 +40,9 @@
 </span>
 
 <style>
+  /* Its own compositing layer: each beat repaints these pixels, not the whole island. */
   .glyph {
+    will-change: transform;
     position: relative;
     flex: none;
     display: grid;

@@ -15,7 +15,7 @@
   let copied = $state(false);
   let hooks = $state<HookStatus | null>(null);
 
-  $effect(() => (agents.working.length ? clock.fast() : undefined));
+  $effect(() => (agents.working.length ? clock.second() : undefined));
   // Other AI tools the owner chose to see (Settings → AI tools): what each did today.
   $effect(() => tools.use());
   const quotas = $derived(system.quotas.filter((q) => shown(q.provider)));
