@@ -62,7 +62,7 @@
           {:else}<CloudLightning size={18} />{/if}
         </span>
         <span class="w-temp num">{Math.round(w.temp)}°</span>
-        <span class="w-text">{wd.label}{#if w.city} in {w.city}{/if}<br /><span class="num">{Math.round(w.high)}° / {Math.round(w.low)}°</span></span>
+        <span class="w-text">{wd.label}{w.city ? ` in ${w.city}` : ''}<br /><span class="num">{Math.round(w.high)}° / {Math.round(w.low)}°</span></span>
       </div>
     {/if}
 
@@ -146,7 +146,8 @@
 <style>
   .home {
     display: grid;
-    grid-template-columns: 1fr 1.15fr;
+    /* minmax(0, …): a long title or command ellipsizes instead of widening the column. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
     gap: 22px;
     padding: 4px 4px 2px;
   }
@@ -234,6 +235,7 @@
     color: var(--warn);
   }
   .right {
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
