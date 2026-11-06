@@ -174,3 +174,13 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   OpenCode, Antigravity, Copilot CLI and Cline; first scan 3.9 s in a debug build (Claude logs read in full
   once), 51 ms after. (4) No AI attribution in commits or PRs from now on (owner's call); PR descriptions
   cleaned.
+- 2026-11-06 (session 4, later): two owner reports. (1) The island opened with the pointer well below it
+  (scrolling in T3 Code): closing could leave Rust holding the open island's hover area (measured mid
+  animation, transitionend missing). Fixed: measure again once settled, and hover-open needs the pointer
+  over the island itself. Verified with pointer moves over a maximized window: no hover at 60 to 250 px.
+  (2) Usage was 38 min stale (the usage service answered 429 for a while; it is shared with Claude Code).
+  Now Claude Code's own copy (`~/.claude.json` cachedUsageUtilization) and Codex's session logs are read
+  every minute (default `quotaMinutes` 1), and a service is asked only when the newest reading is over
+  15 min old, at most every 5 min, with per-provider backoff. Verified: Claude reading follows Claude Code's
+  copy. Also: vite ignores src-tauri/target (a release build next to tauri dev reloaded every window,
+  leaving the settings window blank), Codex window labels ("Monthly", not "43200-minute").

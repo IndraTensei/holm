@@ -117,11 +117,12 @@
   {/if}
 
   <h3>Checking</h3>
-  <Field label="Plan limits every" hint="Claude Code and Codex limits come from their usage service, with the sign-ins they keep on this PC.">
+  <Field label="Plan limits every" hint="Read from the copy Claude Code and Codex keep on this PC, so checking often costs nothing. Their usage service is asked only when that copy is over 15 minutes old, at most every 5 minutes.">
     <Choice
       label="Plan limits every"
       value={s.quotaMinutes}
       options={[
+        { value: 1, label: '1 min' },
         { value: 2, label: '2 min' },
         { value: 5, label: '5 min' },
         { value: 15, label: '15 min' },
