@@ -127,7 +127,33 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
+/// WebView2 reads its browser flags once, when it starts, so the graphics setting is applied here,
+/// before any window exists. Software compositing measured ~120 MB private memory against ~185 MB
+/// with the GPU process, at a small CPU cost while the island morphs. A flag set by the user in
+/// the environment wins.
+fn apply_graphics_setting() {
+    const VAR: &str = "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS";
+    if std::env::var_os(VAR).is_some() {
+        return;
+    }
+    let Some(appdata) = std::env::var_os("APPDATA") else {
+        return;
+    };
+    // Same folder as Config (app_config_dir = %APPDATA%\<identifier>).
+    let path = std::path::PathBuf::from(appdata)
+        .join("in.tenseitech.island")
+        .join("settings.json");
+    if util::read_json(&path).get("graphics").and_then(Value::as_str) == Some("software") {
+        // Keep Tauri's own defaults: this variable replaces them.
+        std::env::set_var(
+            VAR,
+            "--disable-gpu --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection",
+        );
+    }
+}
+
 pub fn run() {
+    apply_graphics_setting();
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             // Starting the app again opens its settings instead of a second island.

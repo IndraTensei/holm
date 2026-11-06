@@ -15,6 +15,8 @@ export interface Settings {
   hideInFullscreen: boolean;
   lineWhenMaximized: boolean;
   autostart: boolean;
+  /** WebView2 compositing. 'software' uses ~60 MB less memory; read by Rust at start-up. */
+  graphics: 'gpu' | 'software';
   hotkey: string;
   pages: PageId[];
   // Look
@@ -74,6 +76,7 @@ export const DEFAULTS: Settings = {
   hideInFullscreen: true,
   lineWhenMaximized: false,
   autostart: false,
+  graphics: 'gpu',
   hotkey: 'Ctrl+Alt+Space',
   pages: ['home', 'music', 'agents', 'system', 'shelf', 'focus'],
   theme: 'obsidian',
