@@ -9,7 +9,7 @@
 
 use std::{
     sync::{
-        atomic::{AtomicBool, AtomicIsize, Ordering},
+        atomic::{AtomicBool, AtomicI64, AtomicIsize, Ordering},
         Arc, Mutex,
     },
     thread,
@@ -38,7 +38,10 @@ use windows::Win32::{
 };
 use windows_core::BOOL;
 
-use crate::{config::Config, util::Hwnd};
+use crate::{config::Config, games, util, util::Hwnd};
+
+/// How long the island stays up over a game for its intro before stepping aside.
+const INTRO_MS: i64 = 4600;
 
 pub const WIN_W: f64 = 760.0;
 pub const WIN_H: f64 = 560.0;
@@ -62,6 +65,14 @@ pub struct Island {
     user_hidden: AtomicBool,
     maximized: AtomicBool,
     previous_foreground: AtomicIsize,
+    /// A game is in front and smart hide is on.
+    game_hidden: AtomicBool,
+    /// Brought back with the shortcut: shown over full screen and games until closed.
+    summoned: AtomicBool,
+    /// Unix ms until which a game intro keeps the island up.
+    intro_until: AtomicI64,
+    /// What the window last was, so ShowWindow runs only on a change.
+    shown: AtomicBool,
 }
 
 #[derive(Serialize, Clone)]
@@ -140,6 +151,10 @@ impl Island {
             user_hidden: AtomicBool::new(false),
             maximized: AtomicBool::new(false),
             previous_foreground: AtomicIsize::new(0),
+            game_hidden: AtomicBool::new(false),
+            summoned: AtomicBool::new(false),
+            intro_until: AtomicI64::new(0),
+            shown: AtomicBool::new(true),
         })
     }
 
@@ -205,11 +220,25 @@ impl Island {
     }
 
     fn visible(&self) -> bool {
-        !self.fullscreen_hidden.load(Ordering::Relaxed) && !self.user_hidden.load(Ordering::Relaxed)
+        if self.summoned.load(Ordering::Relaxed) {
+            return true;
+        }
+        if self.user_hidden.load(Ordering::Relaxed) {
+            return false;
+        }
+        let stepping_aside = self.fullscreen_hidden.load(Ordering::Relaxed)
+            || self.game_hidden.load(Ordering::Relaxed);
+        !stepping_aside || util::now_ms() < self.intro_until.load(Ordering::Relaxed)
     }
 
-    fn apply_visibility(&self) {
-        self.show(self.visible());
+    /// Shows or hides the window when what it should be differs from what it is, and tells the
+    /// frontend (which stops its loops while hidden).
+    fn refresh(&self, app: &AppHandle) {
+        let want = self.visible();
+        if want != self.shown.swap(want, Ordering::Relaxed) {
+            self.show(want);
+            let _ = app.emit("island://shown", want);
+        }
     }
 
     /// A window filling our monitor (borderless full screen, a game, a presentation).
@@ -294,6 +323,9 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
             let mut inside = false;
             let mut elapsed: u64 = 0;
             let mut near = false;
+            let mut tracker = games::Tracker::default();
+            let mut last_game: Option<games::Game> = None;
+            let mut last_foreground: isize = 0;
             loop {
                 let step = if near || inside { 16 } else { 40 };
                 thread::sleep(Duration::from_millis(step));
@@ -333,16 +365,52 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
                     }
                 }
 
-                if elapsed % 1000 < step {
+                // Games: checked the moment the front window changes (GetForegroundWindow is
+                // nearly free), and once a second to notice games that exit. Before the full
+                // screen check, so an intro starts before full screen could hide the island.
+                let second = elapsed % 1000 < step;
+                let foreground = unsafe { GetForegroundWindow() };
+                if second || foreground.0 as isize != last_foreground {
+                    last_foreground = foreground.0 as isize;
+                    let config = app.state::<Config>();
+                    let (game, changes) =
+                        tracker.tick(foreground, island.hwnd.get(), geometry.monitor, || {
+                            custom_games(&config)
+                        });
+                    for change in changes {
+                        match change {
+                            games::Change::Launched(g) => {
+                                if config.bool("gameIntro", true)
+                                    && !island.user_hidden.load(Ordering::Relaxed)
+                                {
+                                    island
+                                        .intro_until
+                                        .store(util::now_ms() + INTRO_MS, Ordering::Relaxed);
+                                    let _ = app.emit("game://launch", &g);
+                                }
+                            }
+                            games::Change::Ended(e) => {
+                                let _ = app.emit("game://ended", &e);
+                            }
+                        }
+                    }
+                    let hide = config.bool("smartHide", true) && game.is_some();
+                    island.game_hidden.store(hide, Ordering::Relaxed);
+                    if game != last_game {
+                        let _ = app.emit("game://active", &game);
+                        last_game = game;
+                    }
+                }
+
+                if second {
                     let config = app.state::<Config>();
                     if config.bool("hideInFullscreen", true) {
                         let full = island.fullscreen_app_running(&geometry);
                         if full != island.fullscreen_hidden.swap(full, Ordering::Relaxed) {
-                            island.apply_visibility();
                             let _ = app.emit("island://fullscreen", full);
                         }
-                    } else if island.fullscreen_hidden.swap(false, Ordering::Relaxed) {
-                        island.apply_visibility();
+                    } else {
+                        island.fullscreen_hidden.store(false, Ordering::Relaxed);
                     }
                     let maximized = island.foreground_maximized(&geometry);
                     if maximized != island.maximized.swap(maximized, Ordering::Relaxed) {
@@ -358,6 +426,8 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
                         island.keep_on_top();
                     }
                 }
+                // Cheap (a few atomics) and catches the end of a game intro on time.
+                island.refresh(&app);
             }
         })
         .expect("island poll thread");
@@ -366,7 +436,7 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
 pub fn set_user_hidden(app: &AppHandle, hidden: bool) {
     if let Some(island) = app.try_state::<Arc<Island>>() {
         island.user_hidden.store(hidden, Ordering::Relaxed);
-        island.apply_visibility();
+        island.refresh(app);
         let _ = app.emit("island://hidden", hidden);
     }
 }
@@ -408,7 +478,47 @@ pub fn island_release_focus(island: State<'_, Arc<Island>>) {
 
 #[tauri::command]
 pub fn island_set_hidden(app: AppHandle, hidden: bool) {
-    set_user_hidden(&app, hidden);
+    crate::set_hidden(&app, hidden);
+}
+
+/// The open shortcut: bring the island back over anything (a game, full screen, hidden) until
+/// it closes again (`on = false`).
+#[tauri::command]
+pub fn island_summon(app: AppHandle, on: bool) {
+    let Some(island) = app.try_state::<Arc<Island>>() else {
+        return;
+    };
+    if on {
+        let foreground = unsafe { GetForegroundWindow() };
+        if foreground != island.hwnd.get() {
+            island
+                .previous_foreground
+                .store(foreground.0 as isize, Ordering::Relaxed);
+        }
+        if island.user_hidden.load(Ordering::Relaxed) {
+            crate::set_hidden(&app, false);
+        }
+    }
+    island.summoned.store(on, Ordering::Relaxed);
+    island.refresh(&app);
+}
+
+/// Games the user added in settings: `customGames: [{ exe, name }]`.
+fn custom_games(config: &Config) -> Vec<(String, String)> {
+    config
+        .snapshot()
+        .get("customGames")
+        .and_then(serde_json::Value::as_array)
+        .map(|list| {
+            list.iter()
+                .filter_map(|g| {
+                    let exe = g.get("exe")?.as_str()?.to_string();
+                    let name = g.get("name").and_then(|n| n.as_str()).unwrap_or("");
+                    Some((exe, name.to_string()))
+                })
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 #[tauri::command]

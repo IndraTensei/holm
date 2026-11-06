@@ -64,17 +64,22 @@ export async function onFileDrop(handler: (e: DropEvent) => void): Promise<Unlis
   });
 }
 
-export async function registerHotkey(accelerator: string, handler: () => void): Promise<boolean> {
-  if (!inTauri || !accelerator) return false;
+/** Replaces every global shortcut with these. Returns the accelerators that could not be taken. */
+export async function registerHotkeys(list: { accelerator: string; handler: () => void }[]): Promise<string[]> {
+  if (!inTauri) return [];
   const shortcut = await import('@tauri-apps/plugin-global-shortcut');
-  try {
-    await shortcut.unregisterAll();
-    await shortcut.register(accelerator, (e) => {
-      if (e.state === 'Pressed') handler();
-    });
-    return true;
-  } catch (err) {
-    console.warn('[island] hotkey', accelerator, err);
-    return false;
+  await shortcut.unregisterAll().catch(() => {});
+  const failed: string[] = [];
+  for (const { accelerator, handler } of list) {
+    if (!accelerator) continue;
+    try {
+      await shortcut.register(accelerator, (e) => {
+        if (e.state === 'Pressed') handler();
+      });
+    } catch (err) {
+      console.warn('[island] hotkey', accelerator, err);
+      failed.push(accelerator);
+    }
   }
+  return failed;
 }

@@ -11,6 +11,7 @@ compile_error!("Tensei Island targets Windows 10/11 only.");
 mod agents;
 mod clipboard;
 mod config;
+mod games;
 mod island;
 mod media;
 mod net;
@@ -72,7 +73,11 @@ pub fn on_settings_changed(app: &AppHandle, patch: &Value) {
 }
 
 fn toggle_hidden(app: &AppHandle) {
-    let hidden = !island::user_hidden(app);
+    set_hidden(app, !island::user_hidden(app));
+}
+
+/// Hides or shows the island on request (tray, hide shortcut) and keeps the tray label in step.
+pub fn set_hidden(app: &AppHandle, hidden: bool) {
     island::set_user_hidden(app, hidden);
     if let Some(items) = app.try_state::<Mutex<TrayItems>>() {
         if let Ok(items) = items.lock() {
@@ -143,7 +148,11 @@ fn apply_graphics_setting() {
     let path = std::path::PathBuf::from(appdata)
         .join("in.tenseitech.island")
         .join("settings.json");
-    if util::read_json(&path).get("graphics").and_then(Value::as_str) == Some("software") {
+    if util::read_json(&path)
+        .get("graphics")
+        .and_then(Value::as_str)
+        == Some("software")
+    {
         // Keep Tauri's own defaults: this variable replaces them.
         std::env::set_var(
             VAR,
@@ -181,6 +190,7 @@ pub fn run() {
             island::island_set_rect,
             island::island_release_focus,
             island::island_set_hidden,
+            island::island_summon,
             island::monitors_list,
             island::open_settings,
             media::media_control,

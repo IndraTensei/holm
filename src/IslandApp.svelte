@@ -18,12 +18,12 @@
   import { focus, shelf, note, weather } from './lib/stores/widgets.svelte';
   import { clock } from './lib/stores/clock.svelte';
   import { beat } from './lib/stores/beat.svelte';
-  import { inTauri, on, send, focusWindow, onFileDrop, registerHotkey } from './lib/bridge';
+  import { inTauri, on, send, call, focusWindow, onFileDrop, registerHotkeys } from './lib/bridge';
   import { findTheme, themeVars, applyVars, accentFromArt } from './lib/themes';
   import { artColor } from './lib/artColor';
   import { motionFor } from './lib/motion';
   import { chime } from './lib/sound';
-  import type { Live } from './lib/types';
+  import type { Game, GameEnded, Live } from './lib/types';
 
   type Mode = 'compact' | 'peek' | 'approval' | 'drop' | 'expanded';
 
@@ -118,18 +118,30 @@
     activity.dismiss();
   }
 
+  // Brought back with the shortcut over a game, full screen or a hidden island.
+  let summoned = false;
+
   function close() {
     expanded = false;
     pinned = false;
     if (inTauri && document.hasFocus()) send('island_release_focus');
+    if (summoned) {
+      summoned = false;
+      send('island_summon', { on: false });
+    }
   }
 
-  function toggle() {
-    if (expanded) close();
-    else {
-      open('hotkey');
-      void focusWindow();
-    }
+  async function toggle() {
+    if (expanded) return close();
+    summoned = true;
+    await call('island_summon', { on: true }).catch(() => {});
+    open('hotkey');
+    void focusWindow();
+  }
+
+  let hidden = false;
+  function toggleHidden() {
+    send('island_set_hidden', { hidden: !hidden });
   }
 
   let enterTimer: ReturnType<typeof setTimeout> | undefined;
@@ -248,8 +260,11 @@
   });
 
   $effect(() => {
-    const hk = s.hotkey;
-    if (settings.ready) void registerHotkey(hk, toggle);
+    const list = [
+      { accelerator: s.hotkey, handler: () => void toggle() },
+      { accelerator: s.hideHotkey, handler: toggleHidden },
+    ];
+    if (settings.ready) void registerHotkeys(list);
   });
 
   // ------------------------------------------------------------ start
@@ -289,11 +304,21 @@
         chime('timer');
       };
       stops.push(await on<boolean>('island://hover', setHover));
-      // The window can be hidden behind WebView2's back (full screen, tray): stop looping then.
-      let fullscreen = false;
-      let hidden = false;
-      stops.push(await on<boolean>('island://fullscreen', (v) => beat.pause((fullscreen = v) || hidden)));
-      stops.push(await on<boolean>('island://hidden', (v) => beat.pause(fullscreen || (hidden = v))));
+      // Rust hides the window behind WebView2's back (games, full screen, tray): stop looping then.
+      stops.push(await on<boolean>('island://shown', (v) => beat.pause(!v)));
+      stops.push(await on<boolean>('island://hidden', (v) => (hidden = v)));
+      stops.push(
+        await on<Game>('game://launch', (g) => {
+          if (expanded && !pinned) close();
+          activity.show('game', { ...g }, 4200);
+        }),
+      );
+      stops.push(
+        await on<GameEnded>('game://ended', (e) => {
+          // Short visits (a crash at start, a quick look) are not worth a recap.
+          if (settings.v.gameRecap && e.durationMs >= 60_000) activity.show('gameover', { ...e }, 5000);
+        }),
+      );
       stops.push(await on('island://toggle', toggle));
       stops.push(await on<boolean>('island://maximized', (v) => (maximized = v)));
       stops.push(await on('island://placed', () => ((lastRect = ''), reportRect())));
@@ -336,6 +361,9 @@
     if (peek === 'charging') activity.show('charging', { percent: 78 }, 1e9);
     if (q.get('drop')) dropping = true;
     if (q.get('timer')) focus.start('focus', 25);
+    const game = q.get('game');
+    if (game) setTimeout(() => activity.show('game', { name: game, exe: 'game.exe' }, 1e9), 300);
+    if (q.get('ended')) activity.show('gameover', { name: 'Valorant', exe: 'valorant.exe', durationMs: 4_320_000 }, 1e9);
   }
 </script>
 

@@ -18,6 +18,17 @@ export interface Settings {
   /** WebView2 compositing. 'software' uses ~60 MB less memory; read by Rust at start-up. */
   graphics: 'gpu' | 'software';
   hotkey: string;
+  /** Hides the island, and shows it again. */
+  hideHotkey: string;
+  // Games
+  /** "Opening Valorant" when a game comes to the front. */
+  gameIntro: boolean;
+  /** Step aside while a game is in front, even windowed. Read by Rust. */
+  smartHide: boolean;
+  /** Games that are not recognised on their own. Read by Rust. */
+  customGames: { exe: string; name: string }[];
+  /** Say how long you played when a game closes. */
+  gameRecap: boolean;
   pages: PageId[];
   // Look
   theme: string;
@@ -78,6 +89,11 @@ export const DEFAULTS: Settings = {
   autostart: false,
   graphics: 'gpu',
   hotkey: 'Ctrl+Alt+Space',
+  hideHotkey: 'Ctrl+Alt+H',
+  gameIntro: true,
+  smartHide: true,
+  customGames: [],
+  gameRecap: true,
   pages: ['home', 'music', 'agents', 'system', 'shelf', 'focus'],
   theme: 'obsidian',
   customThemes: [],

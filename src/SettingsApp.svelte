@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { SlidersHorizontal, Palette, Music2, Bot, LayoutGrid, Info } from '@lucide/svelte';
+  import { SlidersHorizontal, Palette, Music2, Bot, Gamepad2, LayoutGrid, Info } from '@lucide/svelte';
   import GeneralSection from './lib/settings/GeneralSection.svelte';
   import LookSection from './lib/settings/LookSection.svelte';
   import MusicSection from './lib/settings/MusicSection.svelte';
   import AgentsSection from './lib/settings/AgentsSection.svelte';
+  import GamesSection from './lib/settings/GamesSection.svelte';
   import WidgetsSection from './lib/settings/WidgetsSection.svelte';
   import AboutSection from './lib/settings/AboutSection.svelte';
   import { settings } from './lib/stores/settings.svelte';
@@ -17,6 +18,7 @@
     { id: 'look', label: 'Look', icon: Palette },
     { id: 'music', label: 'Music', icon: Music2 },
     { id: 'agents', label: 'Agents', icon: Bot },
+    { id: 'games', label: 'Games', icon: Gamepad2 },
     { id: 'widgets', label: 'Shelf and widgets', icon: LayoutGrid },
     { id: 'about', label: 'About', icon: Info },
   ] as const;
@@ -62,6 +64,7 @@
         {:else if current === 'look'}<LookSection />
         {:else if current === 'music'}<MusicSection />
         {:else if current === 'agents'}<AgentsSection />
+        {:else if current === 'games'}<GamesSection />
         {:else if current === 'widgets'}<WidgetsSection />
         {:else}<AboutSection />{/if}
       </div>
