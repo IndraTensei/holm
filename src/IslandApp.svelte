@@ -205,6 +205,21 @@
     send('island_set_hidden', { hidden: !hidden });
   }
 
+  // Where the pointer last moved inside this window. Opening on hover needs it over the island
+  // itself (or the gap above it, or the top edge over a line), not merely inside the hover area.
+  let pointer: { x: number; y: number } | null = null;
+
+  function overIsland(): boolean {
+    if (!pointer || !islandEl) return false;
+    if (edgeOnly) return pointer.y <= 6;
+    const pad = 6;
+    return [islandEl, bubbleEl].some((el) => {
+      if (!el) return false;
+      const r = el.getBoundingClientRect();
+      return pointer!.x >= r.left - pad && pointer!.x <= r.right + pad && pointer!.y <= r.bottom + pad;
+    });
+  }
+
   let enterTimer: ReturnType<typeof setTimeout> | undefined;
   let leaveTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -213,7 +228,17 @@
     clearTimeout(enterTimer);
     clearTimeout(leaveTimer);
     if (next) {
-      if (!expanded && s.openOn === 'hover' && mode !== 'approval') enterTimer = setTimeout(() => hover && open('hover'), s.hoverDelay);
+      if (!expanded && s.openOn === 'hover' && mode !== 'approval')
+        enterTimer = setTimeout(() => {
+          if (!hover) return;
+          if (overIsland()) open('hover');
+          else {
+            // The hover area Rust holds is bigger than the island (measured mid-animation, say):
+            // do not open, and send the real one again.
+            lastRect = '';
+            reportRect();
+          }
+        }, s.hoverDelay);
     } else if (expanded && !pinned) {
       leaveTimer = setTimeout(() => {
         const typing = document.activeElement instanceof HTMLTextAreaElement || document.activeElement instanceof HTMLInputElement;
@@ -294,6 +319,11 @@
     style;
     edgeOnly;
     void tick().then(reportRect);
+    // Measured at once the island may still be mid-animation (an open island shrinking back), and
+    // transitionend does not always come (an interrupted transition): measure again once settled,
+    // or a stale, bigger hover area opens the island with the pointer well below it.
+    const settled = setTimeout(reportRect, motion.duration + 80);
+    return () => clearTimeout(settled);
   });
 
   // ------------------------------------------------------------ theme
@@ -464,7 +494,7 @@
   }
 </script>
 
-<svelte:window onpointerdown={() => expanded && fit.used()} onwheel={() => expanded && fit.used()} onkeydown={() => expanded && fit.used()} />
+<svelte:window onpointermove={(e) => (pointer = { x: e.clientX, y: e.clientY })} onpointerdown={() => expanded && fit.used()} onwheel={() => expanded && fit.used()} onkeydown={() => expanded && fit.used()} />
 
 <div
   class="stage"
