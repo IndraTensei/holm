@@ -2,7 +2,7 @@
 // a track changed, the volume moved) and settles back. Higher priority wins; equal priority
 // replaces. Approvals are not peeks: they stay until answered (see IslandApp).
 
-export type PeekKind = 'done' | 'attention' | 'track' | 'volume' | 'charging' | 'timer' | 'shelf' | 'pear' | 'game' | 'gameover';
+export type PeekKind = 'done' | 'attention' | 'track' | 'volume' | 'charging' | 'timer' | 'shelf' | 'pear' | 'game' | 'gameover' | 'missed';
 
 export interface Peek {
   id: number;
@@ -15,6 +15,7 @@ export interface Peek {
 const PRIORITY: Record<PeekKind, number> = {
   game: 100,
   attention: 90,
+  missed: 85,
   gameover: 75,
   done: 80,
   timer: 70,

@@ -16,7 +16,7 @@ cargo test --manifest-path src-tauri/Cargo.toml --lib
 ```
 
 Browser preview scenes (mock data, `src/lib/mock.ts`): `?open=music|agents|home|system|shelf|focus`,
-`?peek=done|track|volume|charging`, `?approval=1`, `?drop=1`, `?timer=1`, `?game=<name>`, `?ended=1`, `?theme=<id>`, `?style=notch|pill|line`,
+`?peek=done|track|volume|charging`, `?approval=1`, `?drop=1`, `?timer=1`, `?game=<name>`, `?ended=1`, `?missed=1`, `?theme=<id>`, `?style=notch|pill|line`,
 `?music=off`, `?agents=off`, `?title=lyrics`, `#settings&section=look`, `?section=games#settings`. `python3 scripts/shots.py` screenshots them
 (needs `npx vite preview --port 4173` and Playwright).
 

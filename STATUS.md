@@ -54,6 +54,7 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 | Games | Intro ("Opening Grand Theft Auto V") with the open/hide keys, then smart hide while in front | ✅ verified with stand-in games; real games 🧪 |
 | Games | Recognition: known exes, store library folders, user list (Settings → Games); title fallback | ✅ known and custom verified; store folders and anti-cheat fallback 🧪 |
 | Games | Open shortcut summons the island over a game; hide shortcut (Ctrl+Alt+H); play time on quit | ✅ verified |
+| Games | Agent news while playing is held (no chime) and shown as "While you were playing" after | ✅ verified |
 
 ## Next steps, in order
 
@@ -122,4 +123,5 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   and verified end to end in `npx tauri dev` with stand-in games: copies of powershell.exe named `GTA5.exe` (full
   screen, 70 s) and `questy.exe` (custom list, windowed, 16 s) running a WinForms window. Intro within ~1.7 s of
   launch, hidden after it, summon/close hands focus back to the game, back on quit, play-time card only for the
-  70 s run, Ctrl+Alt+H hides and shows.
+  70 s run, Ctrl+Alt+H hides and shows. Agent done/attention news during a game is held without a chime and
+  shown as one "While you were playing" card afterwards (verified with a synthetic Stop hook mid-game).
