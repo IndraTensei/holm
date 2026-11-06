@@ -216,6 +216,8 @@ export async function call<T>(cmd: string, args?: Record<string, unknown>): Prom
         return [{ index: 0, name: '\\\\.\\DISPLAY1', primary: true, width: 2560, height: 1440, scale: 1.25 }];
       case 'autostart_get':
         return false;
+      case 'island_cursor':
+        return null;
       case 'island_state':
         return { maximized: false, app: '', hidden: false, shown: true };
       case 'app_volume_get':

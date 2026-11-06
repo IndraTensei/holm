@@ -516,6 +516,21 @@ pub fn reposition(app: &AppHandle) {
     }
 }
 
+/// The pointer in the island window's CSS pixels. The page cannot always know: a flick to the
+/// screen edge can stop before the window stops being click-through, so no move reaches it.
+#[tauri::command]
+pub fn island_cursor(island: State<'_, Arc<Island>>) -> Option<(f64, f64)> {
+    let geometry = *island.geometry.lock().ok()?;
+    let mut point = POINT::default();
+    unsafe { GetCursorPos(&mut point).ok()? };
+    (geometry.scale > 0.0).then(|| {
+        (
+            (point.x - geometry.x) as f64 / geometry.scale,
+            (point.y - geometry.y) as f64 / geometry.scale,
+        )
+    })
+}
+
 #[tauri::command]
 pub fn island_set_rect(island: State<'_, Arc<Island>>, x: f64, y: f64, width: f64, height: f64) {
     if x.is_finite() && y.is_finite() && width.is_finite() && height.is_finite() {
@@ -632,7 +647,9 @@ pub fn monitors_list() -> Vec<MonitorInfo> {
         .collect()
 }
 
+/// Async on purpose: creating a WebView2 window from a synchronous command (run on the main
+/// thread) can stall the new webview's setup on Windows, leaving a blank white window.
 #[tauri::command]
-pub fn open_settings(app: AppHandle) -> Result<(), String> {
+pub async fn open_settings(app: AppHandle) -> Result<(), String> {
     crate::open_settings_window(&app).map_err(|e| e.to_string())
 }

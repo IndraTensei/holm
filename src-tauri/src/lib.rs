@@ -203,6 +203,7 @@ pub fn run() {
             island::island_set_hidden,
             island::island_summon,
             island::island_state,
+            island::island_cursor,
             island::monitors_list,
             island::open_settings,
             media::media_control,

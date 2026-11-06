@@ -201,3 +201,9 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   WebView2 flags (no spare renderer, no background networking or component updates, one renderer for both
   windows): 116 MB private at rest (was 259), 156 MB with settings open; settings verified to render. Also
   Home: long titles ellipsize (grid columns could not shrink), usage rings one line each, "Clear in" spacing.
+- 2026-11-06 (session 4, later): the settings window opened blank white from the island's gear (also earlier
+  today, wrongly put down to a vite reload): `open_settings` was a synchronous command, and creating a
+  WebView2 window from one stalls the new webview's setup. Now async. Also the hover guard from the
+  pop-open fix could refuse a flick to the top edge (the page saw no pointer move before the click-through
+  flip): the page now asks Rust for the real pointer (`island_cursor`). Verified on the release build: one
+  jump to the top edge opens the island, the gear opens a fully drawn settings window.
