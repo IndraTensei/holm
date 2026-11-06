@@ -8,7 +8,7 @@ it; it closes when you move away.
 Built with Tauri and Svelte on the WebView2 runtime that Windows already has: a few MB to install, no bundled
 browser, nothing running in the background that does not need to.
 
-![Open island showing the music page](docs/screenshots/09-open-music.jpg)
+![Tensei Island: music, hover to open, an agent asking for approval, then done](docs/media/demo.gif)
 
 ## What it does
 
