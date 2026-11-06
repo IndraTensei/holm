@@ -17,6 +17,7 @@
   import { activity } from './lib/stores/activity.svelte';
   import { focus, shelf, note, weather } from './lib/stores/widgets.svelte';
   import { clock } from './lib/stores/clock.svelte';
+  import { beat } from './lib/stores/beat.svelte';
   import { inTauri, on, send, focusWindow, onFileDrop, registerHotkey } from './lib/bridge';
   import { findTheme, themeVars, applyVars, accentFromArt } from './lib/themes';
   import { artColor } from './lib/artColor';
@@ -288,6 +289,11 @@
         chime('timer');
       };
       stops.push(await on<boolean>('island://hover', setHover));
+      // The window can be hidden behind WebView2's back (full screen, tray): stop looping then.
+      let fullscreen = false;
+      let hidden = false;
+      stops.push(await on<boolean>('island://fullscreen', (v) => beat.pause((fullscreen = v) || hidden)));
+      stops.push(await on<boolean>('island://hidden', (v) => beat.pause(fullscreen || (hidden = v))));
       stops.push(await on('island://toggle', toggle));
       stops.push(await on<boolean>('island://maximized', (v) => (maximized = v)));
       stops.push(await on('island://placed', () => ((lastRect = ''), reportRect())));
