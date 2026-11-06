@@ -184,3 +184,12 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   15 min old, at most every 5 min, with per-provider backoff. Verified: Claude reading follows Claude Code's
   copy. Also: vite ignores src-tauri/target (a release build next to tauri dev reloaded every window,
   leaving the settings window blank), Codex window labels ("Monthly", not "43200-minute").
+- 2026-11-06 (session 4, later): music for every player without setup. Spotify, browsers, VLC and the rest
+  already came through Windows media controls; the gap was volume (the slider moved the whole PC's). Now
+  `appvolume.rs` sets the playing app's own mixer volume (GSMTC app id matched to the audio session's
+  process); PC volume only when no match. Verified the matching on this PC: Pear ("youtube music") and
+  Vivaldi found; Spotify and Chrome not running. "Connect Pear" shows only while Pear plays. Performance for
+  the README measured on the optimized build (i7-11700, 16 threads): line 1.9% of a core, pill with music
+  3.7%, open with agent and music ~28% (large see-through surface; next: cut the open island's repaints),
+  private memory 236 to 320 MB. The first AI tools scan peaked at 560 MB because it read whole logs: Claude
+  logs are now streamed line by line with only the needed fields parsed (not re-measured yet).
