@@ -88,6 +88,7 @@ pointing at `127.0.0.1:47821`. Restart running Claude Code sessions.
   second thing going on (an agent, a timer or the music).
 - **Ctrl+Alt+Space** opens and closes it from the keyboard (change it in Settings → General).
 - Right-click the tray icon to open the island or Settings, hide the island, or quit.
+- **Settings → About** checks for updates (and installs them in one click), and can uninstall Holm.
 - Settings: **General** (start with Windows, shortcuts, graphics, hover or click, when to rest as a line),
   **Look** (shape, theme, typefaces, motion, what the resting island shows), **Music**, **Agents**,
   **Harnesses**, **Games**, **Shelf and widgets** and **About**.
@@ -156,7 +157,8 @@ Figures are the island plus its WebView2 processes; CPU is a share of one core.
 
 Media, system readings, clipboard and Claude Code activity stay on your PC. Plan usage asks Anthropic and OpenAI
 with the sign-ins already on the PC, only when turned on. Lyrics (LRCLIB) and weather (Open-Meteo) are fetched only
-when turned on, sending just the track or place.
+when turned on, sending just the track or place. Once a day Holm asks GitHub for its latest release, sending
+nothing about you; turn that off in Settings → About.
 
 ## Contributing
 

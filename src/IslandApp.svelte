@@ -25,7 +25,7 @@
   import { artColor } from './lib/artColor';
   import { motionFor } from './lib/motion';
   import { chime } from './lib/sound';
-  import type { Front, Game, GameEnded, IslandState, Live } from './lib/types';
+  import type { Front, Game, GameEnded, IslandState, Live, UpdateInfo } from './lib/types';
 
   type Mode = 'compact' | 'peek' | 'approval' | 'drop' | 'expanded';
 
@@ -252,6 +252,27 @@
     }
   }
 
+  // ------------------------------------------------------------ updates
+
+  // Once a day, a minute after start and then hourly while it runs, ask GitHub whether a newer
+  // Holm is out (Settings → About → Check automatically), and say so once per version.
+  const DAY = 24 * 3600_000;
+  let updateTimer: ReturnType<typeof setTimeout> | undefined;
+  async function checkForUpdate() {
+    updateTimer = setTimeout(checkForUpdate, 3600_000);
+    if (!s.autoUpdateCheck || platform.os !== 'windows') return;
+    const last = (await call<number | null>('data_get', { key: 'updateCheckedAt' }).catch(() => null)) ?? 0;
+    if (Date.now() - last < DAY) return;
+    const info = await call<UpdateInfo>('update_check').catch(() => null);
+    if (!info) return;
+    send('data_set', { key: 'updateCheckedAt', value: Date.now() });
+    const told = await call<string | null>('data_get', { key: 'updateTold' }).catch(() => null);
+    if (info.available && told !== info.latest) {
+      send('data_set', { key: 'updateTold', value: info.latest });
+      activity.show('note', { title: `Holm ${info.latest} is out`, sub: 'Click to update', action: 'update' }, 10_000);
+    }
+  }
+
   // ------------------------------------------------------------ measuring and hit area
 
   function measure(node: HTMLElement, key: string) {
@@ -463,6 +484,7 @@
         }),
       );
       if (!inTauri) debugScene();
+      else updateTimer = setTimeout(checkForUpdate, 60_000);
     })();
     const blur = () => {
       if (expanded && openedBy === 'hotkey' && !pinned && !hover) close();
@@ -470,6 +492,7 @@
     window.addEventListener('blur', blur);
     return () => {
       window.removeEventListener('blur', blur);
+      clearTimeout(updateTimer);
       stops.forEach((stop) => stop());
     };
   });
@@ -517,7 +540,13 @@
     aria-label="Holm"
     onpointerenter={() => !inTauri && setHover(true)}
     onpointerleave={() => !inTauri && setHover(false)}
-    onclick={() => (mode === 'compact' || mode === 'peek') && open('click')}
+    onclick={() => {
+      // The "new version" note goes straight to the Update button in Settings → About.
+      if (mode === 'peek' && activity.peek?.kind === 'note' && activity.peek.data.action === 'update') {
+        activity.dismiss();
+        send('open_settings', { section: 'about' });
+      } else if (mode === 'compact' || mode === 'peek') open('click');
+    }}
     onkeydown={(e) => e.key === 'Escape' && close()}
     ontransitionend={(e) => e.target === islandEl && reportRect()}
   >
