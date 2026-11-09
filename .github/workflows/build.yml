@@ -41,7 +41,7 @@ jobs:
 
       # Tauri downloads NSIS and its helper DLL from GitHub on every build; keep them, so a GitHub
       # hiccup (a 504 here has failed releases) can't stop a build, and retry the bundling once.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/AppData/Local/tauri
           key: tauri-tools-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
