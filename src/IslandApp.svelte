@@ -45,20 +45,25 @@
 
   const approval = $derived(s.autoOpenApprovals ? (agents.approvals[0] ?? null) : null);
 
+  // What the resting island shows. A focus timer comes first: it's the one thing the user started
+  // on purpose and it runs against the clock, so it must stay in sight (music or an agent takes
+  // the bubble beside it). Then music that's playing, then an agent, then music that's paused.
   const live = $derived.by((): Live => {
     const musicLive = media.now !== null && media.live(clock.now);
+    if (focus.phase !== 'idle') return 'timer';
     if (musicLive && media.now?.playing) return 'music';
     if (agents.focus) return 'agent';
-    if (focus.phase !== 'idle') return 'timer';
     if (musicLive) return 'music';
     return 'idle';
   });
 
+  // The bubble: an agent that needs you beats music; otherwise music, then an agent.
   const secondary = $derived.by((): Live | null => {
     const options: Live[] = [];
-    if (agents.focus) options.push('agent');
+    if (agents.focus?.status === 'waiting') options.push('agent');
     if (focus.phase !== 'idle') options.push('timer');
     if (media.now?.playing) options.push('music');
+    if (agents.focus) options.push('agent');
     return options.find((o) => o !== live) ?? null;
   });
 
