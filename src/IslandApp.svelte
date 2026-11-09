@@ -268,7 +268,7 @@
     const told = await call<string | null>('data_get', { key: 'updateTold' }).catch(() => null);
     if (info.available && told !== info.latest) {
       send('data_set', { key: 'updateTold', value: info.latest });
-      activity.show('note', { title: `Holm ${info.latest} is out`, sub: 'Settings → About → Update' }, 8000);
+      activity.show('note', { title: `Holm ${info.latest} is out`, sub: 'Click to update', action: 'update' }, 10_000);
     }
   }
 
@@ -539,7 +539,13 @@
     aria-label="Holm"
     onpointerenter={() => !inTauri && setHover(true)}
     onpointerleave={() => !inTauri && setHover(false)}
-    onclick={() => (mode === 'compact' || mode === 'peek') && open('click')}
+    onclick={() => {
+      // The "new version" note goes straight to the Update button in Settings → About.
+      if (mode === 'peek' && activity.peek?.kind === 'note' && activity.peek.data.action === 'update') {
+        activity.dismiss();
+        send('open_settings', { section: 'about' });
+      } else if (mode === 'compact' || mode === 'peek') open('click');
+    }}
     onkeydown={(e) => e.key === 'Escape' && close()}
     ontransitionend={(e) => e.target === islandEl && reportRect()}
   >
