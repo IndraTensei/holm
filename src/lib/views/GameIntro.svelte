@@ -33,17 +33,25 @@
 
 <div class="intro" style="--hue:{hue}" role="status" aria-label="Opening {name}">
   <div class="sweep" aria-hidden="true"></div>
-  <!-- The game's own logo when Holm could read it, else its monogram: never a stock icon. -->
-  <span class="mark"><GameMark {name} {icon} {hue} size={56} /></span>
-  <div class="top">
-    <span class="live" aria-hidden="true"></span>
-    <span>Opening</span>
-  </div>
-  <div class="name display" aria-hidden="true">
-    {#each letters as letter, i}
-      <span class="ch" style="animation-delay:{180 + i * 38}ms">{letter === ' ' ? ' ' : letter}</span>
-    {/each}
-    <span class="glint">{name}</span>
+  <div class="head">
+    <!-- The game's own logo (from its launcher's entry in Windows, or its exe), glowing in its
+         own colours; a monogram tile when there is none. Never a stock icon. -->
+    <span class="mark">
+      {#if icon}<img class="bloom" src={icon} alt="" aria-hidden="true" />{/if}
+      <GameMark {name} {icon} {hue} size={64} />
+    </span>
+    <div class="titles">
+      <div class="top">
+        <span class="live" aria-hidden="true"></span>
+        <span>Opening</span>
+      </div>
+      <div class="name display" aria-hidden="true">
+        {#each letters as letter, i}
+          <span class="ch" style="animation-delay:{180 + i * 38}ms">{letter === ' ' ? ' ' : letter}</span>
+        {/each}
+        <span class="glint">{name}</span>
+      </div>
+    </div>
   </div>
   <div class="charge" aria-hidden="true"><span></span></div>
   <div class="keys">
@@ -117,20 +125,41 @@
     opacity: 0;
     animation: ring 1.1s ease-out 0.3s 2;
   }
-  /* The game's mark, top right: pops in with the intro. */
+  /* The logo on the left, the title beside it. */
+  .head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .titles {
+    flex: 1;
+    min-width: 0;
+  }
+  /* The game's mark pops in with the intro; a blurred copy of the logo behind it lights the
+     island in the logo's own colours, the way album art does for music. */
   .mark {
-    position: absolute;
-    top: 16px;
-    right: 22px;
+    position: relative;
+    display: grid;
     animation: pop 0.55s cubic-bezier(0.2, 0.9, 0.25, 1.25) 0.1s both;
   }
-  .top,
-  .name {
-    margin-right: 72px;
+  .mark > :global(.mark) {
+    position: relative;
+  }
+  .bloom {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transform: scale(1.7);
+    filter: blur(24px) saturate(1.8);
+    opacity: 0;
+    animation: bloom 1.4s ease-out 0.15s forwards;
   }
   .name {
     position: relative;
-    margin-top: 8px;
+    margin-top: 4px;
     font-size: 30px;
     font-weight: 800;
     letter-spacing: -0.02em;
@@ -161,7 +190,7 @@
   }
   .charge {
     position: relative;
-    margin-top: 12px;
+    margin-top: 14px;
     height: 3px;
     border-radius: 2px;
     background: var(--fill-2);
@@ -225,6 +254,11 @@
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+  @keyframes bloom {
+    to {
+      opacity: 0.55;
     }
   }
   @keyframes letter {
