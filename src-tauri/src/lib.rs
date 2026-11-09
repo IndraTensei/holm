@@ -22,6 +22,7 @@ mod harness;
 mod island;
 #[cfg_attr(not(windows), path = "portable/media.rs")]
 mod media;
+mod near;
 mod net;
 #[cfg_attr(not(windows), path = "portable/quiet.rs")]
 mod quiet;
