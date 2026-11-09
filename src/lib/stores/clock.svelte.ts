@@ -1,4 +1,4 @@
-// A shared clock. It ticks at 4 Hz only while lyrics or a progress bar need it, once a second
+// A shared clock. It ticks at 4 Hz only while the music page (lyrics, progress bar) is open, once a second
 // while something shows seconds (an agent's elapsed time, a running timer), and once every 15 s
 // otherwise. Every tick repaints the island, so the slowest rate that looks right wins.
 
@@ -38,7 +38,7 @@ class Clock {
     };
   }
 
-  /** 4 Hz, for lyrics and progress bars. Call from an $effect; returns the release function. */
+  /** 4 Hz, for the music page's lyrics and progress bar. Call from an $effect; returns the release function. */
   fast(): () => void {
     this.fastUsers++;
     if (this.fastUsers === 1) this.restart();
