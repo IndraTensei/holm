@@ -1,7 +1,8 @@
 <script lang="ts">
   // A moment of news: the island grows, says one thing, and settles back.
-  import { Check, BatteryCharging, Volume2, VolumeX, FolderDown, Timer, MessageCircleQuestion, Plug, Gamepad2, Bell, PanelTopClose } from '@lucide/svelte';
+  import { Check, BatteryCharging, Volume2, VolumeX, FolderDown, Timer, MessageCircleQuestion, Plug, Bell, PanelTopClose } from '@lucide/svelte';
   import GameIntro from './GameIntro.svelte';
+  import GameMark from '../ui/GameMark.svelte';
   import Art from '../ui/Art.svelte';
   import Eq from '../ui/Eq.svelte';
   import type { Peek } from '../stores/activity.svelte';
@@ -15,7 +16,7 @@
   <GameIntro name={d.name} icon={d.icon} />
 {:else if peek.kind === 'gameover'}
   <div class="peek">
-    <span class="badge accent"><Gamepad2 size={16} strokeWidth={2.4} /></span>
+    <GameMark name={d.name} icon={d.icon} size={34} />
     <div class="text">
       <div class="title display one">{d.name}</div>
       <div class="sub">Played for {duration(d.durationMs)}</div>

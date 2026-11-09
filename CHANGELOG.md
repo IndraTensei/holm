@@ -9,7 +9,8 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 ### Added
 
 - **Game logos.** The intro that plays when a game starts shows the game's own logo, read from its exe on your
-  PC (nothing is downloaded), and takes its colour from it. Games whose anti-cheat hides their exe keep the
+  PC (nothing is downloaded), and takes its colour from it. Games whose anti-cheat hides their exe get a
+  monogram tile in the game's colour instead ("GV", "R2"), and so does the end-of-game card. No more stock
   gamepad icon.
 
 ### Changed
