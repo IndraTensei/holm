@@ -1,16 +1,20 @@
-# Monthly, grouped, so updates arrive as a few reviewable pull requests rather than a stream.
+# One pull request a quarter with every update (npm, Cargo and GitHub Actions together), instead of
+# a stream: review it, run the app, merge.
 version: 2
+multi-ecosystem-groups:
+  dependencies:
+    schedule:
+      interval: quarterly
 updates:
   - package-ecosystem: npm
     directory: /
-    schedule: { interval: monthly }
-    groups:
-      npm: { patterns: ["*"] }
+    patterns: ["*"]
+    multi-ecosystem-group: dependencies
   - package-ecosystem: cargo
     directory: /src-tauri
-    schedule: { interval: monthly }
-    groups:
-      cargo: { patterns: ["*"] }
+    patterns: ["*"]
+    multi-ecosystem-group: dependencies
   - package-ecosystem: github-actions
     directory: /
-    schedule: { interval: monthly }
+    patterns: ["*"]
+    multi-ecosystem-group: dependencies
