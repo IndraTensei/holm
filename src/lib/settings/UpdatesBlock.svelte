@@ -18,6 +18,8 @@
 
   onMount(() => {
     void call<UninstallInfo>('uninstall_info').then((u) => (uninstallInfo = u)).catch(() => {});
+    // With automatic checks on, opening About checks at once, so "Update" is ready to click.
+    if (settings.v.autoUpdateCheck) void check();
     let stop: (() => void) | undefined;
     void on<UpdateProgress>('update://progress', (p) => (progress = p.total ? p.received / p.total : 0)).then((s) => (stop = s));
     return () => stop?.();

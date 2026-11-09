@@ -7,7 +7,7 @@ Read this first, then CLAUDE.md, then docs/ARCHITECTURE.md.
 
 ## Where things stand
 
-Version 0.1.4. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
+Version 0.1.5. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
 NSIS installer 1.9 MB, portable zip 2.3 MB). The CI build has run on a real Windows 11 desktop (1920×1080,
 100% scale) and the core paths work: placement, click-through, hover, shortcut, full-screen hide, Pear,
 Claude Code hooks, volume peek. 🧪 below means not yet seen on real Windows.
@@ -285,4 +285,5 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   `uninstall` runs `uninstall.exe` next to the exe and exits; the portable copy gets a download link and its
   settings folder. Daily check from the island (`autoUpdateCheck`, `updateCheckedAt`, `updateTold` in
   data.json) shows a note once per version. `__APP_VERSION__` from package.json via Vite replaces the hard-coded
-  version in About. Previews: `?update=1`, `&portable=1`, `?section=about#settings`. Not released yet (batching).
+  version in About. Previews: `?update=1`, `&portable=1`, `?section=about#settings`. Released in v0.1.5, with the update note
+  opening Settings on About (`open_settings` takes a `section`; an open window gets `settings://section`).

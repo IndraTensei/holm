@@ -43,17 +43,27 @@ struct TrayItems {
 }
 
 pub fn open_settings_window(app: &AppHandle) -> tauri::Result<()> {
+    open_settings_at(app, None)
+}
+
+/// Opens Settings, on one section when asked ("about" from the update note); an open window
+/// is told to switch with `settings://section`.
+pub fn open_settings_at(app: &AppHandle, section: Option<&str>) -> tauri::Result<()> {
+    let section = section.filter(|s| s.chars().all(|c| c.is_ascii_lowercase()));
     if let Some(window) = app.get_webview_window("settings") {
         let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();
+        if let Some(section) = section {
+            let _ = window.emit("settings://section", section);
+        }
         return Ok(());
     }
-    WebviewWindowBuilder::new(
-        app,
-        "settings",
-        WebviewUrl::App("index.html#settings".into()),
-    )
+    let url = match section {
+        Some(section) => format!("index.html?section={section}#settings"),
+        None => "index.html#settings".into(),
+    };
+    WebviewWindowBuilder::new(app, "settings", WebviewUrl::App(url.into()))
     .title("Holm · Settings")
     .inner_size(940.0, 680.0)
     .min_inner_size(800.0, 560.0)
