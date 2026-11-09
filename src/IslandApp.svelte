@@ -251,6 +251,9 @@
     }
   }
 
+  /** Logos of games running now, by exe, so the end-of-game card shows the same mark. */
+  const gameIcons = new Map<string, string>();
+
   // ------------------------------------------------------------ updates
 
   // Once a day, a minute after start and then hourly while it runs, ask GitHub whether a newer
@@ -458,6 +461,7 @@
       // The logo comes a moment after the launch (read from the exe on its own thread).
       stops.push(
         await on<GameIcon>('game://icon', ({ exe, icon }) => {
+          gameIcons.set(exe, icon);
           const p = activity.peek;
           if (p?.kind === 'game' && p.data.exe === exe) activity.peek = { ...p, data: { ...p.data, icon } };
         }),
@@ -471,7 +475,8 @@
       stops.push(
         await on<GameEnded>('game://ended', (e) => {
           // Short visits (a crash at start, a quick look) are not worth a recap.
-          if (settings.v.gameRecap && e.durationMs >= 60_000) activity.show('gameover', { ...e }, 5000);
+          if (settings.v.gameRecap && e.durationMs >= 60_000) activity.show('gameover', { ...e, icon: gameIcons.get(e.exe) }, 5000);
+          gameIcons.delete(e.exe);
         }),
       );
       stops.push(await on('island://toggle', toggle));
