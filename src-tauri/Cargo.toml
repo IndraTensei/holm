@@ -20,7 +20,7 @@ tauri-plugin-global-shortcut = "2"
 tauri-plugin-single-instance = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-base64 = "0.22"
+base64 = "0.23"
 tiny_http = "0.12"
 # Windows' own TLS (SChannel) keeps the binary small: no bundled crypto library.
 ureq = { version = "3", default-features = false, features = ["native-tls-no-default", "json", "gzip"] }
@@ -56,8 +56,8 @@ windows = { version = "0.62", features = [
   "Win32_Media_Audio_Endpoints",
   "Win32_Security",
 ] }
-windows-core = "0.62"
-windows-future = "0.3"
+windows-core = "0.100"
+windows-future = "0.100"
 
 [profile.release]
 # Small, fast binary: the island idles most of the time.
