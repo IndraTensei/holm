@@ -6,6 +6,13 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-11-09
+
+### Changed
+
+- Make way reacts only up close: within 40 px either side or 48 px below the island (was 160 px and
+  120 px), so it no longer steps aside while the pointer is elsewhere near the top of the screen.
+
 ## [0.1.3] - 2026-11-09
 
 ### Fixed
@@ -65,7 +72,8 @@ The first release.
 - Notch, Pill and Line shapes, 15 themes plus your own, 13 typefaces, three motion styles.
 - An installer with an options page (start with Windows, Start menu and desktop shortcuts) and a portable exe.
 
-[Unreleased]: https://github.com/IndraTensei/holm/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/IndraTensei/holm/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/IndraTensei/holm/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/IndraTensei/holm/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/IndraTensei/holm/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/IndraTensei/holm/compare/v0.1.0...v0.1.1

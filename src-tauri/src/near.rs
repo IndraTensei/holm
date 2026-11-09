@@ -5,14 +5,17 @@
 //! - The zone is measured from the full island, never from the line it turned into. Measured
 //!   from the line, the zone shrank as soon as the island made way, the pointer was suddenly
 //!   outside it, the island came back, the zone grew, and round it went.
-//! - Leaving takes more than arriving: the zone is 48 px wider once the pointer is near, and the
+//! - Leaving takes more than arriving: the zone is 24 px wider once the pointer is near, and the
 //!   pointer has to stay out of it for 250 ms before the island comes back.
+//!
+//! The zone is small on purpose: only a pointer right at the island (the tabs and address bar
+//! under it) makes it step aside, not one passing somewhere in the top of the screen.
 
 /// How far the zone reaches past the island, in CSS px: either side, and below.
-const SIDE: f64 = 160.0;
-const BELOW: f64 = 120.0;
+const SIDE: f64 = 40.0;
+const BELOW: f64 = 48.0;
 /// Extra reach once near, so a pointer resting on the edge doesn't toggle it.
-const SLACK: f64 = 48.0;
+const SLACK: f64 = 24.0;
 /// How long the pointer must stay out before the island comes back.
 const LEAVE_MS: u64 = 250;
 
@@ -86,17 +89,27 @@ mod tests {
     fn arriving_turns_it_on_at_once() {
         let mut n = Near::default();
         assert_eq!(n.update(960.0, 300.0, ZONE, 0), None);
-        assert_eq!(n.update(960.0, 150.0, ZONE, 16), Some(true));
+        assert_eq!(n.update(960.0, 70.0, ZONE, 16), Some(true));
+    }
+
+    #[test]
+    fn a_pointer_well_away_from_the_island_is_not_near() {
+        // Below the address bar, and well off to the side: the island stays as it is.
+        let mut n = Near::default();
+        assert_eq!(n.update(960.0, 200.0, ZONE, 0), None);
+        assert_eq!(n.update(600.0, 20.0, ZONE, 16), None);
+        assert_eq!(n.update(1300.0, 60.0, ZONE, 32), None);
+        assert!(!n.on());
     }
 
     #[test]
     fn a_pointer_resting_on_the_edge_does_not_flicker() {
-        // The reported bug: resting about 125 px down. Measured from the full island (the zone
-        // no longer shrinks with the line), it stays near, with no toggling.
+        // The reported bug: a pointer resting under the island toggled it. Measured from the
+        // full island (the zone no longer shrinks with the line), it stays near, no toggling.
         let mut n = Near::default();
         let mut changes = 0;
         for t in 0..200 {
-            if n.update(1010.0, 150.0, ZONE, t * 16).is_some() {
+            if n.update(1010.0, 75.0, ZONE, t * 16).is_some() {
                 changes += 1;
             }
         }
@@ -107,9 +120,9 @@ mod tests {
     #[test]
     fn leaving_needs_the_slack_and_a_pause() {
         let mut n = Near::default();
-        n.update(960.0, 150.0, ZONE, 0);
-        // Just past the arriving edge (154) but inside the slack (202): still near.
-        assert_eq!(n.update(960.0, 190.0, ZONE, 16), None);
+        n.update(960.0, 70.0, ZONE, 0);
+        // Just past the arriving edge (82) but inside the slack (106): still near.
+        assert_eq!(n.update(960.0, 95.0, ZONE, 16), None);
         assert!(n.on());
         // Out past the slack: not yet, only after 250 ms out.
         assert_eq!(n.update(960.0, 260.0, ZONE, 32), None);
@@ -120,9 +133,9 @@ mod tests {
     #[test]
     fn coming_back_during_the_pause_keeps_it_on() {
         let mut n = Near::default();
-        n.update(960.0, 150.0, ZONE, 0);
+        n.update(960.0, 70.0, ZONE, 0);
         n.update(960.0, 260.0, ZONE, 16);
-        assert_eq!(n.update(960.0, 150.0, ZONE, 150), None);
+        assert_eq!(n.update(960.0, 70.0, ZONE, 150), None);
         assert_eq!(n.update(960.0, 260.0, ZONE, 300), None);
         assert!(n.on());
     }
