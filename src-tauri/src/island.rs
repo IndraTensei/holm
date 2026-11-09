@@ -39,7 +39,13 @@ use windows::Win32::{
 };
 use windows_core::BOOL;
 
-use crate::{config::Config, games, util, util::Hwnd};
+use crate::{
+    config::Config,
+    games,
+    near::{Near, Zone},
+    util,
+    util::Hwnd,
+};
 
 /// How long the island stays up over a game for its intro before stepping aside.
 const INTRO_MS: i64 = 4600;
@@ -65,6 +71,9 @@ pub struct Island {
     hwnd: Hwnd,
     /// Island rectangle inside the window, CSS px: x, y, width, height.
     rect: Mutex<[f64; 4]>,
+    /// The last rectangle that wasn't the top-edge strip of a line: Make way's near zone is
+    /// measured from this, so it doesn't shrink when the island makes way (see near.rs).
+    full_rect: Mutex<[f64; 4]>,
     geometry: Mutex<Geometry>,
     fullscreen_hidden: AtomicBool,
     user_hidden: AtomicBool,
@@ -153,6 +162,7 @@ impl Island {
             window,
             hwnd,
             rect: Mutex::new([WIN_W / 2.0 - 100.0, 0.0, 200.0, 34.0]),
+            full_rect: Mutex::new([WIN_W / 2.0 - 100.0, 0.0, 200.0, 34.0]),
             geometry: Mutex::new(Geometry::default()),
             fullscreen_hidden: AtomicBool::new(false),
             user_hidden: AtomicBool::new(false),
@@ -339,20 +349,20 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
             // What the frontend was last told; lags `inside` while a drag passes over.
             let mut hover_sent = false;
             let mut elapsed: u64 = 0;
-            let mut near = false;
-            // What the frontend was last told about `near`: "Make way" drops the island to a line
-            // over a maximized app while the pointer is close (see stores/fit). Sent on change only.
-            let mut near_sent = false;
+            // "Make way" drops the island to a line over a maximized app while the pointer is
+            // close (see stores/fit); near.rs decides, without flicker. Sent on change only.
+            let mut near = Near::default();
             let mut tracker = games::Tracker::default();
             let mut last_game: Option<games::Game> = None;
             let mut last_foreground: isize = 0;
             loop {
-                let step = if near || inside { 16 } else { 40 };
+                let step = if near.on() || inside { 16 } else { 40 };
                 thread::sleep(Duration::from_millis(step));
                 elapsed += step;
 
                 let geometry = *island.geometry.lock().expect("geometry");
                 let rect = *island.rect.lock().expect("rect");
+                let full = *island.full_rect.lock().expect("full rect");
                 let mut point = POINT::default();
                 let have_point = unsafe { GetCursorPos(&mut point).is_ok() };
 
@@ -372,13 +382,15 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
                     let (px, py) = (point.x as f64, point.y as f64);
                     let now_inside =
                         island.visible() && px >= left && px <= right && py >= top && py <= bottom;
-                    near = px >= left - 160.0 * s
-                        && px <= right + 160.0 * s
-                        && py <= bottom + 120.0 * s
-                        && py >= geometry.monitor.top as f64 - 4.0;
-                    if near != near_sent {
-                        near_sent = near;
-                        let _ = app.emit("island://near", near);
+                    let zone = Zone {
+                        left: geometry.x as f64 + (full[0] - margin) * s,
+                        right: geometry.x as f64 + (full[0] + full[2] + margin) * s,
+                        bottom: geometry.y as f64 + (full[1] + full[3] + margin) * s,
+                        top: geometry.monitor.top as f64,
+                        scale: s,
+                    };
+                    if let Some(on) = near.update(px, py, zone, elapsed) {
+                        let _ = app.emit("island://near", on);
                     }
                     if now_inside != inside {
                         inside = now_inside;
@@ -541,7 +553,12 @@ pub fn island_cursor(island: State<'_, Arc<Island>>) -> Option<(f64, f64)> {
 #[tauri::command]
 pub fn island_set_rect(island: State<'_, Arc<Island>>, x: f64, y: f64, width: f64, height: f64) {
     if x.is_finite() && y.is_finite() && width.is_finite() && height.is_finite() {
-        *island.rect.lock().expect("rect") = [x, y, width.max(1.0), height.max(1.0)];
+        let rect = [x, y, width.max(1.0), height.max(1.0)];
+        *island.rect.lock().expect("rect") = rect;
+        // The line's hover strip is 1 px tall; anything taller is the island itself.
+        if height > 2.0 {
+            *island.full_rect.lock().expect("full rect") = rect;
+        }
     }
 }
 
