@@ -125,3 +125,20 @@ Commands: see `invoke_handler` in `src-tauri/src/lib.rs`. Events:
 `game://launch|ended|active`, `media://state`,
 `agents://state|approval|done|attention|error`, `quotas://update`, `system://stats`, `power://changed`,
 `clipboard://changed`, `volume://changed`. Types are mirrored in `src/lib/types.ts`.
+
+## macOS and Linux (in development)
+
+Every module that talks to the operating system has its Windows file in `src-tauri/src/` and a macOS/Linux file
+in `src-tauri/src/portable/` with the same commands, payloads and events; `lib.rs` picks one with
+`#[cfg_attr(not(windows), path = "portable/<name>.rs")]`. `games.rs` is Windows-only. `platform_info` reports
+which features the running system has (`stores/platform.svelte.ts` on the UI side), and the UI hides what isn't
+there: the Games page, Make way and Learn, Do not disturb, full-screen hiding, the Wi-Fi and Bluetooth chips (the
+stub reports no radios), and Music explains that now playing is still being built.
+
+- Island window (`portable/island.rs`): placed with Tauri's monitor API, always on top and on all workspaces,
+  click-through outside the island; the pointer comes from `AppHandle::cursor_position` on the same 25/60 Hz
+  poll. Wayland gives apps neither placement nor a global pointer; that needs layer-shell.
+- Start at login: LaunchAgent plist (macOS), XDG autostart `.desktop` (Linux, `$APPIMAGE`-aware).
+- System readings: /proc and /sys on Linux; nothing yet on macOS.
+- Bundles: `tauri.macos.conf.json` (app, dmg, `macOSPrivateApi` for transparency) and `tauri.linux.conf.json`
+  (deb, AppImage). The CI `unix` job builds both and uploads them as artifacts.

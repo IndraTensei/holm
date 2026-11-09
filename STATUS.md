@@ -274,3 +274,8 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   grouped), CODEOWNERS, .editorconfig; labels for platforms and areas; tracking issues #10 (macOS) and #11
   (Linux). README restructured: badges, links row, Platforms (with the issues), Contributing, Build from
   source. CI caches Tauri's NSIS download and retries bundling once (two 504s from GitHub failed builds today).
+- 2026-11-09 (session 7, ports): `feat/cross-platform` (draft PR #13). `portable/` modules for island,
+  shell, system, media, volume, appvolume, radios, clipboard, quiet; harness made portable (dirs, PATH, `ps`,
+  SQLite stubbed); `platform_info` + `stores/platform.svelte.ts` hide what a system lacks (`?os=` previews it);
+  per-OS Tauri configs and `icon.icns`; CI `unix` job (Ubuntu 22.04, macOS). Next on the port: Linux MPRIS
+  media, macOS now playing, full-screen detection, Wayland layer-shell, volume.
