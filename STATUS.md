@@ -2,12 +2,12 @@
 
 The app was called Tensei Island until session 6; it is now **Holm** (repo `IndraTensei/holm`).
 
-Last updated: 2026-11-09 (session 7: v0.1.0 release, installer options page).
+Last updated: 2026-11-09 (session 7: v0.1.0 and v0.1.1 releases, installer options page, lighter compact lyrics).
 Read this first, then CLAUDE.md, then docs/ARCHITECTURE.md.
 
 ## Where things stand
 
-Version 0.1.0. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
+Version 0.1.1. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
 NSIS installer 1.9 MB, portable zip 2.3 MB). The CI build has run on a real Windows 11 desktop (1920×1080,
 100% scale) and the core paths work: placement, click-through, hover, shortcut, full-screen hide, Pear,
 Claude Code hooks, volume peek. 🧪 below means not yet seen on real Windows.
@@ -242,3 +242,14 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   `scripts/installer_art.py`. Kept `installMode: currentUser`: "both" would put a UAC prompt in front of every
   admin user for a per-user tray app. New `shell::repair_autostart`: if the Run value names an exe that no
   longer exists (a moved portable copy), it is pointed at the running exe.
+- 2026-11-09 (session 7, later): the resting island's lyric line. Marquee faded its last 14 px even when the
+  text fit, so the last word of a line looked cut off; it now fades only while text is hidden, measures
+  fractional widths, and has a `once` mode (one quick pass to the end, then stays, with a fade on both edges)
+  for lyrics, which change faster than the old slow out-and-back slide could finish. The compact lyric line no
+  longer runs the clock at 4 Hz: one timer per line, set for the next line's start, re-armed when the player
+  reports a new position. A song with synced lyrics keeps one 240 px width for all its lines, so the island no
+  longer animates its width and re-shapes its window on every line. README: resting-island choices, a Using it
+  section (tray menu, bubble, settings pages), performance notes.
+  WebView2 processes can't be renamed (they are Microsoft's signed msedgewebview2.exe; renaming would mean
+  shipping a ~150 MB fixed runtime with no Windows updates). Task Manager's Processes tab already groups them
+  under "Holm" (holm.exe's FileDescription); README and Settings → About now say so.

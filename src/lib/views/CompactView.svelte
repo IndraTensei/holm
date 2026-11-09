@@ -28,11 +28,31 @@
     return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: !s.clock24h }).replace(/\s?[AP]M$/i, '');
   });
 
-  const lyricLine = $derived.by(() => {
-    if (s.compactTitle !== 'lyrics' || lyrics.status !== 'synced') return '';
-    const i = lyrics.index(media.position(clock.now));
-    return i >= 0 ? lyrics.lines[i].text : '';
+  // The sung line, moved on by one timer set for the next line's start rather than a fast
+  // clock: about one wake-up per lyric line. The effect re-runs when the player reports a new
+  // position (a seek, pause or skip), because media.position reads that state.
+  const showLyrics = $derived(primary === 'music' && s.compactTitle === 'lyrics' && lyrics.status === 'synced');
+  let lyricIndex = $state(-1);
+  $effect(() => {
+    if (!showLyrics || !now) {
+      lyricIndex = -1;
+      return;
+    }
+    const lines = lyrics.lines;
+    const playing = now.playing;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const follow = () => {
+      const pos = media.position(Date.now());
+      const i = lyrics.index(pos);
+      lyricIndex = i;
+      const next = lines[i + 1];
+      // index() switches 0.25 s early, so the next line is due at next.time - 0.25.
+      if (playing && next) timer = setTimeout(follow, Math.max(50, (next.time - 0.25 - pos) * 1000 + 20));
+    };
+    follow();
+    return () => clearTimeout(timer);
   });
+  const lyricLine = $derived(showLyrics && lyricIndex >= 0 ? (lyrics.lines[lyricIndex]?.text ?? '') : '');
 
   const middle = $derived(
     primary === 'music' && s.compactTitle !== 'none' ? lyricLine || now?.title || '' : '',
@@ -55,7 +75,7 @@
   <div class="row">
     <Art src={now.art} size={22} radius={6} />
     {#if middle}
-      <Marquee text={middle} class="mid" />
+      <Marquee text={middle} once={showLyrics} class={showLyrics ? 'mid lyric' : 'mid'} />
     {:else}
       <span class="gap"></span>
     {/if}
@@ -123,6 +143,13 @@
     font-size: var(--t-sm);
     font-weight: 500;
     color: var(--ink-2);
+  }
+  /* A song with synced lyrics keeps one width for all its lines, so the island doesn't
+     resize (and re-shape its window) every few seconds; longer lines slide. */
+  .row :global(.lyric) {
+    flex: none;
+    width: 240px;
+    max-width: none;
   }
   .agent {
     max-width: 260px;
