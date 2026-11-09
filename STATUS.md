@@ -7,7 +7,7 @@ Read this first, then CLAUDE.md, then docs/ARCHITECTURE.md.
 
 ## Where things stand
 
-Version 0.1.2. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
+Version 0.1.3. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
 NSIS installer 1.9 MB, portable zip 2.3 MB). The CI build has run on a real Windows 11 desktop (1920×1080,
 100% scale) and the core paths work: placement, click-through, hover, shortcut, full-screen hide, Pear,
 Claude Code hooks, volume peek. 🧪 below means not yet seen on real Windows.
@@ -274,3 +274,6 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   grouped), CODEOWNERS, .editorconfig; labels for platforms and areas; tracking issues #10 (macOS) and #11
   (Linux). README restructured: badges, links row, Platforms (with the issues), Contributing, Build from
   source. CI caches Tauri's NSIS download and retries bundling once (two 504s from GitHub failed builds today).
+- 2026-11-09 (session 7, v0.1.3): Make way flickered with the pointer resting ~125 px below the island: the
+  near zone was measured from the current rect, which shrank to the 1 px edge strip when the island made way.
+  New `near.rs` (with tests): zone from the last full rect, 48 px slack once near, 250 ms out before leaving.

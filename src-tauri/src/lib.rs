@@ -16,6 +16,7 @@ mod games;
 mod harness;
 mod island;
 mod media;
+mod near;
 mod net;
 mod quiet;
 mod quotas;
