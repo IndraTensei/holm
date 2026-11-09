@@ -19,7 +19,9 @@ browser, nothing running in the background that does not need to.
 
 - **Music, no setup**: Spotify, Apple Music, TIDAL, Deezer, Amazon Music, VLC, browsers (YouTube, SoundCloud,
   Spotify web) and anything else in the Windows media card. Cover, title, synced lyrics, seek, shuffle, repeat,
-  and the playing app's own volume (not the whole PC's). The accent colour follows the album art.
+  and the playing app's own volume (not the whole PC's). The accent colour follows the album art. While a
+  song plays, the resting island shows just the cover, the title, or the line being sung (Settings → Look →
+  Resting island).
 - **Pear Desktop**: also likes, dislikes and exact progress through Pear's API Server plugin.
 - **Claude Code**: live activity per session (reading, editing, running), Allow or Deny permission requests from
   the island, a chime and a summary when it finishes, and your 5-hour and weekly limits as a ring.
@@ -54,8 +56,10 @@ Figures are the island plus its WebView2 processes; CPU is a share of one core.
 - Task Manager's working set reads higher (about 400 MB) because memory shared between the WebView2 processes
   is counted once per process; private memory above is what the island actually holds.
 - Loops (equalizer, spinner) step together at 8 frames a second instead of 60 and sit on their own small
-  layers; clocks tick once a second unless lyrics need more; nothing moves while the island is hidden or a game
-  or full-screen app is in front.
+  layers; clocks tick once a second, or four times a second only while the music page is open; lyrics in the
+  resting island move on with one timer per line, keep one width for the whole song so the island never
+  resizes mid-song, and slide only a line that doesn't fit; nothing moves while the island is hidden or a
+  game or full-screen app is in front.
 - WebView2 runs lean: no spare page process, no background downloads, one page process for both windows.
 - Network: nothing unless turned on. Plan usage is read from the copy Claude Code and Codex keep on the PC,
   and their usage services are asked at most every 5 minutes, only when that copy is old.
@@ -93,8 +97,15 @@ In Pear: Plugins → API Server → on. In the island: Settings → Music → Co
 Settings → Agents → Connect Claude Code. This adds HTTP hooks to `~/.claude/settings.json` (a backup is kept)
 pointing at `127.0.0.1:47821`. Restart running Claude Code sessions.
 
-## Shortcut
-Ctrl+Alt+Space opens and closes the island (change it in Settings → General).
+## Using it
+
+- Hover the island to open it; it closes when you move away. Click the small bubble beside it to jump to the
+  second thing going on (an agent, a timer or the music).
+- **Ctrl+Alt+Space** opens and closes it from the keyboard (change it in Settings → General).
+- Right-click the tray icon to open the island or Settings, hide the island, or quit.
+- Settings: **General** (start with Windows, shortcuts, graphics, hover or click, when to rest as a line),
+  **Look** (shape, theme, typefaces, motion, what the resting island shows), **Music**, **Agents**,
+  **Harnesses**, **Games**, **Shelf and widgets** and **About**.
 
 ## Build
 
