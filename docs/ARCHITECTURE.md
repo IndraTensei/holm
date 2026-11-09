@@ -48,8 +48,10 @@ Pear Desktop and LRCLIB / Open-Meteo are reached from the frontend with fetch/We
 → `expanded` (pages). The shape morphs with a spring written as CSS `linear()` easing; content cross-fades.
 A second live activity sits in a round bubble next to the island, like iOS.
 
-Priority for the resting island: music playing > agent working or waiting > focus timer > music paused in the
-last 5 minutes > idle (quota ring or battery, and the clock).
+Priority for the resting island: focus timer (running or paused: the user started it and it runs against the
+clock) > music playing > agent working or waiting > music paused in the last 5 minutes > idle (quota ring or
+battery, and the clock). The bubble takes the next one, with an agent waiting for an answer first. As a thin
+line, a running timer fills the line with its progress.
 
 ## Settings
 

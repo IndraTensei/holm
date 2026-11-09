@@ -61,7 +61,11 @@
   const lineTone = $derived(
     agent?.status === 'waiting'
       ? 'var(--warn)'
-      : primary === 'agent'
+      : primary === 'timer'
+        ? focus.pausedPhase === 'break' || focus.phase === 'break'
+          ? 'var(--ok)'
+          : 'var(--accent)'
+        : primary === 'agent'
         ? 'var(--accent)'
         : primary === 'music' && now?.playing
           ? 'var(--accent)'
@@ -70,7 +74,8 @@
 </script>
 
 {#if line}
-  <div class="line" style="--tone:{lineTone}"><span></span></div>
+  <!-- As a line, a running timer fills it as it goes, so the time left still reads at a glance. -->
+  <div class="line" class:timer={primary === 'timer'} style="--tone:{lineTone};--fill:{primary === 'timer' ? focus.progress(clock.now) : 1}"><span></span></div>
 {:else if primary === 'music' && now}
   <div class="row">
     <Art src={now.art} size={22} radius={6} />
@@ -222,5 +227,14 @@
     border-radius: 2px;
     background: var(--tone);
     opacity: 0.85;
+  }
+  /* The timer's share done in its colour, the rest as a faint track of the same colour. */
+  .line.timer span {
+    opacity: 1;
+    background: linear-gradient(
+      90deg,
+      var(--tone) max(6px, calc(var(--fill) * 100%)),
+      rgb(from var(--tone) r g b / 0.32) 0
+    );
   }
 </style>

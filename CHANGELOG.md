@@ -20,6 +20,10 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ### Fixed
 
+- **A focus timer you start stays in sight.** It used to come after playing music and a working agent, so with
+  both going it didn't show on the resting island at all. Now the timer takes the island while it runs or is
+  paused, music or your agent sits in the bubble beside it, and as a thin line the island fills up with the
+  timer's progress.
 - Updating on a slow connection no longer fails: the installer download had the same 15-second limit as every
   other request, which a 2 MB file can need more than on a slow line. It now has 10 minutes.
 - The installer left in the temp folder after an update is now deleted shortly after Holm restarts. It was
