@@ -29,6 +29,7 @@
   </ul>
 
   <div class="links">
+    <button class="ghost" onclick={() => send('open_url', { url: 'https://holm.indratensei.me' })}>Holm website</button>
     <button class="ghost" onclick={() => send('open_url', { url: 'https://github.com/pear-devs/pear-desktop' })}>Get Pear Desktop</button>
     <button class="ghost" onclick={() => send('open_url', { url: 'https://code.claude.com/docs/en/hooks' })}>Claude Code hooks</button>
   </div>
