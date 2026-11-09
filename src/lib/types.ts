@@ -198,3 +198,26 @@ export interface IslandState {
   hidden: boolean;
   shown: boolean;
 }
+
+/** `update_check`: the running version against the latest GitHub release. */
+export interface UpdateInfo {
+  current: string;
+  latest: string;
+  available: boolean;
+  /** The release page, for "What's new". */
+  url: string;
+  /** An installed copy, which can update itself (the portable exe can't). */
+  installed: boolean;
+}
+
+/** `update://progress` while the installer downloads, in bytes. */
+export interface UpdateProgress {
+  received: number;
+  total: number;
+}
+
+/** `uninstall_info`. */
+export interface UninstallInfo {
+  installed: boolean;
+  dataDir: string;
+}

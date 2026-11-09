@@ -1,10 +1,11 @@
 <script lang="ts">
   import { send } from '../bridge';
+  import UpdatesBlock from './UpdatesBlock.svelte';
 </script>
 
 <section>
   <h2 class="display">About</h2>
-  <p class="lead">Holm 0.1.4, a lean Dynamic Island for Windows 10 and 11. Built by Ashish John Thomas at Tensei Tech.</p>
+  <p class="lead">Holm {__APP_VERSION__}, a lean Dynamic Island for Windows 10 and 11. Built by Ashish John Thomas at Tensei Tech.</p>
 
   <h3>What it talks to</h3>
   <ul class="facts">
@@ -13,6 +14,7 @@
     <li>Plan usage asks Anthropic and OpenAI with the sign-ins already on this PC, and only when turned on.</li>
     <li>Lyrics come from LRCLIB and weather from Open-Meteo, only when turned on.</li>
     <li>Pear is reached on its local API Server with the token it gives the island.</li>
+    <li>Updates: once a day, when turned on below, Holm asks GitHub for its latest release.</li>
   </ul>
 
   <h3>In Task Manager</h3>
@@ -20,6 +22,8 @@
     <li>Holm draws with Microsoft Edge WebView2, which Windows already has, so a few "Microsoft Edge WebView2" processes run alongside it. On the Processes tab they sit inside the Holm group; on the Details tab they are msedgewebview2.exe with holm.exe in their command line.</li>
     <li>Quitting Holm from the tray closes them too.</li>
   </ul>
+
+  <UpdatesBlock />
 
   <h3>Credits</h3>
   <ul class="facts">
