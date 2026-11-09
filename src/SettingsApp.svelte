@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { SlidersHorizontal, Palette, Music2, Bot, Cpu, Gamepad2, LayoutGrid, Info } from '@lucide/svelte';
+  import { SlidersHorizontal, Palette, Music2, Bot, Cpu, LayoutGrid, Info } from '@lucide/svelte';
+  import GamesGlyph from './lib/ui/GamesGlyph.svelte';
   import GeneralSection from './lib/settings/GeneralSection.svelte';
   import LookSection from './lib/settings/LookSection.svelte';
   import MusicSection from './lib/settings/MusicSection.svelte';
@@ -21,7 +22,7 @@
     { id: 'music', label: 'Music', icon: Music2 },
     { id: 'agents', label: 'Agents', icon: Bot },
     { id: 'tools', label: 'Harnesses', icon: Cpu },
-    { id: 'games', label: 'Games', icon: Gamepad2 },
+    { id: 'games', label: 'Games', icon: GamesGlyph },
     { id: 'widgets', label: 'Shelf and widgets', icon: LayoutGrid },
     { id: 'about', label: 'About', icon: Info },
   ] as const;
