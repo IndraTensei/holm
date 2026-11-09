@@ -27,7 +27,7 @@
     "@fontsource-variable/sora": "^5.3.0",
     "@fontsource-variable/space-grotesk": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
-    "@lucide/svelte": "^1.69.0",
+    "@lucide/svelte": "^1.70.0",
     "@tauri-apps/api": "^2.12.4",
     "@tauri-apps/plugin-global-shortcut": "^2.4.1"
   },
