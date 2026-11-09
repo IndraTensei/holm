@@ -1,6 +1,7 @@
 # Holm — notes for Claude Code
 
-A Dynamic Island for Windows 10/11. Tauri 2 (Rust) + Svelte 5 (TypeScript), WebView2. Windows only.
+A Dynamic Island for Windows 10/11. Tauri 2 (Rust) + Svelte 5 (TypeScript), WebView2. macOS and Linux
+versions are in development (`src-tauri/src/portable/`, issues #10 and #11).
 Start every session by reading STATUS.md, and update its checklist and session log before you finish.
 
 ## Commands
@@ -17,7 +18,7 @@ cargo test --manifest-path src-tauri/Cargo.toml --lib
 
 Browser preview scenes (mock data, `src/lib/mock.ts`): `?open=music|agents|home|system|shelf|focus`,
 `?peek=done|track|volume|charging`, `?approval=1`, `?drop=1`, `?timer=1`, `?game=<name>`, `?front=<app>` (a maximized app in front; add `&near=1` for the pointer near it), `?ended=1`, `?missed=1`, `?theme=<id>`, `?style=notch|pill|line`,
-`?music=off`, `?agents=off`, `?title=lyrics`, `#settings&section=look`, `?section=games#settings`, `?section=tools#settings`. `python3 scripts/shots.py` screenshots them
+`?music=off`, `?agents=off`, `?title=lyrics`, `?os=macos|linux` (what those versions show), `#settings&section=look`, `?section=games#settings`, `?section=tools#settings`. `python3 scripts/shots.py` screenshots them
 (needs `npx vite preview --port 4173` and Playwright). `python scripts/film.py` records the promo clips from
 `npm run dev` (`?film=1` lets it play events into the preview; it films 4K screenshots with the page at 1/8 speed, so the clips
 are 60 fps and the edit can zoom in sharply).
@@ -30,6 +31,9 @@ Type-checking the Windows backend from Linux (no Windows std available as a down
 ## Layout
 
 - `src-tauri/src/*.rs`: one module per integration; each emits events and exposes commands registered in `lib.rs`.
+- `src-tauri/src/portable/*.rs`: the macOS/Linux file for each module that talks to the system, same commands
+  and events, picked with `cfg_attr(path)` in `lib.rs`. `platform_info` (and `stores/platform.svelte.ts`) say
+  which features a system has; the UI hides the rest.
 - `src/lib/stores/*.svelte.ts`: one store per integration (Svelte 5 runes classes); `settings.svelte.ts` owns defaults.
 - `src/lib/views`: island states. `src/lib/pages`: expanded pages. `src/lib/settings`: settings window sections.
 - `src/lib/themes.ts`: themes, fonts and colour math. `src/styles`: base CSS and the bundled font faces.
