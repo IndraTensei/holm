@@ -287,3 +287,9 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   data.json) shows a note once per version. `__APP_VERSION__` from package.json via Vite replaces the hard-coded
   version in About. Previews: `?update=1`, `&portable=1`, `?section=about#settings`. Released in v0.1.5, with the update note
   opening Settings on About (`open_settings` takes a `section`; an open window gets `settings://section`).
+- 2026-11-09 (session 7, unreleased): update hardening. `sha256.rs` (FIPS 180-4, tested against the standard's
+  vectors and GitHub's digest of the real v0.1.5 installer) checks the download against the release asset's
+  `digest`; the download gets its own 10-minute timeout (the shared agent's 15 s cut slow lines off); leftover
+  installers are deleted from a background thread at 5/30/120 s (the `/R` restart starts Holm while the
+  installer still holds its file). Tested by updating a 0.1.4-marked build to the published 0.1.5.
+  Measured 0.1.5: 112 MB private, 2.5% of one core with music, lyrics line and an agent spinner.

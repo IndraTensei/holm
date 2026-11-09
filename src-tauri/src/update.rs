@@ -13,19 +13,23 @@
 use std::{
     io::Read,
     path::{Path, PathBuf},
+    time::Duration,
 };
 
 use serde::Serialize;
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::net::agent;
+use crate::{net::agent, sha256};
 
 const LATEST_API: &str = "https://api.github.com/repos/IndraTensei/holm/releases/latest";
 const DOWNLOAD_PREFIX: &str = "https://github.com/IndraTensei/holm/releases/download/";
 pub const RELEASES_PAGE: &str = "https://github.com/IndraTensei/holm/releases/latest";
 /// Far above the ~2 MB installer; a guard against a wrong or hostile response.
 const MAX_INSTALLER: u64 = 64 * 1024 * 1024;
+/// The shared agent gives up on any request after 15 s, which a slow connection can need for the
+/// installer alone; the download gets this long instead.
+const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(600);
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -81,11 +85,18 @@ fn uninstaller() -> Option<PathBuf> {
     path.is_file().then_some(path)
 }
 
+struct Installer {
+    url: String,
+    size: u64,
+    /// The SHA-256 GitHub publishes for the file ("sha256:<hex>"), when it gives one.
+    sha256: Option<String>,
+}
+
 struct Release {
     tag: String,
     url: String,
-    /// The x64 setup exe and its size, when the release has one.
-    installer: Option<(String, u64)>,
+    /// The x64 setup exe, when the release has one.
+    installer: Option<Installer>,
 }
 
 fn latest_release() -> Result<Release, String> {
@@ -112,8 +123,14 @@ fn latest_release() -> Result<Release, String> {
         assets.iter().find_map(|asset| {
             let name = asset["name"].as_str()?;
             let url = asset["browser_download_url"].as_str()?;
-            (name.ends_with("_x64-setup.exe") && url.starts_with(DOWNLOAD_PREFIX))
-                .then(|| (url.to_string(), asset["size"].as_u64().unwrap_or(0)))
+            (name.ends_with("_x64-setup.exe") && url.starts_with(DOWNLOAD_PREFIX)).then(|| Installer {
+                url: url.to_string(),
+                size: asset["size"].as_u64().unwrap_or(0),
+                sha256: asset["digest"]
+                    .as_str()
+                    .and_then(|d| d.strip_prefix("sha256:"))
+                    .map(str::to_ascii_lowercase),
+            })
         })
     });
     Ok(Release {
@@ -147,9 +164,17 @@ fn failed<E>(_: E) -> String {
     "The download stopped. Check your connection and try again.".to_string()
 }
 
-/// Downloads the latest installer to `dir`, reporting progress, and checks it looks like one.
-fn download(app: &AppHandle, url: &str, size: u64, dir: &Path) -> Result<PathBuf, String> {
-    let mut response = agent().get(url).call().map_err(failed)?;
+/// Downloads the latest installer to `dir`, reporting progress, and checks it is exactly the file
+/// the release lists: same size, an exe, and the same SHA-256 when GitHub publishes one.
+fn download(app: &AppHandle, installer: &Installer, dir: &Path) -> Result<PathBuf, String> {
+    let (url, size) = (installer.url.as_str(), installer.size);
+    let mut response = agent()
+        .get(url)
+        .config()
+        .timeout_global(Some(DOWNLOAD_TIMEOUT))
+        .build()
+        .call()
+        .map_err(failed)?;
     if response.status().as_u16() != 200 {
         return Err(format!(
             "The download failed ({}). Try again in a few minutes.",
@@ -181,6 +206,14 @@ fn download(app: &AppHandle, url: &str, size: u64, dir: &Path) -> Result<PathBuf
     if (size > 0 && bytes.len() as u64 != size) || !bytes.starts_with(b"MZ") {
         return Err("The downloaded installer isn't complete. Try again.".into());
     }
+    if let Some(expected) = &installer.sha256 {
+        if sha256::hex(&bytes) != *expected {
+            return Err(
+                "The downloaded installer doesn't match the release, so it wasn't run. Try again."
+                    .into(),
+            );
+        }
+    }
     std::fs::write(&path, &bytes).map_err(|e| format!("Couldn't save the installer: {e}"))?;
     Ok(path)
 }
@@ -198,10 +231,10 @@ pub async fn update_install(app: AppHandle) -> Result<(), String> {
         if !newer(&release.tag, &current) {
             return Err("You already have the latest version.".to_string());
         }
-        let (url, size) = release
+        let installer = release
             .installer
             .ok_or("This release has no installer yet. Try again in a few minutes.")?;
-        download(&handle, &url, size, &std::env::temp_dir())
+        download(&handle, &installer, &std::env::temp_dir())
     })
     .await
     .map_err(|e| e.to_string())??;
@@ -213,18 +246,33 @@ pub async fn update_install(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-/// The installer from the last update can't delete itself and Holm can't while it runs, so it's
-/// removed on the next start (it ran, or Holm wouldn't be starting as the new version).
+/// The installer from the last update can't delete itself, and it starts Holm again (`/R`) while
+/// it is still running, so its file is removed from a background thread a little later, trying a
+/// few times until the installer has let go of it.
 pub fn clean_downloads() {
-    let Ok(entries) = std::fs::read_dir(std::env::temp_dir()) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let name = entry.file_name().to_string_lossy().into_owned();
-        if name.starts_with("Holm_") && name.ends_with("_x64-setup.exe") {
-            let _ = std::fs::remove_file(entry.path());
-        }
-    }
+    let _ = std::thread::Builder::new()
+        .name("clean-downloads".into())
+        .spawn(|| {
+            for wait in [5, 30, 120] {
+                std::thread::sleep(Duration::from_secs(wait));
+                let Ok(entries) = std::fs::read_dir(std::env::temp_dir()) else {
+                    return;
+                };
+                let mut left = 0;
+                for entry in entries.flatten() {
+                    let name = entry.file_name().to_string_lossy().into_owned();
+                    if name.starts_with("Holm_")
+                        && name.ends_with("_x64-setup.exe")
+                        && std::fs::remove_file(entry.path()).is_err()
+                    {
+                        left += 1;
+                    }
+                }
+                if left == 0 {
+                    return;
+                }
+            }
+        });
 }
 
 #[tauri::command]
