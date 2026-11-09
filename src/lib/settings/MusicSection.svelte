@@ -4,6 +4,7 @@
   import Choice from './Choice.svelte';
   import { settings } from '../stores/settings.svelte';
   import { pear } from '../stores/pear.svelte';
+  import { platform } from '../stores/platform.svelte';
 
   const s = $derived(settings.v);
   const statusText = $derived(
@@ -20,9 +21,15 @@
 
 <section>
   <h2 class="display">Music</h2>
+  {#if !platform.info.media}
+    <p class="lead">
+      Now playing isn't available on {platform.name} yet: it's being built, and you can follow or help on <a href={platform.issue} target="_blank" rel="noreferrer">the tracking issue</a>. Pear Desktop still connects below.
+    </p>
+  {:else}
   <p class="lead">
     Works with no setup: Spotify, Apple Music, TIDAL, Deezer, Amazon Music, VLC, browsers (YouTube, SoundCloud, Spotify web) and anything else that shows in the Windows media card. The volume slider sets the playing app's own volume, not the whole PC's. Pear can also connect for likes, shuffle and repeat.
   </p>
+  {/if}
 
   <Field label="Source">
     <Choice

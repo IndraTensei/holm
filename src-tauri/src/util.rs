@@ -80,6 +80,7 @@ pub fn file_name(path: &str) -> String {
         .unwrap_or_else(|| path.to_string())
 }
 
+#[cfg(windows)]
 /// Joins the calling thread to the multithreaded COM apartment. Safe to call more than once.
 pub fn ensure_mta() {
     unsafe {
@@ -90,14 +91,17 @@ pub fn ensure_mta() {
     }
 }
 
+#[cfg(windows)]
 pub fn wide(text: &str) -> Vec<u16> {
     text.encode_utf16().chain(std::iter::once(0)).collect()
 }
 
+#[cfg(windows)]
 /// A raw window handle that can cross threads (the handle itself is just a number).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Hwnd(pub isize);
 
+#[cfg(windows)]
 impl Hwnd {
     pub fn get(self) -> windows::Win32::Foundation::HWND {
         windows::Win32::Foundation::HWND(self.0 as *mut core::ffi::c_void)

@@ -16,6 +16,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+#[cfg(windows)]
 use windows::Win32::{
     Foundation::CloseHandle,
     System::Diagnostics::ToolHelp::{
@@ -182,6 +183,7 @@ const TOOLS: &[Spec] = &[
 fn base(b: Base) -> PathBuf {
     match b {
         Base::Home => util::home_dir(),
+        Base::Local | Base::Roaming if !cfg!(windows) => app_data_dir(b),
         Base::Local => std::env::var_os("LOCALAPPDATA")
             .map(PathBuf::from)
             .unwrap_or_default(),
@@ -191,12 +193,30 @@ fn base(b: Base) -> PathBuf {
     }
 }
 
+/// Where apps keep their data on macOS (Application Support) and Linux (XDG data and config).
+fn app_data_dir(b: Base) -> PathBuf {
+    let home = util::home_dir();
+    if cfg!(target_os = "macos") {
+        return home.join("Library/Application Support");
+    }
+    let (var, fallback) = match b {
+        Base::Roaming => ("XDG_CONFIG_HOME", ".config"),
+        _ => ("XDG_DATA_HOME", ".local/share"),
+    };
+    std::env::var_os(var)
+        .map(PathBuf::from)
+        .unwrap_or_else(|| home.join(fallback))
+}
+
 fn on_path(exes: &[&str]) -> bool {
     let Some(path) = std::env::var_os("PATH") else {
         return false;
     };
     std::env::split_paths(&path).any(|dir| {
         exes.iter().any(|exe| {
+            if !cfg!(windows) {
+                return dir.join(exe).is_file();
+            }
             ["exe", "cmd", "bat"]
                 .iter()
                 .any(|ext| dir.join(format!("{exe}.{ext}")).is_file())
@@ -204,6 +224,24 @@ fn on_path(exes: &[&str]) -> bool {
     })
 }
 
+/// Running program names, lower case, from `ps` (procps on Linux, BSD ps on macOS).
+#[cfg(not(windows))]
+fn processes() -> HashSet<String> {
+    let Ok(out) = std::process::Command::new("ps")
+        .args(["-axo", "comm="])
+        .output()
+    else {
+        return HashSet::new();
+    };
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .filter_map(|line| line.trim().rsplit('/').next())
+        .filter(|name| !name.is_empty())
+        .map(str::to_lowercase)
+        .collect()
+}
+
+#[cfg(windows)]
 fn processes() -> HashSet<String> {
     let mut names = HashSet::new();
     unsafe {
@@ -499,6 +537,7 @@ fn cline_today(since: i64) -> Option<Today> {
 
 /// Windows ships SQLite (winsqlite3.dll, Windows 10 and later): loaded on first use, so reading
 /// another tool's database costs no bundled library. Read-only, one query at a time.
+#[cfg(windows)]
 mod sqlite {
     use std::{
         ffi::{c_char, c_int, c_void, CStr, CString},
@@ -602,6 +641,18 @@ mod sqlite {
             (api.close)(handle);
             Some(rows)
         }
+    }
+}
+
+/// macOS and Linux: the system SQLite isn't loaded yet, so tools that keep their history in a
+/// database show as installed and running, without today's usage.
+#[cfg(not(windows))]
+mod sqlite {
+    use std::path::Path;
+
+    pub fn query(db: &Path, sql: &str, param: i64) -> Option<Vec<Vec<String>>> {
+        let _ = (db, sql, param);
+        None
     }
 }
 
