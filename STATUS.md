@@ -303,3 +303,13 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   after playing music and a working agent, so with both it never showed); the bubble takes the next thing, an
   agent waiting for an answer first. As a thin line, a running timer fills the line with its progress (a faint
   track in the timer's colour, the done share bright).
+- 2026-11-09 (session 7, unreleased): game logos from Windows' installed-programs list. The owner tested
+  Valorant on 0.1.5 (built before the logo work) and saw the old gamepad; and Vanguard hides Valorant's exe,
+  so the exe-icon path alone would only ever give it a monogram. New `installed.rs` reads the Uninstall keys
+  (HKCU, HKLM 64- and 32-bit; 142 entries in ~10 ms here) and matches a game by install folder (deepest
+  folder holding the exe, shared roots like Program Files ignored) or by name (letters and digits); its
+  DisplayIcon (.ico/.exe, never an uninstaller, forward slashes turned back, which the shell needs) is the
+  logo source, then the exe. Checked here with a probe running the real code: Valorant
+  (`ProgramData\Riot Games\Metadata\valorant.live\valorant.live.ico`, by name and by path) and Deadlock
+  (Steam's `steam\games\<sha>.ico`) both come out as 128 px PNGs (icon size raised from 96). The intro now
+  leads with the 64 px mark on the left, a blurred copy of the logo behind it as a glow, the title beside it.
