@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/IndraTensei/holm/discussions
+    about: Ask how something works, share a setup, or talk through an idea before it becomes a request.
+  - name: macOS and Linux ports
+    url: https://github.com/IndraTensei/holm/issues/10
+    about: Track and help with the macOS (#10) and Linux (#11) versions.
+  - name: Report a security problem
+    url: https://github.com/IndraTensei/holm/security/advisories/new
+    about: Privately, please, not as a public issue.
