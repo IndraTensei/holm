@@ -29,10 +29,12 @@ mod quiet;
 mod quotas;
 #[cfg_attr(not(windows), path = "portable/radios.rs")]
 mod radios;
+mod sha256;
 #[cfg_attr(not(windows), path = "portable/shell.rs")]
 mod shell;
 #[cfg_attr(not(windows), path = "portable/system.rs")]
 mod system;
+mod update;
 mod util;
 #[cfg_attr(not(windows), path = "portable/volume.rs")]
 mod volume;
@@ -97,17 +99,27 @@ struct TrayItems {
 }
 
 pub fn open_settings_window(app: &AppHandle) -> tauri::Result<()> {
+    open_settings_at(app, None)
+}
+
+/// Opens Settings, on one section when asked ("about" from the update note); an open window
+/// is told to switch with `settings://section`.
+pub fn open_settings_at(app: &AppHandle, section: Option<&str>) -> tauri::Result<()> {
+    let section = section.filter(|s| s.chars().all(|c| c.is_ascii_lowercase()));
     if let Some(window) = app.get_webview_window("settings") {
         let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();
+        if let Some(section) = section {
+            let _ = window.emit("settings://section", section);
+        }
         return Ok(());
     }
-    WebviewWindowBuilder::new(
-        app,
-        "settings",
-        WebviewUrl::App("index.html#settings".into()),
-    )
+    let url = match section {
+        Some(section) => format!("index.html?section={section}#settings"),
+        None => "index.html#settings".into(),
+    };
+    WebviewWindowBuilder::new(app, "settings", WebviewUrl::App(url.into()))
     .title("Holm · Settings")
     .inner_size(940.0, 680.0)
     .min_inner_size(800.0, 560.0)
@@ -259,6 +271,7 @@ pub fn run() {
     migrate_legacy_settings();
     shell::migrate_legacy_autostart();
     shell::repair_autostart();
+    update::clean_downloads();
     apply_graphics_setting();
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -329,6 +342,10 @@ pub fn run() {
             shell::path_exists,
             net::fetch_json,
             platform_info,
+            update::update_check,
+            update::update_install,
+            update::uninstall_info,
+            update::uninstall,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Holm");

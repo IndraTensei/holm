@@ -29,6 +29,9 @@ Holm runs on your PC with your user's rights. These parts matter most:
 - **Files Holm reads**: Claude Code and Codex sign-in files (only to ask for plan usage, when turned on),
   harness logs, the clipboard.
 - **Network requests**: plan usage (Anthropic, OpenAI), lyrics (LRCLIB), weather (Open-Meteo), Pear's local
-  API.
+  API, and the update check (GitHub's latest-release API).
+- **Updates**: the installer is downloaded only from this repository's release assets over HTTPS, checked for
+  size, type and the SHA-256 GitHub publishes for the file, and run in passive mode. Anything that could make Holm download or run a different file is in
+  scope.
 
 Holm isn't code-signed yet, so Windows SmartScreen warns on first run; that by itself isn't a vulnerability.

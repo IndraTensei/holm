@@ -252,6 +252,14 @@ export async function call<T>(cmd: string, args?: Record<string, unknown>): Prom
         const win = os === 'windows';
         return { os, media: win, appVolume: win, volume: win, radios: win, clipboard: win, games: win, quiet: win, frontApp: win, battery: win || os === 'linux', systemStats: win || os === 'linux' };
       }
+      case 'update_check':
+        // ?update=1 previews an available update.
+        return { current: '0.1.4', latest: params.get('update') ? '0.1.5' : '0.1.4', available: Boolean(params.get('update')), url: 'https://github.com/IndraTensei/holm/releases/latest', installed: params.get('portable') === null };
+      case 'uninstall_info':
+        return { installed: params.get('portable') === null, dataDir: String.raw`C:\Users\you\AppData\Roaming\in.tenseitech.holm` };
+      case 'update_install':
+      case 'uninstall':
+        return null;
       case 'island_summon':
       case 'island_set_hidden':
         return null;

@@ -674,6 +674,6 @@ pub fn monitors_list() -> Vec<MonitorInfo> {
 /// Async on purpose: creating a WebView2 window from a synchronous command (run on the main
 /// thread) can stall the new webview's setup on Windows, leaving a blank white window.
 #[tauri::command]
-pub async fn open_settings(app: AppHandle) -> Result<(), String> {
-    crate::open_settings_window(&app).map_err(|e| e.to_string())
+pub async fn open_settings(app: AppHandle, section: Option<String>) -> Result<(), String> {
+    crate::open_settings_at(&app, section.as_deref()).map_err(|e| e.to_string())
 }
