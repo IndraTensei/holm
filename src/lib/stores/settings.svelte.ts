@@ -63,6 +63,8 @@ export interface Settings {
   pearClientId: string;
   lyrics: boolean;
   trackToasts: boolean;
+  /** Ask GitHub once a day whether a newer Holm is out (Settings → About). */
+  autoUpdateCheck: boolean;
   volumeOsd: boolean;
   // Agents
   agents: boolean;
@@ -132,6 +134,7 @@ export const DEFAULTS: Settings = {
   pearClientId: '',
   lyrics: true,
   trackToasts: false,
+  autoUpdateCheck: true,
   volumeOsd: true,
   agents: true,
   hookPort: 47821,
