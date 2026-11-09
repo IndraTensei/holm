@@ -66,6 +66,13 @@
     recording = null;
     void settings.set({ [which]: [...mods, key].join('+') });
   }
+
+  const maximizedHint = {
+    away: "Make way: the full island, until the pointer comes near it (a browser's tabs, say). Then it drops to a thin line, and comes back when the pointer moves off. Push the pointer to the top edge to open it.",
+    learn: "Learn: stays full until it keeps opening by accident over an app (a browser's tabs), then rests as a thin line over that app only. Push the pointer to the top edge to open the line.",
+    line: 'A thin line over every maximized app. Push the pointer to the top edge to open it.',
+    full: 'Always the full island, even over a maximized app.',
+  };
 </script>
 
 <section>
@@ -132,11 +139,12 @@
     </Field>
   {/if}
 
-  <Field label="Over a maximized window" hint="Learn: stays full until it keeps opening by accident over an app (a browser's tabs), then rests as a thin line over that app only. Hover still opens the line.">
+  <Field label="Over a maximized window" hint={maximizedHint[s.overMaximized]}>
     <Choice
       label="Over a maximized window"
       value={s.overMaximized}
       options={[
+        { value: 'away', label: 'Make way' },
         { value: 'learn', label: 'Learn' },
         { value: 'line', label: 'Thin line' },
         { value: 'full', label: 'Full' },
