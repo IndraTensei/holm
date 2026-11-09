@@ -6,6 +6,18 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ## [Unreleased]
 
+### Added
+
+- **Updates in Settings → About**: check for a new version, see what's new, and update in one click (the
+  installer downloads, runs with a progress window and opens Holm again). Holm checks once a day and says when
+  a new version is out; the portable exe links to the download instead. Turn the daily check off there.
+- **Uninstall in Settings → About**: opens Holm's uninstaller, which asks whether to delete settings too.
+  The portable copy explains how to remove it and opens its settings folder.
+
+### Changed
+
+- The version shown in Settings → About comes from the build, so releases no longer need it edited.
+
 ## [0.1.4] - 2026-11-09
 
 ### Changed

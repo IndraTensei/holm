@@ -23,6 +23,7 @@ mod quotas;
 mod radios;
 mod shell;
 mod system;
+mod update;
 mod util;
 mod volume;
 
@@ -198,6 +199,7 @@ pub fn run() {
     migrate_legacy_settings();
     shell::migrate_legacy_autostart();
     shell::repair_autostart();
+    update::clean_downloads();
     apply_graphics_setting();
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -264,6 +266,10 @@ pub fn run() {
             shell::open_url,
             shell::path_exists,
             net::fetch_json,
+            update::update_check,
+            update::update_install,
+            update::uninstall_info,
+            update::uninstall,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Holm");

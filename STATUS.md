@@ -80,8 +80,8 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
    the second renderer is for.
 7. Then the ⬜ items: Codex live activity (tail `~/.codex/sessions/**/rollout-*.jsonl`, or Codex `notify`),
    drag-out from the shelf (`tauri-plugin-drag`), GPU/temperature readings (PDH counters), Windows toast for
-   agent completion when the island is hidden, Bluetooth device name, calendar (ICS) on Home, self-update
-   (`tauri-plugin-updater` + signed releases), code signing.
+   agent completion when the island is hidden, Bluetooth device name, calendar (ICS) on Home, code signing
+   (then the updater can check the installer's signature too).
 8. macOS and Linux (asked for; README says "planned"). The Svelte UI, settings, lyrics, weather, Claude Code
    hooks (HTTP on 127.0.0.1), plan usage and harness reading are portable already. Per system, re-do the
    Windows-only Rust: the island window (always on top, click-through outside the island, placement under the
@@ -279,3 +279,10 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   New `near.rs` (with tests): zone from the last full rect, 48 px slack once near, 250 ms out before leaving.
 - 2026-11-09 (session 7, v0.1.4): Make way's near zone shrunk to 40 px either side and 48 px below the full
   island (24 px slack): at 160/120 it stepped aside while the pointer was elsewhere near the top of the screen.
+- 2026-11-09 (session 7, unreleased): Settings → About gets Updates and Uninstall (`update.rs`, no new
+  dependencies). `update_check` reads GitHub's latest release; `update_install` downloads the x64 setup
+  asset (only from this repo's release downloads, size and MZ checked) to %TEMP%, runs it `/P /R` and exits;
+  `uninstall` runs `uninstall.exe` next to the exe and exits; the portable copy gets a download link and its
+  settings folder. Daily check from the island (`autoUpdateCheck`, `updateCheckedAt`, `updateTold` in
+  data.json) shows a note once per version. `__APP_VERSION__` from package.json via Vite replaces the hard-coded
+  version in About. Previews: `?update=1`, `&portable=1`, `?section=about#settings`. Not released yet (batching).

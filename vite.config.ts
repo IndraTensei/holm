@@ -1,9 +1,12 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import pkg from './package.json' with { type: 'json' };
 
 // Tauri expects a fixed port in dev and a static build in dist/.
 export default defineConfig({
   plugins: [svelte()],
+  // The app's version, from package.json, so the UI never has to be edited for a release.
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   clearScreen: false,
   // Rust's build output lives inside the project: a release build next to `tauri dev` would
   // otherwise reload every open window mid-build (seen as a blank settings window).
