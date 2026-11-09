@@ -2,12 +2,12 @@
 
 The app was called Tensei Island until session 6; it is now **Holm** (repo `IndraTensei/holm`).
 
-Last updated: 2026-11-09 (session 7: v0.1.0 release, installer options page, lighter compact lyrics).
+Last updated: 2026-11-09 (session 7: v0.1.0 and v0.1.1 releases, installer options page, lighter compact lyrics).
 Read this first, then CLAUDE.md, then docs/ARCHITECTURE.md.
 
 ## Where things stand
 
-Version 0.1.0. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
+Version 0.1.1. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
 NSIS installer 1.9 MB, portable zip 2.3 MB). The CI build has run on a real Windows 11 desktop (1920×1080,
 100% scale) and the core paths work: placement, click-through, hover, shortcut, full-screen hide, Pear,
 Claude Code hooks, volume peek. 🧪 below means not yet seen on real Windows.
