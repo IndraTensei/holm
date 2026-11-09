@@ -67,7 +67,11 @@ Calm by default, each adjustable in Settings → General → Behaviour:
   arriving with the button down counts once it is released. Click-through still follows the cursor at once,
   so files can be dropped.
 - Tuck when idle: with nothing live for 20 s the island rests as a thin line (`tuckWhenIdle`, `tuckAfter`).
-- Over a maximized window (`overMaximized`): Learn (default), Thin line or Full. Learn keeps the full island
+- Over a maximized window (`overMaximized`): Make way (default), Learn, Thin line or Full. Make way keeps the
+  full island and drops it to a line only while the pointer is near: Rust's poll already knows (the zone that
+  speeds it to 60 Hz, 160 px either side and 120 px below) and sends `island://near` on change; while it is
+  true `fit.line` is on, so the hover area becomes the top edge and the tabs below get the click.
+  Learn keeps the full island
   until it gets in the way over an app: an open on hover that closes within 2 s with no click, scroll or key is
   a miss, and three misses over one app within three days (no real use in between) add the app to `lineApps`,
   with a one-time note. Rust reports the front app with `island://maximized` {maximized, app}; the counting is

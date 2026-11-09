@@ -1,5 +1,10 @@
-// Whether the island should rest as a thin line over the maximized window in front, learned
-// per app from how the island gets used there.
+// Whether the island should rest as a thin line over the maximized window in front.
+//
+// Make way (the default): the full island, until the pointer comes near it (heading for a
+// browser's tabs, say); then a thin line until the pointer moves off again. Rust says when the
+// pointer is near (`island://near`, the same zone that speeds up its polling), on change only.
+//
+// Learn: the line is learned per app from how the island gets used there.
 //
 // An open on hover that closes again within 2 s with no click, scroll or key inside is a miss:
 // the island was in the way (a browser tab, a title bar button). Three misses over one app
@@ -27,6 +32,8 @@ export const appKey = (app: string) => app.trim().toLowerCase();
 class Fit {
   maximized = $state(false);
   app = $state('');
+  /** The pointer is close to the island (Rust's poll), for Make way. */
+  near = $state(false);
   private misses: Record<string, number[]> = {};
   private trial: { app: string; at: number; used: boolean } | null = null;
 
@@ -43,6 +50,7 @@ class Fit {
   get line(): boolean {
     const mode = settings.v.overMaximized;
     if (!this.maximized || mode === 'full') return false;
+    if (mode === 'away') return this.near;
     const key = appKey(this.app);
     return mode === 'line' || settings.v.lineApps.includes(key) || (settings.v.browsersAsLine && BROWSERS.includes(key));
   }
