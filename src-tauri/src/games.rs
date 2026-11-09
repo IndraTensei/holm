@@ -25,7 +25,105 @@ use windows::{
     },
 };
 
-use crate::util;
+use crate::{png, util};
+
+/// The game's own icon, read from its exe through the shell (the same image Explorer shows), as
+/// a PNG data URL of up to 96 px. Takes a few tens of ms, so it runs on its own thread after the
+/// intro has started. None when the shell has no icon for it.
+pub fn icon(path: &str) -> Option<String> {
+    use base64::Engine;
+    use windows::{
+        core::HSTRING,
+        Win32::{
+            Foundation::SIZE,
+            Graphics::Gdi::{
+                CreateCompatibleDC, DeleteDC, DeleteObject, GetDIBits, GetObjectW, BITMAP,
+                BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, HGDIOBJ,
+            },
+            System::Com::{CoInitializeEx, CoUninitialize, COINIT_APARTMENTTHREADED},
+            UI::Shell::{
+                IShellItemImageFactory, SHCreateItemFromParsingName, SIIGBF_BIGGERSIZEOK,
+                SIIGBF_ICONONLY,
+            },
+        },
+    };
+    const SIDE: i32 = 96;
+    unsafe {
+        let com = CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok();
+        let pixels = (|| {
+            let factory: IShellItemImageFactory =
+                SHCreateItemFromParsingName(&HSTRING::from(path), None).ok()?;
+            let bitmap = factory
+                .GetImage(
+                    SIZE { cx: SIDE, cy: SIDE },
+                    SIIGBF_ICONONLY | SIIGBF_BIGGERSIZEOK,
+                )
+                .ok()?;
+            let object = HGDIOBJ(bitmap.0);
+            let mut info = BITMAP::default();
+            let read = GetObjectW(
+                object,
+                std::mem::size_of::<BITMAP>() as i32,
+                Some(&mut info as *mut BITMAP as *mut core::ffi::c_void),
+            );
+            let (width, height) = (info.bmWidth, info.bmHeight.abs());
+            let mut header = BITMAPINFO {
+                bmiHeader: BITMAPINFOHEADER {
+                    biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+                    biWidth: width,
+                    biHeight: -height, // top-down rows
+                    biPlanes: 1,
+                    biBitCount: 32,
+                    biCompression: BI_RGB.0,
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+            let mut bgra = vec![0u8; (width.max(0) * height * 4) as usize];
+            let dc = CreateCompatibleDC(None);
+            let lines = if read > 0 && width > 0 && height > 0 && width <= 512 && height <= 512 {
+                GetDIBits(
+                    dc,
+                    windows::Win32::Graphics::Gdi::HBITMAP(bitmap.0),
+                    0,
+                    height as u32,
+                    Some(bgra.as_mut_ptr() as *mut core::ffi::c_void),
+                    &mut header,
+                    DIB_RGB_COLORS,
+                )
+            } else {
+                0
+            };
+            let _ = DeleteDC(dc);
+            let _ = DeleteObject(object);
+            (lines > 0).then_some((width as u32, height as u32, bgra))
+        })();
+        if com {
+            CoUninitialize();
+        }
+        let (width, height, mut px) = pixels?;
+        // BGRA → RGBA. The shell hands back premultiplied alpha; PNG wants it straight.
+        let premultiplied = px.chunks_exact(4).all(|p| p[0] <= p[3] && p[1] <= p[3] && p[2] <= p[3]);
+        for p in px.chunks_exact_mut(4) {
+            p.swap(0, 2);
+            let alpha = p[3] as u32;
+            if premultiplied && alpha > 0 && alpha < 255 {
+                for c in &mut p[..3] {
+                    *c = ((*c as u32 * 255 + alpha / 2) / alpha).min(255) as u8;
+                }
+            }
+        }
+        // An icon with no visible pixel at all isn't worth showing.
+        if px.chunks_exact(4).all(|p| p[3] == 0) {
+            return None;
+        }
+        let png = png::encode_rgba(width, height, &px);
+        Some(format!(
+            "data:image/png;base64,{}",
+            base64::engine::general_purpose::STANDARD.encode(png)
+        ))
+    }
+}
 
 /// Well-known games by exe name (lower case) → the name to show.
 const KNOWN: &[(&str, &str)] = &[
@@ -98,6 +196,18 @@ const NOT_GAMES: &[&str] = &[
 pub struct Game {
     pub name: String,
     pub exe: String,
+    /// Full path of the exe, for its icon; empty when only the window title was readable.
+    #[serde(skip)]
+    pub path: String,
+}
+
+/// The game's icon, sent after `game://launch` once it has been read (`game://icon`).
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct GameIcon {
+    pub exe: String,
+    /// A PNG data URL.
+    pub icon: String,
 }
 
 #[derive(Serialize, Clone)]
@@ -274,6 +384,7 @@ fn by_title(hwnd: HWND) -> Option<Game> {
         .map(|(exe, name)| Game {
             name: (*name).to_string(),
             exe: (*exe).to_string(),
+            path: String::new(),
         })
 }
 
@@ -330,18 +441,19 @@ pub fn identify(path: &str, custom: &[(String, String)], big: bool) -> Option<Ga
             } else {
                 name.trim().to_string()
             };
-            return Some(Game { name, exe });
+            return Some(Game { name, exe, path: path.to_string() });
         }
     }
     if let Some((_, name)) = KNOWN.iter().find(|(known, _)| *known == exe) {
         return Some(Game {
             name: (*name).to_string(),
             exe,
+            path: path.to_string(),
         });
     }
     if big {
         if let Some(name) = library_name(&lower, path) {
-            return Some(Game { name, exe });
+            return Some(Game { name, exe, path: path.to_string() });
         }
     }
     None

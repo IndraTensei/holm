@@ -293,3 +293,9 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   installers are deleted from a background thread at 5/30/120 s (the `/R` restart starts Holm while the
   installer still holds its file). Tested by updating a 0.1.4-marked build to the published 0.1.5.
   Measured 0.1.5: 112 MB private, 2.5% of one core with music, lyrics line and an agent spinner.
+- 2026-11-09 (session 7, unreleased): game logos. `games::icon` reads the exe's icon through the shell
+  (`IShellItemImageFactory`, 96 px, un-premultiplied) on its own thread after `game://launch`, encodes it with the
+  new store-only `png.rs` (checked against Pillow) and sends `game://icon` {exe, icon}; `GameIntro` pops it in on
+  the right and takes its hue from it (`artColor`). `Game.path` is serde-skipped; title-only detections have no
+  path and no logo. Preview: `?game=Valorant&icon=1`. README rewritten as a tour (centred GIF, screenshots,
+  everyday-use table, details folded), no emoji.

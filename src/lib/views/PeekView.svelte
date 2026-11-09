@@ -12,7 +12,7 @@
 </script>
 
 {#if peek.kind === 'game'}
-  <GameIntro name={d.name} />
+  <GameIntro name={d.name} icon={d.icon} />
 {:else if peek.kind === 'gameover'}
   <div class="peek">
     <span class="badge accent"><Gamepad2 size={16} strokeWidth={2.4} /></span>
