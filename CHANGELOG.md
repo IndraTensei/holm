@@ -9,6 +9,7 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 ### Added
 
 - Contributor guide, code of conduct, security policy, issue and pull request templates.
+- Dependency updates arrive as one combined pull request a quarter.
 - Tracking issues for the macOS (#10) and Linux (#11) versions.
 
 ### Changed

@@ -270,7 +270,7 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   under the header. Port plan is Next step 8.
 - 2026-11-09 (session 7, open source): merged branches deleted (and auto-delete on merge turned on),
   Discussions and private vulnerability reporting on. Added CONTRIBUTING, CODE_OF_CONDUCT (Contributor
-  Covenant 2.1), SECURITY, CHANGELOG, issue forms (bug, feature) and config, PR template, Dependabot (monthly,
+  Covenant 2.1), SECURITY, CHANGELOG, issue forms (bug, feature) and config, PR template, Dependabot (quarterly, one combined PR; was monthly,
   grouped), CODEOWNERS, .editorconfig; labels for platforms and areas; tracking issues #10 (macOS) and #11
   (Linux). README restructured: badges, links row, Platforms (with the issues), Contributing, Build from
   source. CI caches Tauri's NSIS download and retries bundling once (two 504s from GitHub failed builds today).
