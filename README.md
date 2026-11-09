@@ -72,8 +72,19 @@ Figures are the island plus its WebView2 processes; CPU is a share of one core.
 
 ## Install
 
-Download the setup .exe (or the portable zip) from the latest GitHub release or the latest Actions run, and run
-it. Settings and data live in `%APPDATA%\in.tenseitech.holm`.
+Get it from the [latest release](https://github.com/IndraTensei/holm/releases/latest):
+
+- **`Holm_<version>_x64-setup.exe`**: the installer. It asks where to install, whether Holm starts when you
+  sign in to Windows, and whether to add Start menu and desktop shortcuts. No administrator rights needed.
+- **`Holm-<version>-portable-x64.exe`**: the app on its own. Put it anywhere and run it. It needs WebView2,
+  which Windows 11 already has.
+
+Holm isn't code-signed yet, so Windows SmartScreen may say it "protected your PC": choose **More info → Run
+anyway**. Holm lives in the system tray. Start with Windows can be switched on or off later in Settings →
+General. Settings and data live in `%APPDATA%\in.tenseitech.holm`.
+
+Unattended install: `Holm_<version>_x64-setup.exe /S` (add `/AUTOSTART` to start with Windows, `/NS` for no
+shortcuts).
 
 ### Connect Pear Desktop
 In Pear: Plugins → API Server → on. In the island: Settings → Music → Connect Pear, then Allow in Pear's dialog.
@@ -93,8 +104,9 @@ npx tauri dev     # run
 npx tauri build   # installer
 ```
 
-Pushing to GitHub runs `.github/workflows/build.yml` on a Windows runner and uploads the installer and a
-portable zip; tagging `v*` publishes a release. See CLAUDE.md for development notes and STATUS.md for what is done.
+Pushing to GitHub runs `.github/workflows/build.yml` on a Windows runner and uploads the installer and the
+portable exe; tagging `v*` publishes a release (notes from `docs/releases/<tag>.md`). The installer is Tauri's
+NSIS template with an options page added: `src-tauri/windows/installer.nsi`. See CLAUDE.md for development notes and STATUS.md for what is done.
 
 ## Privacy
 
