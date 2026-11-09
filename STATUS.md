@@ -2,12 +2,12 @@
 
 The app was called Tensei Island until session 6; it is now **Holm** (repo `IndraTensei/holm`).
 
-Last updated: 2026-11-09 (session 7: v0.1.0 and v0.1.1 releases, installer options page, lighter compact lyrics).
+Last updated: 2026-11-09 (session 7: releases v0.1.0 to v0.1.2, installer options page, lighter compact lyrics, Make way, public repo).
 Read this first, then CLAUDE.md, then docs/ARCHITECTURE.md.
 
 ## Where things stand
 
-Version 0.1.1. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
+Version 0.1.2. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
 NSIS installer 1.9 MB, portable zip 2.3 MB). The CI build has run on a real Windows 11 desktop (1920×1080,
 100% scale) and the core paths work: placement, click-through, hover, shortcut, full-screen hide, Pear,
 Claude Code hooks, volume peek. 🧪 below means not yet seen on real Windows.
@@ -82,6 +82,14 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
    drag-out from the shelf (`tauri-plugin-drag`), GPU/temperature readings (PDH counters), Windows toast for
    agent completion when the island is hidden, Bluetooth device name, calendar (ICS) on Home, self-update
    (`tauri-plugin-updater` + signed releases), code signing.
+8. macOS and Linux (asked for; README says "planned"). The Svelte UI, settings, lyrics, weather, Claude Code
+   hooks (HTTP on 127.0.0.1), plan usage and harness reading are portable already. Per system, re-do the
+   Windows-only Rust: the island window (always on top, click-through outside the island, placement under the
+   notch on Macs with one; on Linux, Wayland does not let apps place or keep windows on top without
+   layer-shell, so X11 and wlroots compositors first), media (macOS has no public now-playing API, and the private MediaRemote one was locked down in
+   15.4, so it needs a workaround; Linux has MPRIS over D-Bus, which is easy), per-app volume, Wi-Fi/Bluetooth toggles, full-screen and
+   game detection, start at login, and the installer (.dmg signed and notarized; AppImage/.deb). Gate each
+   module with `#[cfg(target_os)]` and stub what a system can't do, so features hide rather than break.
 
 ## Known risks and things to watch
 
@@ -255,3 +263,8 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   under "Holm" (holm.exe's FileDescription); README and Settings → About now say so.
   Licensed MIT (LICENSE, README section, package.json and Cargo.toml) and made the repo public.
   Website holm.indratensei.me: repo homepage, README header and Install, and a Holm website button in Settings → About.
+  "Make way" (new default for Over a maximized window): the full island over a maximized app, dropping to a
+  line while the pointer is near (Rust's existing near zone, sent as `island://near` on change) and back when it
+  leaves; open by pushing to the top edge. Learn, Thin line and Full stay. Preview: `?front=chrome&near=1`.
+  README: a Supported systems table (Windows 10 1809+/11 x64; ARM untested; macOS and Linux planned) and a line
+  under the header. Port plan is Next step 8.

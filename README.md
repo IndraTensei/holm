@@ -10,6 +10,8 @@
   <a href="https://github.com/IndraTensei/holm/releases/latest">Download</a>
 </p>
 
+<p align="center"><b>Runs on Windows 10 and 11 (64-bit).</b> macOS and Linux are planned, not available yet.</p>
+
 A Dynamic Island for Windows 10 and 11 that stays small. It sits at the top of the screen and shows what is
 going on: the song that is playing (Spotify, Pear, browsers, any player in the Windows media card), what Claude
 Code is doing in your terminals, your Claude plan usage, a focus timer, and quick system readings. Hover to open
@@ -35,8 +37,10 @@ browser, nothing running in the background that does not need to.
   from the files each one already keeps, each with its own logo.
 - **Games**: an intro when a game starts, out of the way while you play, a hotkey to bring it back, and the
   agent news you missed when you are done.
-- **Calm by default**: rests as a thin line when idle and over browser tabs, never opens mid-drag, respects
-  Windows Do not disturb, never takes focus.
+- **Calm by default**: over a maximized app it stays full but makes way, dropping to a thin line while your
+  pointer is near (on its way to a browser's tabs, say) and coming back when it moves off; push to the top edge
+  to open it. Rests as a line when idle, never opens mid-drag, respects Windows Do not disturb, never takes
+  focus. Settings → General → Over a maximized window also has Learn, Thin line and Full.
 - **Shelf**: drop files on the island to keep them handy, clipboard history, a quick note.
 - **Focus**: a timer that counts down in the island while you work.
 - **Home**: clock, weather, Wi-Fi and Bluetooth toggles, battery.
@@ -70,9 +74,25 @@ Figures are the island plus its WebView2 processes; CPU is a share of one core.
   (expand it to see them). On the Details tab they appear as `msedgewebview2.exe`, Microsoft's own signed
   runtime that Windows keeps up to date, so they can't carry Holm's name; their command line includes
   `--webview-exe-name=holm.exe`. Quitting Holm closes them all.
+- The pointer is read with `GetCursorPos` (a cheap read of where it is, no mouse hook in the input path) 25
+  times a second, 60 near the island; it needs no memory, and the page hears only changes (over the island,
+  near it).
 - Network: nothing unless turned on. Plan usage is read from the copy Claude Code and Codex keep on the PC,
   and their usage services are asked at most every 5 minutes, only when that copy is old.
 - Install size: about 2 MB installer, 5 MB on disk, plus the WebView2 runtime that Windows already has.
+
+## Supported systems
+
+| System | Status |
+| --- | --- |
+| Windows 11, 64-bit (x64) | Supported, tested |
+| Windows 10 version 1809 or later, 64-bit (x64) | Supported |
+| Windows on ARM | Not built yet; the x64 build may run under emulation, untested |
+| macOS | Planned, not available yet |
+| Linux | Planned, not available yet |
+
+Holm talks to Windows directly for media, volume, Wi-Fi and Bluetooth, games and full-screen detection,
+so each new system needs its own version of those parts; the island itself (the Svelte UI) carries over.
 
 ## Minimum requirements
 
