@@ -10,6 +10,7 @@
   import WidgetsSection from './lib/settings/WidgetsSection.svelte';
   import AboutSection from './lib/settings/AboutSection.svelte';
   import { settings } from './lib/stores/settings.svelte';
+  import { on } from './lib/bridge';
   import { media } from './lib/stores/media.svelte';
   import { system } from './lib/stores/system.svelte';
   import { findTheme, themeVars, applyVars, mix } from './lib/themes';
@@ -40,6 +41,10 @@
   onMount(() => {
     void (async () => {
       await settings.load();
+      // The update note on the island opens Settings on About; an open window switches here.
+      await on<string>('settings://section', (s) => {
+        if (sections.some((x) => x.id === s)) current = s as Section;
+      });
       await media.start();
       await system.start(() => {}, () => {});
     })();
