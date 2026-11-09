@@ -5,6 +5,7 @@
   import Choice from './Choice.svelte';
   import { settings, DEFAULTS, type PageId } from '../stores/settings.svelte';
   import { call } from '../bridge';
+  import { platform } from '../stores/platform.svelte';
   import type { MonitorInfo } from '../types';
 
   const s = $derived(settings.v);
@@ -78,9 +79,9 @@
 <section>
   <h2 class="display">General</h2>
 
-  <Field label="Start with Windows" hint="The island is there as soon as you sign in.">
+  <Field label={platform.autostartLabel} hint="The island is there as soon as you sign in.">
     <Toggle
-      label="Start with Windows"
+      label={platform.autostartLabel}
       checked={autostart}
       onchange={(v) => {
         autostart = v;
@@ -139,6 +140,7 @@
     </Field>
   {/if}
 
+  {#if platform.info.frontApp}
   <Field label="Over a maximized window" hint={maximizedHint[s.overMaximized]}>
     <Choice
       label="Over a maximized window"
@@ -171,14 +173,19 @@
       </ul>
     </Field>
   {/if}
+  {/if}
 
+  {#if platform.info.quiet}
   <Field label="Respect Do not disturb" hint="While Windows' Do not disturb is on: no song, volume or charging pop-ups and no chimes. Agent news waits and shows when it is off.">
     <Toggle label="Respect Do not disturb" checked={s.respectDnd} onchange={(v) => settings.set({ respectDnd: v })} />
   </Field>
+  {/if}
 
+  {#if platform.info.frontApp}
   <Field label="Hide during full screen" hint="Games, videos and presentations are never covered.">
     <Toggle label="Hide during full screen" checked={s.hideInFullscreen} onchange={(v) => settings.set({ hideInFullscreen: v })} />
   </Field>
+  {/if}
 
   {#if monitors.length > 1}
     <Field label="Display">

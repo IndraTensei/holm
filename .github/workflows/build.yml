@@ -85,3 +85,57 @@ jobs:
             *-setup.exe
             *-portable-x64.exe
           generate_release_notes: true
+
+  # macOS and Linux versions, in development (#10, #11): type check, lint, test and bundle on
+  # every push, uploaded as build artifacts. Not published with releases until they're ready.
+  unix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            name: linux
+          - os: macos-latest
+            name: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build packages
+        if: matrix.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev patchelf
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install frontend packages
+        run: npm ci
+
+      - name: Lint and test the backend
+        run: |
+          cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets
+          cargo test --manifest-path src-tauri/Cargo.toml --lib
+
+      - name: Build the app
+        run: npx tauri build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: holm-${{ matrix.name }}
+          path: |
+            src-tauri/target/release/bundle/dmg/*.dmg
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/appimage/*.AppImage
+          if-no-files-found: error

@@ -1,31 +1,42 @@
-//! Holm: a lean Dynamic Island for Windows.
+//! Holm: a lean Dynamic Island for Windows, with macOS and Linux in development.
 //!
-//! Rust owns everything that touches Windows (window placement and click-through, media
-//! sessions, system readings, agent hooks, clipboard, radios, volume). The Svelte frontend in
-//! ../src draws the island and the settings window and talks to these modules through the
+//! Rust owns everything that touches the operating system (window placement and click-through,
+//! media sessions, system readings, agent hooks, clipboard, radios, volume). The Svelte frontend
+//! in ../src draws the island and the settings window and talks to these modules through the
 //! commands registered below and the events each module emits (see docs/ARCHITECTURE.md).
-
-#[cfg(not(windows))]
-compile_error!("Holm targets Windows 10/11 only.");
+//!
+//! Modules that talk to the system have a Windows file here and a macOS/Linux file in
+//! `portable/` with the same commands and events; `platform_info` tells the UI which features a
+//! system has, so the rest hides instead of breaking.
 
 mod agents;
+#[cfg_attr(not(windows), path = "portable/appvolume.rs")]
 mod appvolume;
+#[cfg_attr(not(windows), path = "portable/clipboard.rs")]
 mod clipboard;
 mod config;
+#[cfg(windows)]
 mod games;
 mod harness;
+#[cfg_attr(not(windows), path = "portable/island.rs")]
 mod island;
+#[cfg_attr(not(windows), path = "portable/media.rs")]
 mod media;
 mod near;
 mod net;
+#[cfg_attr(not(windows), path = "portable/quiet.rs")]
 mod quiet;
 mod quotas;
+#[cfg_attr(not(windows), path = "portable/radios.rs")]
 mod radios;
 mod sha256;
+#[cfg_attr(not(windows), path = "portable/shell.rs")]
 mod shell;
+#[cfg_attr(not(windows), path = "portable/system.rs")]
 mod system;
 mod update;
 mod util;
+#[cfg_attr(not(windows), path = "portable/volume.rs")]
 mod volume;
 
 use std::sync::Mutex;
@@ -38,6 +49,50 @@ use tauri::{
 };
 
 use config::Config;
+
+/// Which system Holm is running on and which of its features work there. The UI hides what a
+/// system doesn't have (on macOS and Linux, while their versions are being built).
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PlatformInfo {
+    os: &'static str,
+    media: bool,
+    app_volume: bool,
+    volume: bool,
+    radios: bool,
+    clipboard: bool,
+    games: bool,
+    quiet: bool,
+    /// Knows which maximized app is in front (Make way, Learn).
+    front_app: bool,
+    battery: bool,
+    system_stats: bool,
+}
+
+#[tauri::command]
+fn platform_info() -> PlatformInfo {
+    let windows = cfg!(windows);
+    let linux = cfg!(target_os = "linux");
+    PlatformInfo {
+        os: if windows {
+            "windows"
+        } else if cfg!(target_os = "macos") {
+            "macos"
+        } else {
+            "linux"
+        },
+        media: windows,
+        app_volume: windows,
+        volume: windows,
+        radios: windows,
+        clipboard: windows,
+        games: windows,
+        quiet: windows,
+        front_app: windows,
+        battery: windows || linux,
+        system_stats: windows || linux,
+    }
+}
 
 struct TrayItems {
     hide: MenuItem<Wry>,
@@ -153,6 +208,9 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
 /// with the GPU process, at a small CPU cost while the island morphs. A flag set by the user in
 /// the environment wins.
 fn apply_graphics_setting() {
+    if !cfg!(windows) {
+        return;
+    }
     const VAR: &str = "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS";
     if std::env::var_os(VAR).is_some() {
         return;
@@ -192,6 +250,9 @@ const LEGACY_IDENTIFIER: &str = "in.tenseitech.island";
 /// Settings and data from before the rename are copied into the new folder once, the first time
 /// Holm starts with no settings of its own. The old folder is left as it was.
 fn migrate_legacy_settings() {
+    if !cfg!(windows) {
+        return;
+    }
     let Some(appdata) = std::env::var_os("APPDATA") else {
         return;
     };
@@ -219,6 +280,9 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
+            // A menu bar app on macOS: no Dock icon, no app menu.
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             let handle = app.handle().clone();
             app.manage(Config::load(&handle));
             island::setup(&handle)?;
@@ -277,6 +341,7 @@ pub fn run() {
             shell::open_url,
             shell::path_exists,
             net::fetch_json,
+            platform_info,
             update::update_check,
             update::update_install,
             update::uninstall_info,

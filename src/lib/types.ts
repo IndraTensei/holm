@@ -199,6 +199,22 @@ export interface IslandState {
   shown: boolean;
 }
 
+/** Which system Holm runs on and which of its features work there (`platform_info`). */
+export interface PlatformInfo {
+  os: 'windows' | 'macos' | 'linux';
+  media: boolean;
+  appVolume: boolean;
+  volume: boolean;
+  radios: boolean;
+  clipboard: boolean;
+  games: boolean;
+  quiet: boolean;
+  /** Knows which maximized app is in front (Make way, Learn). */
+  frontApp: boolean;
+  battery: boolean;
+  systemStats: boolean;
+}
+
 /** `update_check`: the running version against the latest GitHub release. */
 export interface UpdateInfo {
   current: string;

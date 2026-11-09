@@ -19,6 +19,7 @@
   import { clock } from './lib/stores/clock.svelte';
   import { beat } from './lib/stores/beat.svelte';
   import { fit } from './lib/stores/fit.svelte';
+  import { platform } from './lib/stores/platform.svelte';
   import { inTauri, on, send, call, focusWindow, onFileDrop, registerHotkeys } from './lib/bridge';
   import { findTheme, themeVars, applyVars, accentFromArt } from './lib/themes';
   import { artColor } from './lib/artColor';
@@ -259,7 +260,7 @@
   let updateTimer: ReturnType<typeof setTimeout> | undefined;
   async function checkForUpdate() {
     updateTimer = setTimeout(checkForUpdate, 3600_000);
-    if (!s.autoUpdateCheck) return;
+    if (!s.autoUpdateCheck || platform.os !== 'windows') return;
     const last = (await call<number | null>('data_get', { key: 'updateCheckedAt' }).catch(() => null)) ?? 0;
     if (Date.now() - last < DAY) return;
     const info = await call<UpdateInfo>('update_check').catch(() => null);
@@ -402,7 +403,7 @@
   onMount(() => {
     const stops: (() => void)[] = [];
     void (async () => {
-      await settings.load();
+      await Promise.all([settings.load(), platform.load()]);
       await media.start();
       await agents.start({
         done: (d) => {
