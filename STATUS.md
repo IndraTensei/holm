@@ -7,7 +7,7 @@ Read this first, then CLAUDE.md, then docs/ARCHITECTURE.md.
 
 ## Where things stand
 
-Version 0.1.2. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
+Version 0.1.3. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
 NSIS installer 1.9 MB, portable zip 2.3 MB). The CI build has run on a real Windows 11 desktop (1920×1080,
 100% scale) and the core paths work: placement, click-through, hover, shortcut, full-screen hide, Pear,
 Claude Code hooks, volume peek. 🧪 below means not yet seen on real Windows.
@@ -270,7 +270,7 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   under the header. Port plan is Next step 8.
 - 2026-11-09 (session 7, open source): merged branches deleted (and auto-delete on merge turned on),
   Discussions and private vulnerability reporting on. Added CONTRIBUTING, CODE_OF_CONDUCT (Contributor
-  Covenant 2.1), SECURITY, CHANGELOG, issue forms (bug, feature) and config, PR template, Dependabot (monthly,
+  Covenant 2.1), SECURITY, CHANGELOG, issue forms (bug, feature) and config, PR template, Dependabot (quarterly, one combined PR; was monthly,
   grouped), CODEOWNERS, .editorconfig; labels for platforms and areas; tracking issues #10 (macOS) and #11
   (Linux). README restructured: badges, links row, Platforms (with the issues), Contributing, Build from
   source. CI caches Tauri's NSIS download and retries bundling once (two 504s from GitHub failed builds today).
@@ -279,3 +279,6 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   SQLite stubbed); `platform_info` + `stores/platform.svelte.ts` hide what a system lacks (`?os=` previews it);
   per-OS Tauri configs and `icon.icns`; CI `unix` job (Ubuntu 22.04, macOS). Next on the port: Linux MPRIS
   media, macOS now playing, full-screen detection, Wayland layer-shell, volume.
+- 2026-11-09 (session 7, v0.1.3): Make way flickered with the pointer resting ~125 px below the island: the
+  near zone was measured from the current rect, which shrank to the 1 px edge strip when the island made way.
+  New `near.rs` (with tests): zone from the last full rect, 48 px slack once near, 250 ms out before leaving.

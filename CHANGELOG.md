@@ -6,9 +6,18 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-09
+
+### Fixed
+
+- Make way no longer flickers between the full island and the line with the pointer resting just below it:
+  the near zone is measured from the full island, reaches further once near, and needs the pointer away for
+  250 ms before the island comes back.
+
 ### Added
 
 - Contributor guide, code of conduct, security policy, issue and pull request templates.
+- Dependency updates arrive as one combined pull request a quarter.
 - Tracking issues for the macOS (#10) and Linux (#11) versions.
 
 ### Changed
@@ -56,7 +65,8 @@ The first release.
 - Notch, Pill and Line shapes, 15 themes plus your own, 13 typefaces, three motion styles.
 - An installer with an options page (start with Windows, Start menu and desktop shortcuts) and a portable exe.
 
-[Unreleased]: https://github.com/IndraTensei/holm/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/IndraTensei/holm/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/IndraTensei/holm/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/IndraTensei/holm/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/IndraTensei/holm/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/IndraTensei/holm/releases/tag/v0.1.0
