@@ -128,3 +128,8 @@ NSIS template with an options page added: `src-tauri/windows/installer.nsi`. See
 Media, system readings, clipboard and Claude Code activity stay on your PC. Plan usage asks Anthropic and OpenAI
 with the sign-ins already on the PC, only when turned on. Lyrics (LRCLIB) and weather (Open-Meteo) are fetched only
 when turned on, sending just the track or place.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Third-party code, logos and typefaces keep their own licenses, listed in
+[NOTICE](NOTICE).

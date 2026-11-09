@@ -253,3 +253,4 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   WebView2 processes can't be renamed (they are Microsoft's signed msedgewebview2.exe; renaming would mean
   shipping a ~150 MB fixed runtime with no Windows updates). Task Manager's Processes tab already groups them
   under "Holm" (holm.exe's FileDescription); README and Settings → About now say so.
+  Licensed MIT (LICENSE, README section, package.json and Cargo.toml) and made the repo public.
