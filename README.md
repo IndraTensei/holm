@@ -5,6 +5,11 @@
   </picture>
 </h1>
 
+<p align="center">
+  <a href="https://holm.indratensei.me"><b>holm.indratensei.me</b></a> ·
+  <a href="https://github.com/IndraTensei/holm/releases/latest">Download</a>
+</p>
+
 A Dynamic Island for Windows 10 and 11 that stays small. It sits at the top of the screen and shows what is
 going on: the song that is playing (Spotify, Pear, browsers, any player in the Windows media card), what Claude
 Code is doing in your terminals, your Claude plan usage, a focus timer, and quick system readings. Hover to open
@@ -80,7 +85,7 @@ Figures are the island plus its WebView2 processes; CPU is a share of one core.
 
 ## Install
 
-Get it from the [latest release](https://github.com/IndraTensei/holm/releases/latest):
+Get it from [holm.indratensei.me](https://holm.indratensei.me) or the [latest release](https://github.com/IndraTensei/holm/releases/latest):
 
 - **`Holm_<version>_x64-setup.exe`**: the installer. It asks where to install, whether Holm starts when you
   sign in to Windows, and whether to add Start menu and desktop shortcuts. No administrator rights needed.
