@@ -25,11 +25,20 @@ use windows::{
     },
 };
 
-use crate::{png, util};
+use crate::{installed, png, util};
 
-/// The game's own icon, read from its exe through the shell (the same image Explorer shows), as
-/// a PNG data URL of up to 96 px. Takes a few tens of ms, so it runs on its own thread after the
-/// intro has started. None when the shell has no icon for it.
+/// The game's logo as a PNG data URL. First the icon its launcher registered with Windows for it
+/// (Settings → Apps: Riot's and Steam's are the official 256 px logos, and found by name even
+/// when anti-cheat hides the game's exe), then the exe's own icon. Takes a few tens of ms, so
+/// it runs on its own thread after the intro has started.
+pub fn logo(game: &Game) -> Option<String> {
+    installed::logo_file(&game.name, &game.path)
+        .and_then(|file| icon(&file))
+        .or_else(|| (!game.path.is_empty()).then(|| icon(&game.path)).flatten())
+}
+
+/// The icon of a file (exe or .ico) through the shell, the same image Explorer shows, up to
+/// 128 px. None when the shell has no icon for it.
 pub fn icon(path: &str) -> Option<String> {
     use base64::Engine;
     use windows::{
@@ -47,7 +56,7 @@ pub fn icon(path: &str) -> Option<String> {
             },
         },
     };
-    const SIDE: i32 = 96;
+    const SIDE: i32 = 128;
     unsafe {
         let com = CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok();
         let pixels = (|| {

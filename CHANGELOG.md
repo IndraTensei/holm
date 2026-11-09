@@ -8,10 +8,12 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ### Added
 
-- **Game logos.** The intro that plays when a game starts shows the game's own logo, read from its exe on your
-  PC (nothing is downloaded), and takes its colour from it. Games whose anti-cheat hides their exe get a
-  monogram tile in the game's colour instead ("GV", "R2"), and so does the end-of-game card. No more stock
-  gamepad icon.
+- **Game logos.** The intro that plays when a game starts leads with the game's own logo, large, lit by a
+  glow in its own colours, and takes its colour from it. Holm finds the logo where the game's launcher left it
+  in Windows' list of installed programs (Riot, Steam, EA, Ubisoft, Battle.net and ordinary installers all
+  register one), so games whose anti-cheat hides them, like Valorant, get their real logo too; otherwise it
+  reads the exe's icon. Nothing is downloaded. A game with neither gets a monogram tile in its colour ("GV",
+  "R2"), and the end-of-game card shows the same mark. No more stock gamepad icon.
 
 ### Changed
 
