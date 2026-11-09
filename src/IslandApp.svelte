@@ -448,6 +448,7 @@
       );
       stops.push(await on('island://toggle', toggle));
       stops.push(await on<Front>('island://maximized', (v) => fit.set(v)));
+      stops.push(await on<boolean>('island://near', (v) => (fit.near = v)));
       stops.push(await on('island://placed', () => ((lastRect = ''), reportRect())));
       stops.push(
         await onFileDrop((e) => {
@@ -494,6 +495,7 @@
       activity.show('missed', { title: 'While you were playing', items: [{ project: 'meetbot', text: 'is done' }, { project: 'holm', text: 'needs you' }], count: 2 }, 1e9);
     const front = q.get('front');
     if (front) fit.set({ maximized: true, app: front });
+    if (q.get('near')) fit.near = true;
     if (q.get('ended')) activity.show('gameover', { name: 'Valorant', exe: 'valorant.exe', durationMs: 4_320_000 }, 1e9);
   }
 </script>

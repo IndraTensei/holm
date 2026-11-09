@@ -340,6 +340,9 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
             let mut hover_sent = false;
             let mut elapsed: u64 = 0;
             let mut near = false;
+            // What the frontend was last told about `near`: "Make way" drops the island to a line
+            // over a maximized app while the pointer is close (see stores/fit). Sent on change only.
+            let mut near_sent = false;
             let mut tracker = games::Tracker::default();
             let mut last_game: Option<games::Game> = None;
             let mut last_foreground: isize = 0;
@@ -373,6 +376,10 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
                         && px <= right + 160.0 * s
                         && py <= bottom + 120.0 * s
                         && py >= geometry.monitor.top as f64 - 4.0;
+                    if near != near_sent {
+                        near_sent = near;
+                        let _ = app.emit("island://near", near);
+                    }
                     if now_inside != inside {
                         inside = now_inside;
                         if inside {

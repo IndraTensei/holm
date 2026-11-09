@@ -14,7 +14,7 @@ export interface Settings {
   collapseDelay: number;
   hideInFullscreen: boolean;
   /** Over a maximized window: learn per app, always a thin line, or never. */
-  overMaximized: 'learn' | 'line' | 'full';
+  overMaximized: 'away' | 'learn' | 'line' | 'full';
   /** Apps (lower-case program names) the island rests as a line over; learned or added. */
   lineApps: string[];
   /** Browsers rest as a line over a maximized window from the start (their tabs sit under the island). */
@@ -98,7 +98,7 @@ export const DEFAULTS: Settings = {
   hoverDelay: 220,
   collapseDelay: 380,
   hideInFullscreen: true,
-  overMaximized: 'learn',
+  overMaximized: 'away',
   lineApps: [],
   browsersAsLine: true,
   tuckWhenIdle: true,
