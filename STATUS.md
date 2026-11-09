@@ -268,3 +268,9 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   leaves; open by pushing to the top edge. Learn, Thin line and Full stay. Preview: `?front=chrome&near=1`.
   README: a Supported systems table (Windows 10 1809+/11 x64; ARM untested; macOS and Linux planned) and a line
   under the header. Port plan is Next step 8.
+- 2026-11-09 (session 7, open source): merged branches deleted (and auto-delete on merge turned on),
+  Discussions and private vulnerability reporting on. Added CONTRIBUTING, CODE_OF_CONDUCT (Contributor
+  Covenant 2.1), SECURITY, CHANGELOG, issue forms (bug, feature) and config, PR template, Dependabot (monthly,
+  grouped), CODEOWNERS, .editorconfig; labels for platforms and areas; tracking issues #10 (macOS) and #11
+  (Linux). README restructured: badges, links row, Platforms (with the issues), Contributing, Build from
+  source. CI caches Tauri's NSIS download and retries bundling once (two 504s from GitHub failed builds today).
