@@ -6,6 +6,8 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-11-09
+
 ### Added
 
 - **Updates in Settings → About**: check for a new version, see what's new, and update in one click (the
@@ -13,6 +15,7 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
   a new version is out; the portable exe links to the download instead. Turn the daily check off there.
 - **Uninstall in Settings → About**: opens Holm's uninstaller, which asks whether to delete settings too.
   The portable copy explains how to remove it and opens its settings folder.
+- Clicking the "new version" note on the island opens Settings → About with the Update button ready.
 
 ### Changed
 
@@ -84,7 +87,8 @@ The first release.
 - Notch, Pill and Line shapes, 15 themes plus your own, 13 typefaces, three motion styles.
 - An installer with an options page (start with Windows, Start menu and desktop shortcuts) and a portable exe.
 
-[Unreleased]: https://github.com/IndraTensei/holm/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/IndraTensei/holm/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/IndraTensei/holm/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/IndraTensei/holm/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/IndraTensei/holm/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/IndraTensei/holm/compare/v0.1.1...v0.1.2

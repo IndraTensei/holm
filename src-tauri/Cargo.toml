@@ -1,6 +1,6 @@
 [package]
 name = "holm"
-version = "0.1.4"
+version = "0.1.5"
 description = "A lean Dynamic Island for Windows"
 license = "MIT"
 authors = ["Ashish John Thomas <ashishthomas012@gmail.com>"]
