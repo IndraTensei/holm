@@ -250,3 +250,6 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   reports a new position. A song with synced lyrics keeps one 240 px width for all its lines, so the island no
   longer animates its width and re-shapes its window on every line. README: resting-island choices, a Using it
   section (tray menu, bubble, settings pages), performance notes.
+  WebView2 processes can't be renamed (they are Microsoft's signed msedgewebview2.exe; renaming would mean
+  shipping a ~150 MB fixed runtime with no Windows updates). Task Manager's Processes tab already groups them
+  under "Holm" (holm.exe's FileDescription); README and Settings → About now say so.
