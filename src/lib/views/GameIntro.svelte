@@ -5,8 +5,23 @@
   // Plays once per launch, so plain CSS animations are fine here (no loops: see stores/beat).
   import { Gamepad2 } from '@lucide/svelte';
   import { settings } from '../stores/settings.svelte';
+  import { artColor } from '../artColor';
+  import { rgbToHsl } from '../themes';
 
-  let { name }: { name: string } = $props();
+  // `icon`: the game's own icon from its exe (a PNG data URL), arriving a moment after the intro
+  // starts. It pops in on the right, and its colour becomes the intro's.
+  let { name, icon }: { name: string; icon?: string } = $props();
+  let iconHue = $state<number | null>(null);
+  $effect(() => {
+    iconHue = null;
+    const src = icon;
+    if (!src) return;
+    void artColor(src).then((rgb) => {
+      if (!rgb || src !== icon) return;
+      const [h, s] = rgbToHsl(rgb);
+      if (s > 0.2) iconHue = h; // a grey logo keeps the name's colour
+    });
+  });
 
   // A hue per game: a few well-known ones tuned by hand, the rest from the name.
   const HUES: Record<string, number> = {
@@ -29,7 +44,7 @@
     return h;
   }
 
-  const hue = $derived(hueOf(name));
+  const hue = $derived(iconHue ?? hueOf(name));
   const letters = $derived([...name]);
   const keys = (combo: string) => (combo ? combo.split('+') : []);
   const back = $derived(keys(settings.v.hotkey));
@@ -38,6 +53,7 @@
 
 <div class="intro" style="--hue:{hue}" role="status" aria-label="Opening {name}">
   <div class="sweep" aria-hidden="true"></div>
+  {#if icon}<img class="logo" src={icon} alt="" aria-hidden="true" />{/if}
   <div class="top">
     <span class="icon"><Gamepad2 size={14} strokeWidth={2.4} /></span>
     <span>Opening</span>
@@ -108,6 +124,22 @@
     height: 22px;
     border-radius: 7px;
     background: var(--g-soft);
+  }
+  /* The game's own icon, top right: pops in when it arrives, with a glow in its colour. */
+  .logo {
+    position: absolute;
+    top: 16px;
+    right: 22px;
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    border-radius: 14px;
+    filter: drop-shadow(0 6px 18px var(--g-soft));
+    animation: pop 0.55s cubic-bezier(0.2, 0.9, 0.25, 1.25) both;
+  }
+  .logo ~ .top,
+  .logo ~ .name {
+    margin-right: 72px;
   }
   .name {
     position: relative;
@@ -187,6 +219,16 @@
   em {
     margin-left: 5px;
     font-style: normal;
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6) rotate(-8deg);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
   @keyframes letter {
     to {

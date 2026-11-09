@@ -18,6 +18,7 @@ mod island;
 mod media;
 mod near;
 mod net;
+mod png;
 mod quiet;
 mod quotas;
 mod radios;

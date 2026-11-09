@@ -6,6 +6,17 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ## [Unreleased]
 
+### Added
+
+- **Game logos.** The intro that plays when a game starts shows the game's own logo, read from its exe on your
+  PC (nothing is downloaded), and takes its colour from it. Games whose anti-cheat hides their exe keep the
+  gamepad icon.
+
+### Changed
+
+- The README is rewritten as a friendlier tour with screenshots, a centred demo, and the technical detail
+  folded away.
+
 ### Fixed
 
 - Updating on a slow connection no longer fails: the installer download had the same 15-second limit as every
