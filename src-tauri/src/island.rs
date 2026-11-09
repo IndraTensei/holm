@@ -442,6 +442,21 @@ fn spawn_poll(app: AppHandle, island: Arc<Island>) {
                                         .intro_until
                                         .store(util::now_ms() + INTRO_MS, Ordering::Relaxed);
                                     let _ = app.emit("game://launch", &g);
+                                    // The logo follows on its own thread, so the intro isn't held.
+                                    if !g.path.is_empty() {
+                                        let (app, exe, path) =
+                                            (app.clone(), g.exe.clone(), g.path.clone());
+                                        let _ = thread::Builder::new().name("game-icon".into()).spawn(
+                                            move || {
+                                                if let Some(icon) = games::icon(&path) {
+                                                    let _ = app.emit(
+                                                        "game://icon",
+                                                        games::GameIcon { exe, icon },
+                                                    );
+                                                }
+                                            },
+                                        );
+                                    }
                                 }
                             }
                             games::Change::Ended(e) => {

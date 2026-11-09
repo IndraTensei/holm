@@ -158,6 +158,12 @@ export interface Game {
   exe: string;
 }
 
+/** `game://icon`: the game's own icon, read from its exe after the launch (PNG data URL). */
+export interface GameIcon {
+  exe: string;
+  icon: string;
+}
+
 /** A game that closed, and how long it ran. */
 export interface GameEnded {
   name: string;

@@ -24,7 +24,7 @@
   import { artColor } from './lib/artColor';
   import { motionFor } from './lib/motion';
   import { chime } from './lib/sound';
-  import type { Front, Game, GameEnded, IslandState, Live, UpdateInfo } from './lib/types';
+  import type { Front, Game, GameEnded, GameIcon, IslandState, Live, UpdateInfo } from './lib/types';
 
   type Mode = 'compact' | 'peek' | 'approval' | 'drop' | 'expanded';
 
@@ -251,6 +251,9 @@
     }
   }
 
+  /** Logos of games running now, by exe, so the end-of-game card shows the same mark. */
+  const gameIcons = new Map<string, string>();
+
   // ------------------------------------------------------------ updates
 
   // Once a day, a minute after start and then hourly while it runs, ask GitHub whether a newer
@@ -455,6 +458,14 @@
           activity.show('game', { ...g }, 4200);
         }),
       );
+      // The logo comes a moment after the launch (read from the exe on its own thread).
+      stops.push(
+        await on<GameIcon>('game://icon', ({ exe, icon }) => {
+          gameIcons.set(exe, icon);
+          const p = activity.peek;
+          if (p?.kind === 'game' && p.data.exe === exe) activity.peek = { ...p, data: { ...p.data, icon } };
+        }),
+      );
       stops.push(
         await on<Game | null>('game://active', (g) => {
           inGame = g && settings.v.smartHide ? g : null;
@@ -464,7 +475,8 @@
       stops.push(
         await on<GameEnded>('game://ended', (e) => {
           // Short visits (a crash at start, a quick look) are not worth a recap.
-          if (settings.v.gameRecap && e.durationMs >= 60_000) activity.show('gameover', { ...e }, 5000);
+          if (settings.v.gameRecap && e.durationMs >= 60_000) activity.show('gameover', { ...e, icon: gameIcons.get(e.exe) }, 5000);
+          gameIcons.delete(e.exe);
         }),
       );
       stops.push(await on('island://toggle', toggle));
@@ -514,6 +526,14 @@
     if (q.get('timer')) focus.start('focus', 25);
     const game = q.get('game');
     if (game) setTimeout(() => activity.show('game', { name: game, exe: 'game.exe' }, 1e9), 300);
+    // &icon=1: a stand-in logo arrives a moment later, as the real one read from the exe does.
+    if (game && q.get('icon')) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#ff4655"/><path d="M14 16h10l8 20 8-20h10L36 48h-8z" fill="#fff"/></svg>`;
+      setTimeout(() => {
+        const p = activity.peek;
+        if (p?.kind === 'game') activity.peek = { ...p, data: { ...p.data, icon: `data:image/svg+xml,${encodeURIComponent(svg)}` } };
+      }, 900);
+    }
     if (q.get('missed'))
       activity.show('missed', { title: 'While you were playing', items: [{ project: 'meetbot', text: 'is done' }, { project: 'holm', text: 'needs you' }], count: 2 }, 1e9);
     const front = q.get('front');
