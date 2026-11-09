@@ -21,6 +21,7 @@ mod net;
 mod quiet;
 mod quotas;
 mod radios;
+mod sha256;
 mod shell;
 mod system;
 mod update;
