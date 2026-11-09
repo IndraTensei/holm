@@ -1,5 +1,9 @@
 # One pull request a quarter with every update (npm, Cargo and GitHub Actions together), instead of
 # a stream: review it, run the app, merge.
+#
+# Major versions are left out: they change behaviour (TypeScript 5 → 7, a new actions/checkout) and
+# are upgraded by hand with testing. The windows, windows-core and windows-future crates only work
+# at matching versions, so they're upgraded together by hand too, never one at a time.
 version: 2
 multi-ecosystem-groups:
   dependencies:
@@ -10,11 +14,23 @@ updates:
     directory: /
     patterns: ["*"]
     multi-ecosystem-group: dependencies
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: cargo
     directory: /src-tauri
     patterns: ["*"]
     multi-ecosystem-group: dependencies
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "windows"
+      - dependency-name: "windows-core"
+      - dependency-name: "windows-future"
   - package-ecosystem: github-actions
     directory: /
     patterns: ["*"]
     multi-ecosystem-group: dependencies
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

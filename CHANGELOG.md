@@ -6,6 +6,18 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ## [Unreleased]
 
+### Fixed
+
+- Updating on a slow connection no longer fails: the installer download had the same 15-second limit as every
+  other request, which a 2 MB file can need more than on a slow line. It now has 10 minutes.
+- The installer left in the temp folder after an update is now deleted shortly after Holm restarts. It was
+  still in use when Holm started, so it stayed until the next start.
+
+### Security
+
+- Updates check the downloaded installer against the SHA-256 that GitHub publishes for the release file, and
+  don't run it if they differ (as well as the size and file type checks).
+
 ## [0.1.5] - 2026-11-09
 
 ### Added
