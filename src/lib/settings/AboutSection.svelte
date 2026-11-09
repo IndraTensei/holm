@@ -15,6 +15,12 @@
     <li>Pear is reached on its local API Server with the token it gives the island.</li>
   </ul>
 
+  <h3>In Task Manager</h3>
+  <ul class="facts">
+    <li>Holm draws with Microsoft Edge WebView2, which Windows already has, so a few "Microsoft Edge WebView2" processes run alongside it. On the Processes tab they sit inside the Holm group; on the Details tab they are msedgewebview2.exe with holm.exe in their command line.</li>
+    <li>Quitting Holm from the tray closes them too.</li>
+  </ul>
+
   <h3>Credits</h3>
   <ul class="facts">
     <li>Plan usage reading and some interaction ideas adapted from BrimDeck (Apache-2.0).</li>

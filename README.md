@@ -61,6 +61,10 @@ Figures are the island plus its WebView2 processes; CPU is a share of one core.
   resizes mid-song, and slide only a line that doesn't fit; nothing moves while the island is hidden or a
   game or full-screen app is in front.
 - WebView2 runs lean: no spare page process, no background downloads, one page process for both windows.
+- In Task Manager, the island's WebView2 processes are listed inside the **Holm** group on the Processes tab
+  (expand it to see them). On the Details tab they appear as `msedgewebview2.exe`, Microsoft's own signed
+  runtime that Windows keeps up to date, so they can't carry Holm's name; their command line includes
+  `--webview-exe-name=holm.exe`. Quitting Holm closes them all.
 - Network: nothing unless turned on. Plan usage is read from the copy Claude Code and Codex keep on the PC,
   and their usage services are asked at most every 5 minutes, only when that copy is old.
 - Install size: about 2 MB installer, 5 MB on disk, plus the WebView2 runtime that Windows already has.
