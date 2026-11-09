@@ -1,6 +1,9 @@
 // Tiny synthesized chimes: no audio files to ship, and they follow the system volume.
+// The audio context lives only while a chime plays: an open one keeps a WebView2 audio process
+// and an output stream running for the rest of the session.
 
 let ctx: AudioContext | null = null;
+let closer: ReturnType<typeof setTimeout> | undefined;
 
 function tone(freq: number, start: number, length: number, gain: number): void {
   if (!ctx) return;
@@ -32,6 +35,12 @@ export function chime(kind: 'done' | 'ask' | 'timer'): void {
       tone(987.8, 0.16, 0.4, 0.07);
       tone(1318.5, 0.32, 0.8, 0.06);
     }
+    // The longest chime ends after 1.2 s; close a little after the last one.
+    clearTimeout(closer);
+    closer = setTimeout(() => {
+      void ctx?.close().catch(() => {});
+      ctx = null;
+    }, 2000);
   } catch {
     /* audio unavailable */
   }
