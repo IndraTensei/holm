@@ -196,6 +196,7 @@ fn migrate_legacy_settings() {
 pub fn run() {
     migrate_legacy_settings();
     shell::migrate_legacy_autostart();
+    shell::repair_autostart();
     apply_graphics_setting();
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {

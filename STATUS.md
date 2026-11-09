@@ -2,7 +2,7 @@
 
 The app was called Tensei Island until session 6; it is now **Holm** (repo `IndraTensei/holm`).
 
-Last updated: 2026-11-06 (session 6: renamed to Holm, new logo, 4K promo).
+Last updated: 2026-11-09 (session 7: v0.1.0 release, installer options page).
 Read this first, then CLAUDE.md, then docs/ARCHITECTURE.md.
 
 ## Where things stand
@@ -31,7 +31,7 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 | Window | Click-through outside the island (cursor poll + `set_ignore_cursor_events`) | ✅ flips in ~15 ms; clicks outside reach the app below |
 | Window | Hide during full screen, line style when maximized, keep on top | ✅ full-screen hide and return ~0.4 s, no focus stolen; line style 🧪 |
 | Window | Tray menu, single instance, settings window, global shortcut (Ctrl+Alt+Space) | ✅ shortcut opens with focus, closes and returns focus; tray 🧪 |
-| Window | Start with Windows (HKCU Run) | ✅ 🧪 |
+| Window | Start with Windows (HKCU Run): Settings → General, the installer's options page, `/AUTOSTART` for silent installs; a moved portable exe re-points it | ✅ 🧪 |
 | Island | Notch / Pill / Line, spring morph, compact → peek → approval → drop → expanded | ✅ (browser) |
 | Island | Second live activity bubble | ✅ (browser) |
 | Music | Windows media sessions (Spotify, browsers, any SMTC app), art, timeline, controls | ✅ seen with Pear; Spotify and browsers 🧪 |
@@ -51,7 +51,8 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 | Shelf | Clipboard history (text, private copies skipped), quick note | ✅ 🧪 |
 | Widgets | Focus timer, weather (Open-Meteo + city search), Wi-Fi / Bluetooth toggles + SSID | ✅ 🧪 |
 | Look | 15 themes + custom theme editor, 13 bundled fonts, motion presets, size | ✅ (browser) |
-| Build | GitHub Actions: check, clippy, test, NSIS installer + portable zip, release on `v*` tag | ✅ green on main and branches (~20 min); `v*` release not run |
+| Build | GitHub Actions: check, clippy, test, NSIS installer + portable exe, release on `v*` tag with notes from `docs/releases/<tag>.md` | ✅ green on main and branches (~20 min) |
+| Build | Installer: Tauri's NSIS template plus an options page (start with Windows, Start menu, desktop), branded sidebar and header | ✅ compiles; pages 🧪 |
 | Perf | Looping decorations on a shared 8 fps beat; Graphics setting (hardware or software) | ✅ measured, see log |
 | Games | Intro ("Opening Grand Theft Auto V") with the open/hide keys, then smart hide while in front | ✅ verified with stand-in games; real games 🧪 |
 | Games | Recognition: known exes, store library folders, user list (Settings → Games); title fallback | ✅ known and custom verified; store folders and anti-cheat fallback 🧪 |
@@ -70,7 +71,8 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 3. Finish the 🧪 items by hand: tray menu, settings window, an Allow/Deny prompt (ask `claude` to run
    `npm install` without bypass mode), the done peek and chime, Spotify and a YouTube tab, each Pear control,
    line style with a maximized window, a second monitor, 125–150% scaling.
-4. Install the setup .exe for a clean user; check Start with Windows.
+4. Run the v0.1.0 setup .exe for a clean user: click through the options page (each box on and off), check
+   the Run value, shortcuts and the finish page's run box; uninstall removes the Run value.
 5. Remaining always-on cost: ~3% of a core while an agent works (8 fps beat plus the 4 Hz clock). Next: tick
    the agent's elapsed time at 1 Hz (it only shows seconds) and try 6 fps.
 6. Memory: ~185 MB (hardware) or ~120 MB (software) private across 7 WebView2 processes. Next ideas: shrink
@@ -230,3 +232,13 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   twice. `scripts/film.py` now takes 4K screenshots (CDP clip with scale) at 1/8 page speed; the compositor crops
   the 4K frames, so every zoom is sharp. Also fixed "Â·" mojibake in the old end card. Outputs: `promo/holm-promo.mp4`
   (55 s, 1080p60, same soundtrack, kept out of git) and a new `docs/media/demo.gif` (720 px, 3.3 MB).
+- 2026-11-09 (session 7): first release, **v0.1.0**. The release ships the setup .exe and the bare portable exe
+  (the zip is gone); notes come from `docs/releases/v0.1.0.md`. The installer now uses a copy of Tauri's NSIS
+  template (`src-tauri/windows/installer.nsi`, tauri-cli 2.12.4, changes marked `Holm:`; re-apply them when
+  upgrading tauri-cli) with an options page after the folder page: start Holm when I sign in (on by default; on
+  a reinstall it follows the existing Run value), add to the Start menu, add a desktop shortcut (moved here from
+  the finish page). Silent installs skip it; `/AUTOSTART` turns start with Windows on. The uninstaller already
+  removed the "Holm" Run value. Sidebar and header bitmaps drawn from the brand SVGs by
+  `scripts/installer_art.py`. Kept `installMode: currentUser`: "both" would put a UAC prompt in front of every
+  admin user for a per-user tray app. New `shell::repair_autostart`: if the Run value names an exe that no
+  longer exists (a moved portable copy), it is pointed at the running exe.
