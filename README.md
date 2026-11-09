@@ -5,6 +5,8 @@
   </picture>
 </h1>
 
+<p align="center"><b>A Dynamic Island for Windows that knows when to get out of the way.</b></p>
+
 <p align="center">
   <a href="https://github.com/IndraTensei/holm/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/IndraTensei/holm?label=release&color=5B6AEE"></a>
   <a href="https://github.com/IndraTensei/holm/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/IndraTensei/holm/total?color=8797FF"></a>
@@ -21,179 +23,244 @@
   <a href="https://github.com/IndraTensei/holm/discussions">Discussions</a>
 </p>
 
-<p align="center"><b>Runs on Windows 10 and 11 (64-bit).</b> macOS and Linux versions are in the works, and help is welcome.</p>
+<br>
 
-A Dynamic Island for Windows 10 and 11 that stays small. It sits at the top of the screen and shows what is
-going on: the song that is playing (Spotify, Pear, browsers, any player in the Windows media card), what Claude
-Code is doing in your terminals, your Claude plan usage, a focus timer, and quick system readings. Hover to open
-it; it closes when you move away.
+<p align="center">
+  <img src="docs/media/demo.gif" width="720" alt="Holm: a song playing, the island opening on hover, Claude Code asking for permission, then finishing">
+</p>
 
-Built with Tauri and Svelte on the WebView2 runtime that Windows already has: a few MB to install, no bundled
-browser, nothing running in the background that does not need to.
+<br>
 
-![Holm: music, hover to open, an agent asking for approval, then done](docs/media/demo.gif)
+The top of your screen is mostly empty. Holm puts a small island there that quietly keeps you in the loop: the
+song that's playing, what Claude Code is doing in your terminals, how much of your plan you've used, a focus
+timer, the weather. Hover over it and it opens. Move away and it tucks itself back in.
 
-## What it does
+It's built to be the opposite of a heavy desktop widget. Holm uses the WebView2 runtime that Windows already
+has, so the installer is about 2 MB, it sits at a fraction of a percent of one processor core when idle, and
+nothing on screen moves while it's hidden.
 
-- **Music, no setup**: Spotify, Apple Music, TIDAL, Deezer, Amazon Music, VLC, browsers (YouTube, SoundCloud,
-  Spotify web) and anything else in the Windows media card. Cover, title, synced lyrics, seek, shuffle, repeat,
-  and the playing app's own volume (not the whole PC's). The accent colour follows the album art. While a
-  song plays, the resting island shows just the cover, the title, or the line being sung (Settings → Look →
-  Resting island).
-- **Pear Desktop**: also likes, dislikes and exact progress through Pear's API Server plugin.
-- **Claude Code**: live activity per session (reading, editing, running), Allow or Deny permission requests from
-  the island, a chime and a summary when it finishes, and your 5-hour and weekly limits as a ring.
-- **Harnesses**: finds the AI coding agents on your PC (Claude Code, Codex, OpenCode, Antigravity, Gemini CLI,
-  Copilot CLI, Cline, Cursor Agent, Amp and more), shows which are running and what each used today, read
-  from the files each one already keeps, each with its own logo.
-- **Games**: an intro when a game starts, out of the way while you play, a hotkey to bring it back, and the
-  agent news you missed when you are done.
-- **Calm by default**: over a maximized app it stays full but makes way, dropping to a thin line while your
-  pointer is near (on its way to a browser's tabs, say) and coming back when it moves off; push to the top edge
-  to open it. Rests as a line when idle, never opens mid-drag, respects Windows Do not disturb, never takes
-  focus. Settings → General → Over a maximized window also has Learn, Thin line and Full.
-- **Shelf**: drop files on the island to keep them handy, clipboard history, a quick note.
-- **Focus**: a timer that counts down in the island while you work.
-- **Home**: clock, weather, Wi-Fi and Bluetooth toggles, battery.
-- **Looks**: Notch, Pill or Line; 15 themes plus your own; 13 bundled typefaces; springy, smooth or minimal motion.
+<p align="center">
+  <a href="https://github.com/IndraTensei/holm/releases/latest"><b>Download for Windows 10 and 11</b></a>
+  <br>
+  <sub>Free and open source · No administrator rights needed · macOS and Linux versions are in the works</sub>
+</p>
 
-More screens in [docs/screenshots](docs/screenshots) (browser preview with sample data).
+## A quick tour
 
-## Install
+### Music that feels at home
 
-Get it from [holm.indratensei.me](https://holm.indratensei.me) or the [latest release](https://github.com/IndraTensei/holm/releases/latest):
+Play something in Spotify, Apple Music, TIDAL, Deezer, VLC, YouTube in a browser, or anything else that shows up
+in the Windows media card, and Holm picks it up with no setup. You get the cover, synced lyrics you can tap to
+jump to, seek, shuffle and repeat, and a volume slider for that app alone, not your whole PC. The island even
+takes its accent colour from the album art. While a song plays, the resting island can show just the cover, the
+title, or the line being sung.
 
-- **`Holm_<version>_x64-setup.exe`**: the installer. It asks where to install, whether Holm starts when you
-  sign in to Windows, and whether to add Start menu and desktop shortcuts. No administrator rights needed.
-- **`Holm-<version>-portable-x64.exe`**: the app on its own. Put it anywhere and run it. It needs WebView2,
-  which Windows 11 already has.
+Using Pear Desktop? Connect it and you also get likes, dislikes and exact progress.
 
-Holm isn't code-signed yet, so Windows SmartScreen may say it "protected your PC": choose **More info → Run
-anyway**. Holm lives in the system tray. Start with Windows can be switched on or off later in Settings →
-General. Settings and data live in `%APPDATA%\in.tenseitech.holm`.
+<p align="center">
+  <img src="docs/screenshots/09-open-music.jpg" width="620" alt="The music page: album art, controls, and synced lyrics">
+</p>
 
-Unattended install: `Holm_<version>_x64-setup.exe /S` (add `/AUTOSTART` to start with Windows, `/NS` for no
-shortcuts).
+### Your coding agents, at a glance
 
-### Connect Pear Desktop
-In Pear: Plugins → API Server → on. In the island: Settings → Music → Connect Pear, then Allow in Pear's dialog.
+Connect Claude Code once, and every session shows up live: what it's reading, editing or running, and for how
+long. When it asks for permission, the island opens with **Allow** and **Deny** so you can answer without
+hunting for the right terminal. When it finishes, you hear a soft chime and see a one-line summary. Your 5-hour
+and weekly limits sit in a small ring.
 
-### Connect Claude Code
-Settings → Agents → Connect Claude Code. This adds HTTP hooks to `~/.claude/settings.json` (a backup is kept)
-pointing at `127.0.0.1:47821`. Restart running Claude Code sessions.
+Holm also spots the other AI coding tools on your PC (Codex, OpenCode, Gemini CLI, Copilot CLI, Cline, Cursor
+Agent, Amp and more) and shows which are running and what each one used today.
 
-## Using it
+<table align="center">
+  <tr>
+    <td><img src="docs/screenshots/10-open-agents.jpg" width="400" alt="The agents page with a live session"></td>
+    <td><img src="docs/screenshots/05-approval.jpg" width="400" alt="An approval request with Allow and Deny"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Every session, live</sub></td>
+    <td align="center"><sub>Answer permission requests from the island</sub></td>
+  </tr>
+</table>
 
-- Hover the island to open it; it closes when you move away. Click the small bubble beside it to jump to the
-  second thing going on (an agent, a timer or the music).
-- **Ctrl+Alt+Space** opens and closes it from the keyboard (change it in Settings → General).
-- Right-click the tray icon to open the island or Settings, hide the island, or quit.
-- **Settings → About** checks for updates (and installs them in one click), and can uninstall Holm.
-- Settings: **General** (start with Windows, shortcuts, graphics, hover or click, when to rest as a line),
-  **Look** (shape, theme, typefaces, motion, what the resting island shows), **Music**, **Agents**,
-  **Harnesses**, **Games**, **Shelf and widgets** and **About**.
+### A home for the small things
 
-## Platforms
+The home page puts the clock, the weather, Wi-Fi and Bluetooth toggles and your battery next to what's playing
+and what your agents are up to. Drop files on the island to keep them on a shelf, scroll back through your
+clipboard, jot a quick note, or start a focus timer that counts down right in the island.
+
+<p align="center">
+  <img src="docs/screenshots/17-open-home-arena.jpg" width="620" alt="The home page in the Arena theme">
+</p>
+
+### Ready when you game
+
+Start a game and the island plays a short intro with the game's own logo, then steps aside completely while you
+play. Press a shortcut if you want it back. When you're done, it shows you what your agents finished while you
+were away.
+
+### Polite by design
+
+Holm tries hard never to be in the way. Over a maximized app, the full island stays put until your pointer comes
+right up to it, on its way to a browser's tabs say, and then it slips down to a thin line so your click lands
+where you meant it. It comes back the moment you move off. It rests as a line when nothing is happening, never
+opens while you're dragging something, never steals focus, and respects Windows' Do not disturb.
+
+### Make it yours
+
+Choose a Notch, Pill or Line shape, one of 15 themes or your own, 13 typefaces, and springy, smooth or minimal
+motion.
+
+<p align="center">
+  <img src="docs/screenshots/settings-look.jpg" width="620" alt="Settings, Look: shapes, themes and typefaces">
+</p>
+
+More screens live in [docs/screenshots](docs/screenshots).
+
+## Getting started
+
+1. Download **`Holm_<version>_x64-setup.exe`** from the [latest release](https://github.com/IndraTensei/holm/releases/latest)
+   and run it. It asks where to install, whether Holm should start when you sign in, and whether you'd like
+   Start menu and desktop shortcuts.
+2. Holm isn't code-signed yet, so Windows SmartScreen may say it "protected your PC". Choose **More info →
+   Run anyway**.
+3. Look at the top of your screen. That's it.
+
+Prefer not to install anything? **`Holm-<version>-portable-x64.exe`** is the whole app in one file. Put it
+anywhere and run it.
+
+<details>
+<summary><b>Connect Claude Code</b></summary>
+<br>
+
+Open Settings → Agents → **Connect Claude Code**. Holm adds its hooks to `~/.claude/settings.json` (keeping a
+backup) so Claude Code can report to the island on `127.0.0.1:47821`. Restart any Claude Code sessions that were
+already running.
+</details>
+
+<details>
+<summary><b>Connect Pear Desktop</b></summary>
+<br>
+
+In Pear, turn on Plugins → API Server. Then in Holm, open Settings → Music → **Connect Pear** and choose Allow in
+Pear's dialog.
+</details>
+
+<details>
+<summary><b>Install for many PCs at once</b></summary>
+<br>
+
+`Holm_<version>_x64-setup.exe /S` installs silently. Add `/AUTOSTART` to start Holm when users sign in, or `/NS`
+for no shortcuts.
+</details>
+
+## Everyday use
+
+| To | Do this |
+| --- | --- |
+| Open the island | Hover over it, or press **Ctrl+Alt+Space** |
+| Jump to the other thing going on | Click the small bubble beside the island |
+| Open it over a maximized app | Push the pointer to the very top edge |
+| Hide it for a while | **Ctrl+Alt+H**, or right-click the tray icon |
+| Change anything | Right-click the tray icon → Settings |
+| Update | Settings → About → **Update** (Holm also tells you when there's a new version) |
+| Uninstall | Settings → About → **Uninstall Holm** |
+
+Both shortcuts can be changed in Settings → General. Your settings live in `%APPDATA%\in.tenseitech.holm`.
+
+## Where it runs
 
 | System | Status |
 | --- | --- |
-| Windows 11, 64-bit (x64) | ✅ Supported and tested |
-| Windows 10 version 1809 or later, 64-bit (x64) | ✅ Supported |
-| Windows on ARM | Not built yet. The x64 build may run under emulation; untested |
-| macOS | 🛠️ In development: [#10](https://github.com/IndraTensei/holm/issues/10) |
-| Linux | 🛠️ In development: [#11](https://github.com/IndraTensei/holm/issues/11) |
+| Windows 11, 64-bit | Supported and tested |
+| Windows 10 version 1809 or later, 64-bit | Supported |
+| Windows on ARM | Not built yet (the x64 build may run under emulation, untested) |
+| macOS | In development, see [#10](https://github.com/IndraTensei/holm/issues/10) |
+| Linux | In development, see [#11](https://github.com/IndraTensei/holm/issues/11) |
 
-The island, its pages, settings, themes, lyrics, weather, the Claude Code connection and plan usage are shared
-by every system. What differs is the part that talks to the operating system: the always-on-top window and
-click-through, now playing, volume, Wi-Fi and Bluetooth, full-screen and game detection, start at login and the
-installer. Each system gets its own version of those, and a feature a system can't offer yet stays hidden there
-instead of breaking.
+Most of Holm, from the island and its pages to settings, themes, lyrics and the Claude Code connection, is the
+same everywhere. The parts that talk to the operating system (the always-on-top window, now playing, volume,
+Wi-Fi and Bluetooth, game detection, start at login and the installer) need their own version on each system.
+Want Holm on your Mac or Linux desktop sooner? The tracking issues list every piece, so pick one and say so there.
 
-Want Holm on your Mac or Linux desktop sooner? The tracking issues list each piece; pick one and say so there.
+## Light on your PC
 
-## Performance
+Measured on Windows 11 with an Intel Core i7-11700 at 1920×1080, default settings. The figures include Holm's
+WebView2 processes; CPU is a share of one core.
 
-Measured on the optimized build: Windows 11 Pro (build 26200), Intel Core i7-11700 (8 cores, 16 threads),
-GeForce GTX 1660 Super, 16 GB, 1920×1080 at 100%, WebView2 156, default settings (Graphics: Software).
-Figures are the island plus its WebView2 processes; CPU is a share of one core.
-
-| State | CPU, one core | Memory (private) |
+| What's happening | CPU | Memory |
 | --- | --- | --- |
-| At rest | 0.3% | 116 MB |
-| Open, with an agent working (spinner moving) | 8% | 143 MB |
-| Open, with the settings window open too | | 156 MB |
+| Resting at the top of the screen | 0.3% | 116 MB |
+| A song playing, lyrics in the island, an agent working | 2.5% | 112 MB |
+| Open, with an agent working | 8% | 143 MB |
 
-- With Graphics → Hardware it holds about 100 MB more (225 to 260 MB) and uses a little less processor while
-  open (5% in the same state).
-- Task Manager's working set reads higher (about 400 MB) because memory shared between the WebView2 processes
-  is counted once per process; private memory above is what the island actually holds.
-- Loops (equalizer, spinner) step together at 8 frames a second instead of 60 and sit on their own small
-  layers; clocks tick once a second, or four times a second only while the music page is open; lyrics in the
-  resting island move on with one timer per line, keep one width for the whole song so the island never
-  resizes mid-song, and slide only a line that doesn't fit; nothing moves while the island is hidden or a
-  game or full-screen app is in front.
-- WebView2 runs lean: no spare page process, no background downloads, one page process for both windows.
-- In Task Manager, the island's WebView2 processes are listed inside the **Holm** group on the Processes tab
-  (expand it to see them). On the Details tab they appear as `msedgewebview2.exe`, Microsoft's own signed
-  runtime that Windows keeps up to date, so they can't carry Holm's name; their command line includes
-  `--webview-exe-name=holm.exe`. Quitting Holm closes them all.
-- The pointer is read with `GetCursorPos` (a cheap read of where it is, no mouse hook in the input path) 25
-  times a second, 60 near the island; it needs no memory, and the page hears only changes (over the island,
-  near it).
-- Network: nothing unless turned on. Plan usage is read from the copy Claude Code and Codex keep on the PC,
-  and their usage services are asked at most every 5 minutes, only when that copy is old.
-- Install size: about 2 MB installer, 5 MB on disk, plus the WebView2 runtime that Windows already has.
+<details>
+<summary><b>How it stays that light</b></summary>
+<br>
 
-## Minimum requirements
+- **No 60 fps loops.** The equalizer and spinners step together on a shared 8 frames a second, each on its own
+  small layer. Nothing moves at all while the island is hidden or a game or full-screen app is in front.
+- **Clocks that only tick when needed.** Once a second normally, four times a second only while the music page is
+  open. Lyrics in the resting island move on with one timer per line, and the island keeps one width for the
+  whole song instead of resizing on every line.
+- **A cheap pointer check.** Holm asks Windows where the pointer is 25 times a second (60 near the island), with
+  no mouse hook in your input, and the island only hears about changes.
+- **A lean WebView2.** Drawing is in software by default, with no spare page process, no background downloads,
+  and one page process for both windows. Settings → General → Graphics → Hardware uses about 100 MB more memory
+  and a little less processor while the island is open.
+- **About Task Manager.** Holm's WebView2 processes are listed inside the Holm group on the Processes tab. On the
+  Details tab they appear as `msedgewebview2.exe`, Microsoft's own runtime, with `holm.exe` in their command
+  line. Task Manager's working set reads higher (about 400 MB) because it counts shared memory once per process;
+  the figures above are what Holm actually holds. Quitting Holm closes them all.
+- **Small footprint.** About a 2 MB installer and 5 MB on disk, plus the WebView2 runtime Windows already has.
+</details>
 
-- Windows 10 version 1809 or later, or Windows 11, 64-bit (x64).
-- Microsoft Edge WebView2 Runtime: built into Windows 11 and present on most Windows 10 PCs; the installer
-  fetches it if missing.
-- About 150 MB of free memory for the island (4 GB of RAM works), and any 64-bit dual-core processor.
-- No particular graphics card: drawing is in software by default (Hardware in Settings needs DirectX 11).
-- Internet only for the optional parts: lyrics, weather, plan usage.
+**You'll need** Windows 10 version 1809 or later, or Windows 11, 64-bit; the WebView2 runtime (built into
+Windows 11, and the installer fetches it if it's missing); about 150 MB of free memory; and any 64-bit dual-core
+processor. No particular graphics card is needed.
 
 ## Privacy
 
-Media, system readings, clipboard and Claude Code activity stay on your PC. Plan usage asks Anthropic and OpenAI
-with the sign-ins already on the PC, only when turned on. Lyrics (LRCLIB) and weather (Open-Meteo) are fetched only
-when turned on, sending just the track or place. Once a day Holm asks GitHub for its latest release, sending
-nothing about you; turn that off in Settings → About.
+- Your music, system readings, clipboard and Claude Code activity never leave your PC.
+- Plan usage asks Anthropic and OpenAI using the sign-ins already on your PC, and only if you turn it on.
+- Lyrics (LRCLIB) and weather (Open-Meteo) are fetched only if you turn them on, sending just the song or the
+  place.
+- Once a day Holm asks GitHub whether there's a new version, sending nothing about you. You can turn that off in
+  Settings → About.
 
 ## Contributing
 
-Holm is open for development, and contributions of every size are welcome:
+Holm is open for development, and help of every size is welcome.
 
 - **Found a bug?** [Open a bug report](https://github.com/IndraTensei/holm/issues/new?template=bug_report.yml).
 - **Have an idea?** [Request a feature](https://github.com/IndraTensei/holm/issues/new?template=feature_request.yml),
   or talk it through first in [Discussions](https://github.com/IndraTensei/holm/discussions).
-- **Want to write code?** Pull requests are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), then look
-  for [good first issue](https://github.com/IndraTensei/holm/labels/good%20first%20issue) or
-  [help wanted](https://github.com/IndraTensei/holm/labels/help%20wanted), or help with the
-  [macOS](https://github.com/IndraTensei/holm/issues/10) and [Linux](https://github.com/IndraTensei/holm/issues/11)
-  versions.
-- **No Windows PC?** You can still work on the island's look and pages: `npm run dev` runs it in any browser
+- **Want to write code?** Start with [CONTRIBUTING.md](CONTRIBUTING.md), then look for a
+  [good first issue](https://github.com/IndraTensei/holm/labels/good%20first%20issue) or
+  [help wanted](https://github.com/IndraTensei/holm/labels/help%20wanted), or help bring Holm to
+  [macOS](https://github.com/IndraTensei/holm/issues/10) and [Linux](https://github.com/IndraTensei/holm/issues/11).
+- **No Windows PC?** You can still work on the island's look and pages. `npm run dev` runs it in any browser
   with sample data.
 
-Please follow the [Code of Conduct](CODE_OF_CONDUCT.md), and report security problems privately as described
-in [SECURITY.md](SECURITY.md).
+Please follow the [Code of Conduct](CODE_OF_CONDUCT.md), and report security problems privately as described in
+[SECURITY.md](SECURITY.md).
 
 ## Build from source
 
 ```sh
 npm ci
-npx tauri dev     # run, with hot reload for the UI
-npx tauri build   # the installer, in src-tauri/target/release/bundle/nsis
+npx tauri dev     # run it, with hot reload for the UI
+npx tauri build   # build the installer, in src-tauri/target/release/bundle/nsis
 ```
 
-Needs Node.js 22+, Rust stable and the Visual Studio C++ Build Tools; [CONTRIBUTING.md](CONTRIBUTING.md) has the
-details. Every push and pull request runs `.github/workflows/build.yml` on a Windows runner (type check,
-clippy, tests, installer and portable exe). Tagging `vX.Y.Z` publishes a release with notes from
-`docs/releases/vX.Y.Z.md`. The installer is Tauri's NSIS template with an options page added
-(`src-tauri/windows/installer.nsi`). [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) explains how the pieces fit;
-[STATUS.md](STATUS.md) tracks what is done and what is next.
+You'll need Node.js 22 or later, Rust stable and the Visual Studio C++ Build Tools; [CONTRIBUTING.md](CONTRIBUTING.md)
+has the details. Every push and pull request is type-checked, linted, tested and built on Windows by
+`.github/workflows/build.yml`, and tagging `vX.Y.Z` publishes a release with notes from
+`docs/releases/vX.Y.Z.md`. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) explains how the pieces fit, and
+[STATUS.md](STATUS.md) tracks what's done and what's next.
 
 ## License
 
 MIT, see [LICENSE](LICENSE). Third-party code, logos and typefaces keep their own licenses, listed in
 [NOTICE](NOTICE).
+
+<p align="center"><sub>Made by Ashish John Thomas at Tensei Tech.</sub></p>

@@ -3,33 +3,28 @@
   // rises in letter by letter, a light sweeps across, a bar charges, and the island says which
   // keys bring it back or hide it. Then Rust steps the island aside for the game.
   // Plays once per launch, so plain CSS animations are fine here (no loops: see stores/beat).
-  import { Gamepad2 } from '@lucide/svelte';
+  import GameMark from '../ui/GameMark.svelte';
   import { settings } from '../stores/settings.svelte';
+  import { hueOf } from '../gameLook';
+  import { artColor } from '../artColor';
+  import { rgbToHsl } from '../themes';
 
-  let { name }: { name: string } = $props();
+  // `icon`: the game's own icon from its exe (a PNG data URL), arriving a moment after the intro
+  // starts. It pops in on the right, and its colour becomes the intro's.
+  let { name, icon }: { name: string; icon?: string } = $props();
+  let iconHue = $state<number | null>(null);
+  $effect(() => {
+    iconHue = null;
+    const src = icon;
+    if (!src) return;
+    void artColor(src).then((rgb) => {
+      if (!rgb || src !== icon) return;
+      const [h, s] = rgbToHsl(rgb);
+      if (s > 0.2) iconHue = h; // a grey logo keeps the name's colour
+    });
+  });
 
-  // A hue per game: a few well-known ones tuned by hand, the rest from the name.
-  const HUES: Record<string, number> = {
-    valorant: 355,
-    'grand theft auto v': 135,
-    'red dead redemption 2': 8,
-    'counter-strike 2': 38,
-    fortnite: 270,
-    'apex legends': 2,
-    'league of legends': 45,
-    minecraft: 110,
-    'elden ring': 42,
-    'cyberpunk 2077': 58,
-  };
-  function hueOf(n: string): number {
-    const known = HUES[n.toLowerCase()];
-    if (known !== undefined) return known;
-    let h = 0;
-    for (const c of n) h = (h * 31 + c.charCodeAt(0)) % 360;
-    return h;
-  }
-
-  const hue = $derived(hueOf(name));
+  const hue = $derived(iconHue ?? hueOf(name));
   const letters = $derived([...name]);
   const keys = (combo: string) => (combo ? combo.split('+') : []);
   const back = $derived(keys(settings.v.hotkey));
@@ -38,8 +33,10 @@
 
 <div class="intro" style="--hue:{hue}" role="status" aria-label="Opening {name}">
   <div class="sweep" aria-hidden="true"></div>
+  <!-- The game's own logo when Holm could read it, else its monogram: never a stock icon. -->
+  <span class="mark"><GameMark {name} {icon} {hue} size={56} /></span>
   <div class="top">
-    <span class="icon"><Gamepad2 size={14} strokeWidth={2.4} /></span>
+    <span class="live" aria-hidden="true"></span>
     <span>Opening</span>
   </div>
   <div class="name display" aria-hidden="true">
@@ -101,13 +98,35 @@
     opacity: 0;
     animation: rise 0.4s ease-out 0.05s forwards;
   }
-  .icon {
-    display: grid;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 7px;
-    background: var(--g-soft);
+  /* A live dot in the game's colour: one ring goes out from it, twice, then it rests. */
+  .live {
+    position: relative;
+    width: 7px;
+    height: 7px;
+    margin: 0 2px 0 1px;
+    border-radius: 50%;
+    background: var(--g);
+    box-shadow: 0 0 8px var(--g);
+  }
+  .live::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1.5px solid var(--g);
+    opacity: 0;
+    animation: ring 1.1s ease-out 0.3s 2;
+  }
+  /* The game's mark, top right: pops in with the intro. */
+  .mark {
+    position: absolute;
+    top: 16px;
+    right: 22px;
+    animation: pop 0.55s cubic-bezier(0.2, 0.9, 0.25, 1.25) 0.1s both;
+  }
+  .top,
+  .name {
+    margin-right: 72px;
   }
   .name {
     position: relative;
@@ -187,6 +206,26 @@
   em {
     margin-left: 5px;
     font-style: normal;
+  }
+  @keyframes ring {
+    from {
+      opacity: 0.8;
+      transform: scale(0.4);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1.6);
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6) rotate(-8deg);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
   @keyframes letter {
     to {

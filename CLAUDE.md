@@ -16,7 +16,7 @@ cargo test --manifest-path src-tauri/Cargo.toml --lib
 ```
 
 Browser preview scenes (mock data, `src/lib/mock.ts`): `?open=music|agents|home|system|shelf|focus`,
-`?peek=done|track|volume|charging`, `?approval=1`, `?drop=1`, `?timer=1`, `?game=<name>`, `?front=<app>` (a maximized app in front; add `&near=1` for the pointer near it), `?ended=1`, `?missed=1`, `?theme=<id>`, `?style=notch|pill|line`,
+`?peek=done|track|volume|charging`, `?approval=1`, `?drop=1`, `?timer=1`, `?game=<name>` (add `&icon=1` for a logo), `?front=<app>` (a maximized app in front; add `&near=1` for the pointer near it), `?ended=1`, `?missed=1`, `?theme=<id>`, `?style=notch|pill|line`,
 `?music=off`, `?agents=off`, `?title=lyrics`, `#settings&section=look`, `?section=games#settings`, `?section=tools#settings`. `python3 scripts/shots.py` screenshots them
 (needs `npx vite preview --port 4173` and Playwright). `python scripts/film.py` records the promo clips from
 `npm run dev` (`?film=1` lets it play events into the preview; it films 4K screenshots with the page at 1/8 speed, so the clips
