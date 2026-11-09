@@ -5,7 +5,7 @@
 
 <section>
   <h2 class="display">About</h2>
-  <p class="lead">Holm 0.1.3, a lean Dynamic Island for {platform.os === 'windows' ? 'Windows 10 and 11' : `${platform.name} (in development)`}. Built by Ashish John Thomas at Tensei Tech.</p>
+  <p class="lead">Holm 0.1.4, a lean Dynamic Island for {platform.os === 'windows' ? 'Windows 10 and 11' : `${platform.name} (in development)`}. Built by Ashish John Thomas at Tensei Tech.</p>
 
   <h3>What it talks to</h3>
   <ul class="facts">
