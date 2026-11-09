@@ -6,6 +6,8 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-11-09
+
 ### Added
 
 - **Game logos.** The intro that plays when a game starts leads with the game's own logo, large, lit by a
@@ -17,6 +19,7 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ### Changed
 
+- Settings: Games has Holm's own reticle icon in the sidebar instead of the stock gamepad.
 - The README is rewritten as a friendlier tour with screenshots, a centred demo, and the technical detail
   folded away.
 
@@ -120,7 +123,8 @@ The first release.
 - Notch, Pill and Line shapes, 15 themes plus your own, 13 typefaces, three motion styles.
 - An installer with an options page (start with Windows, Start menu and desktop shortcuts) and a portable exe.
 
-[Unreleased]: https://github.com/IndraTensei/holm/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/IndraTensei/holm/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/IndraTensei/holm/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/IndraTensei/holm/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/IndraTensei/holm/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/IndraTensei/holm/compare/v0.1.2...v0.1.3
