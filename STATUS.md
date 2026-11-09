@@ -254,3 +254,4 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   shipping a ~150 MB fixed runtime with no Windows updates). Task Manager's Processes tab already groups them
   under "Holm" (holm.exe's FileDescription); README and Settings → About now say so.
   Licensed MIT (LICENSE, README section, package.json and Cargo.toml) and made the repo public.
+  Website holm.indratensei.me: repo homepage, README header and Install, and a Holm website button in Settings → About.
