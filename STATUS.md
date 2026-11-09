@@ -303,3 +303,19 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   after playing music and a working agent, so with both it never showed); the bubble takes the next thing, an
   agent waiting for an answer first. As a thin line, a running timer fills the line with its progress (a faint
   track in the timer's colour, the done share bright).
+- 2026-11-09 (session 7, unreleased): memory research (owner asked for "max" optimisation). Measured the
+  release build at rest: ~110 MB private over 7 processes (holm 10, WebView2 browser 31, GPU 13.5 with the
+  default Software graphics, network 10, storage 7, crashpad 3, page 32 to 65 as the session goes on), and an
+  audio process (8) once a chime had played. Tried, via `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` on the
+  installed build: `--in-process-gpu` (+40 MB, the GPU work moves into the browser process), network or audio
+  service in-process (ignored), `--js-flags=--lite-mode` / `--jitless` (no gain), the GPU path without
+  `--disable-gpu` (GPU process 13 to 83 MB). `ICoreWebView2_19` MemoryUsageTargetLevel Low at rest made no
+  measurable difference to private memory (113 either way); not kept. Moving the lyrics cache out of
+  localStorage did not stop the storage process (WebView2 starts it anyway); not kept. Kept: the chime's
+  AudioContext closes 2 s after it plays (an open one holds an output stream and the audio process). The
+  existing lean flags + Software graphics are the WebView2 floor. Native alternative measured with a Slint
+  1.18 probe (frameless, transparent, always-on-top pill with text, gradient and a looping dot): software
+  renderer 4 MB private / 0.15% CPU and transparency works; Skia 63 MB and FemtoVG 117 MB (GPU drivers).
+  So a Slint software-rendered island would put Holm near 15 MB, at the price of rewriting the UI
+  (~8,800 lines of Svelte/TS) in .slint + Rust; Settings could stay a WebView2 window in its own process,
+  started on demand. Not started: owner's call.
