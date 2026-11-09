@@ -246,21 +246,58 @@ Please follow the [Code of Conduct](CODE_OF_CONDUCT.md), and report security pro
 
 ## Build from source
 
-```sh
-npm ci
-npx tauri dev     # run it, with hot reload for the UI
-npx tauri build   # build the installer, in src-tauri/target/release/bundle/nsis
-```
+**You'll need**
 
-You'll need Node.js 22 or later, Rust stable and the Visual Studio C++ Build Tools; [CONTRIBUTING.md](CONTRIBUTING.md)
-has the details. Every push and pull request is type-checked, linted, tested and built on Windows by
-`.github/workflows/build.yml`, and tagging `vX.Y.Z` publishes a release with notes from
-`docs/releases/vX.Y.Z.md`. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) explains how the pieces fit, and
-[STATUS.md](STATUS.md) tracks what's done and what's next.
+- Windows 10 or 11
+- [Node.js](https://nodejs.org) 22 or later
+- [Rust](https://rustup.rs) stable, with the MSVC toolchain
+- The [Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) ("Desktop development with C++")
+
+**Steps**
+
+1. Get the code:
+
+   ```sh
+   git clone https://github.com/IndraTensei/holm.git
+   cd holm
+   ```
+
+2. Install the frontend packages:
+
+   ```sh
+   npm ci
+   ```
+
+3. Run Holm in development, with hot reload for the UI:
+
+   ```sh
+   npx tauri dev
+   ```
+
+4. Build the installer and the app:
+
+   ```sh
+   npx tauri build
+   ```
+
+   The installer lands in `src-tauri/target/release/bundle/nsis`, and the app itself is
+   `src-tauri/target/release/holm.exe`.
+
+Only want to work on the look? `npm run dev` runs the island in any browser with sample data, no Rust needed.
+
+**How releases are made**
+
+Every push and pull request is type-checked, linted, tested and built on Windows by
+[`.github/workflows/build.yml`](.github/workflows/build.yml). Tagging `vX.Y.Z` on `main` publishes a release with
+the installer, the portable exe, and notes from `docs/releases/vX.Y.Z.md`.
+
+**Learn more**
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): setup details, checks to run, and the house rules
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how the pieces fit together
+- [STATUS.md](STATUS.md): what's done and what's next
 
 ## License
 
 MIT, see [LICENSE](LICENSE). Third-party code, logos and typefaces keep their own licenses, listed in
 [NOTICE](NOTICE).
-
-<p align="center"><sub>Made by Ashish John Thomas at Tensei Tech.</sub></p>
