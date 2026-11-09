@@ -14,6 +14,7 @@ mod clipboard;
 mod config;
 mod games;
 mod harness;
+mod installed;
 mod island;
 mod media;
 mod near;

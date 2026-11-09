@@ -7,7 +7,7 @@ Read this first, then CLAUDE.md, then docs/ARCHITECTURE.md.
 
 ## Where things stand
 
-Version 0.1.5. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
+Version 0.1.6. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
 NSIS installer 1.9 MB, portable zip 2.3 MB). The CI build has run on a real Windows 11 desktop (1920×1080,
 100% scale) and the core paths work: placement, click-through, hover, shortcut, full-screen hide, Pear,
 Claude Code hooks, volume peek. 🧪 below means not yet seen on real Windows.
@@ -319,3 +319,16 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   So a Slint software-rendered island would put Holm near 15 MB, at the price of rewriting the UI
   (~8,800 lines of Svelte/TS) in .slint + Rust; Settings could stay a WebView2 window in its own process,
   started on demand. Not started: owner's call.
+- 2026-11-09 (session 7, unreleased): game logos from Windows' installed-programs list. The owner tested
+  Valorant on 0.1.5 (built before the logo work) and saw the old gamepad; and Vanguard hides Valorant's exe,
+  so the exe-icon path alone would only ever give it a monogram. New `installed.rs` reads the Uninstall keys
+  (HKCU, HKLM 64- and 32-bit; 142 entries in ~10 ms here) and matches a game by install folder (deepest
+  folder holding the exe, shared roots like Program Files ignored) or by name (letters and digits); its
+  DisplayIcon (.ico/.exe, never an uninstaller, forward slashes turned back, which the shell needs) is the
+  logo source, then the exe. Checked here with a probe running the real code: Valorant
+  (`ProgramData\Riot Games\Metadata\valorant.live\valorant.live.ico`, by name and by path) and Deadlock
+  (Steam's `steam\games\<sha>.ico`) both come out as 128 px PNGs (icon size raised from 96). The intro now
+  leads with the 64 px mark on the left, a blurred copy of the logo behind it as a glow, the title beside it.
+- 2026-11-09 (session 7): v0.1.6 released: game logos from the installed-programs list and the redesigned
+  intro, Holm's own Games icon in Settings, the focus timer on the resting island, update hardening (SHA-256,
+  slow downloads, leftover installer), the chime's audio context closing after it plays, README tour.
