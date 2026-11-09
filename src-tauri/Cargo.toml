@@ -25,6 +25,11 @@ tiny_http = "0.12"
 # Windows' own TLS (SChannel) keeps the binary small: no bundled crypto library.
 ureq = { version = "3", default-features = false, features = ["native-tls-no-default", "json", "gzip"] }
 
+# Transparent windows on macOS need Tauri's private-API feature (tauri.macos.conf.json turns on
+# macOSPrivateApi to match). Features add up, so this only extends the tauri line above.
+[target.'cfg(target_os = "macos")'.dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png", "macos-private-api"] }
+
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.62", features = [
   "Foundation",

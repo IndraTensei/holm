@@ -246,6 +246,12 @@ export async function call<T>(cmd: string, args?: Record<string, unknown>): Prom
       }
       case 'quiet_get':
         return false;
+      case 'platform_info': {
+        // ?os=macos or ?os=linux previews what those versions show (see stores/platform).
+        const os = params.get('os') ?? 'windows';
+        const win = os === 'windows';
+        return { os, media: win, appVolume: win, volume: win, radios: win, clipboard: win, games: win, quiet: win, frontApp: win, battery: win || os === 'linux', systemStats: win || os === 'linux' };
+      }
       case 'island_summon':
       case 'island_set_hidden':
         return null;

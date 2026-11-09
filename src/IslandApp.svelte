@@ -19,6 +19,7 @@
   import { clock } from './lib/stores/clock.svelte';
   import { beat } from './lib/stores/beat.svelte';
   import { fit } from './lib/stores/fit.svelte';
+  import { platform } from './lib/stores/platform.svelte';
   import { inTauri, on, send, call, focusWindow, onFileDrop, registerHotkeys } from './lib/bridge';
   import { findTheme, themeVars, applyVars, accentFromArt } from './lib/themes';
   import { artColor } from './lib/artColor';
@@ -381,7 +382,7 @@
   onMount(() => {
     const stops: (() => void)[] = [];
     void (async () => {
-      await settings.load();
+      await Promise.all([settings.load(), platform.load()]);
       await media.start();
       await agents.start({
         done: (d) => {

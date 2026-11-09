@@ -1,25 +1,28 @@
 <script lang="ts">
   import { send } from '../bridge';
+  import { platform } from '../stores/platform.svelte';
 </script>
 
 <section>
   <h2 class="display">About</h2>
-  <p class="lead">Holm 0.1.2, a lean Dynamic Island for Windows 10 and 11. Built by Ashish John Thomas at Tensei Tech.</p>
+  <p class="lead">Holm 0.1.2, a lean Dynamic Island for {platform.os === 'windows' ? 'Windows 10 and 11' : `${platform.name} (in development)`}. Built by Ashish John Thomas at Tensei Tech.</p>
 
   <h3>What it talks to</h3>
   <ul class="facts">
-    <li>Windows media controls, system readings, the clipboard and radios stay on this PC.</li>
+    <li>Media, system readings, the clipboard and radios stay on this {platform.os === 'macos' ? 'Mac' : 'computer'}.</li>
     <li>Claude Code reaches the island through local hooks on 127.0.0.1. Nothing is uploaded.</li>
     <li>Plan usage asks Anthropic and OpenAI with the sign-ins already on this PC, and only when turned on.</li>
     <li>Lyrics come from LRCLIB and weather from Open-Meteo, only when turned on.</li>
     <li>Pear is reached on its local API Server with the token it gives the island.</li>
   </ul>
 
+  {#if platform.os === 'windows'}
   <h3>In Task Manager</h3>
   <ul class="facts">
     <li>Holm draws with Microsoft Edge WebView2, which Windows already has, so a few "Microsoft Edge WebView2" processes run alongside it. On the Processes tab they sit inside the Holm group; on the Details tab they are msedgewebview2.exe with holm.exe in their command line.</li>
     <li>Quitting Holm from the tray closes them too.</li>
   </ul>
+  {/if}
 
   <h3>Credits</h3>
   <ul class="facts">

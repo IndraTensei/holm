@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { platform } from '../stores/platform.svelte';
   import {
     Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, ThumbsDown, Volume2, VolumeX, ChevronDown, Plug,
   } from '@lucide/svelte';
@@ -183,7 +184,11 @@
 {:else}
   <div class="empty">
     <p class="display">Nothing is playing</p>
-    <span>Play something in Spotify, Pear, a browser or any player that shows in the Windows media card.</span>
+    {#if platform.info.media}
+      <span>Play something in Spotify, Pear, a browser or any player that shows in the Windows media card.</span>
+    {:else}
+      <span>Now playing on {platform.name} is still being built. Pear Desktop works today: Settings → Music.</span>
+    {/if}
 
   </div>
 {/if}

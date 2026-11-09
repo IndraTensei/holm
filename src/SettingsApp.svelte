@@ -10,6 +10,7 @@
   import WidgetsSection from './lib/settings/WidgetsSection.svelte';
   import AboutSection from './lib/settings/AboutSection.svelte';
   import { settings } from './lib/stores/settings.svelte';
+  import { platform } from './lib/stores/platform.svelte';
   import { media } from './lib/stores/media.svelte';
   import { system } from './lib/stores/system.svelte';
   import { findTheme, themeVars, applyVars, mix } from './lib/themes';
@@ -39,7 +40,7 @@
 
   onMount(() => {
     void (async () => {
-      await settings.load();
+      await Promise.all([settings.load(), platform.load()]);
       await media.start();
       await system.start(() => {}, () => {});
     })();
@@ -53,7 +54,7 @@
       Holm
     </div>
     <nav>
-      {#each sections as sec (sec.id)}
+      {#each sections.filter((x) => x.id !== 'games' || platform.info.games) as sec (sec.id)}
         {@const Icon = sec.icon}
         <button class:on={current === sec.id} aria-current={current === sec.id ? 'page' : undefined} onclick={() => (current = sec.id)}>
           <Icon size={16} />
