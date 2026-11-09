@@ -30,6 +30,9 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
   other request, which a 2 MB file can need more than on a slow line. It now has 10 minutes.
 - The installer left in the temp folder after an update is now deleted shortly after Holm restarts. It was
   still in use when Holm started, so it stayed until the next start.
+- After the first chime (an agent finishing, a timer ending), Holm kept the sound output open for the rest of
+  the session, which keeps a WebView2 audio process and an audio stream running. It now closes them two
+  seconds after each chime.
 
 ### Security
 
