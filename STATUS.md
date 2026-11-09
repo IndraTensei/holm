@@ -299,3 +299,7 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   the right and takes its hue from it (`artColor`). `Game.path` is serde-skipped; title-only detections have no
   path and no logo. Preview: `?game=Valorant&icon=1`. README rewritten as a tour (centred GIF, screenshots,
   everyday-use table, details folded), no emoji.
+- 2026-11-09 (session 7, unreleased): a focus timer the user started now takes the resting island (it came
+  after playing music and a working agent, so with both it never showed); the bubble takes the next thing, an
+  agent waiting for an answer first. As a thin line, a running timer fills the line with its progress (a faint
+  track in the timer's colour, the done share bright).
