@@ -5,6 +5,7 @@
   import { settings } from '../stores/settings.svelte';
   import { pear } from '../stores/pear.svelte';
   import { platform } from '../stores/platform.svelte';
+  import { send } from '../bridge';
 
   const s = $derived(settings.v);
   const statusText = $derived(
@@ -23,7 +24,7 @@
   <h2 class="display">Music</h2>
   {#if !platform.info.media}
     <p class="lead">
-      Now playing isn't available on {platform.name} yet: it's being built, and you can follow or help on <a href={platform.issue} target="_blank" rel="noreferrer">the tracking issue</a>. Pear Desktop still connects below.
+      Now playing isn't available on {platform.name} yet: it's being built, and you can follow or help on <button class="link" onclick={() => send('open_url', { url: platform.issue })}>the tracking issue</button>. Pear Desktop still connects below.
     </p>
   {:else}
   <p class="lead">
@@ -38,7 +39,7 @@
       options={[
         { value: 'auto', label: 'Automatic' },
         { value: 'pear', label: 'Pear only' },
-        { value: 'system', label: 'Windows only' },
+        { value: 'system', label: platform.os === 'windows' ? 'Windows only' : 'System only' },
       ]}
       onchange={(v) => settings.set({ musicSource: v })}
     />
@@ -82,6 +83,15 @@
 </section>
 
 <style>
+  .link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
   .pear {
     margin: 6px 0 10px;
     padding: 14px 16px;
