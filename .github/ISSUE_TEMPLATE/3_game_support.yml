@@ -1,0 +1,59 @@
+name: Game support
+description: A game Holm doesn't recognise, or shows with the wrong name or logo.
+labels: ["area: games", "status: needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Holm spots a game by its exe, or by a big window from a store's games folder. It takes the logo from the game's entry in Windows' installed programs (what its launcher registered), then from the exe.
+        You can add any game yourself in Settings → Games while this is looked at.
+  - type: input
+    id: game
+    attributes:
+      label: Game
+      placeholder: Valorant
+    validations:
+      required: true
+  - type: input
+    id: exe
+    attributes:
+      label: Its exe
+      description: With the game running, open Task Manager → Details and find it there.
+      placeholder: VALORANT-Win64-Shipping.exe
+    validations:
+      required: true
+  - type: dropdown
+    id: launcher
+    attributes:
+      label: Where it's from
+      options: [Steam, Riot Client, Epic Games, EA app, Ubisoft Connect, Battle.net, Xbox app or Game Pass, GOG Galaxy, Standalone installer, Other]
+    validations:
+      required: true
+  - type: dropdown
+    id: what
+    attributes:
+      label: What goes wrong
+      multiple: true
+      options:
+        - It isn't recognised as a game
+        - No intro when it starts
+        - Wrong name
+        - No logo, only initials
+        - Wrong logo
+        - The island stays over the game
+        - Something else
+    validations:
+      required: true
+  - type: input
+    id: holm
+    attributes:
+      label: Holm version
+      description: Settings → About shows it.
+      placeholder: "0.1.6"
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Where it's installed, whether it uses anti-cheat, a screenshot of the intro.

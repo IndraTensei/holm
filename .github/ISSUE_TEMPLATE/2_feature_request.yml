@@ -1,7 +1,10 @@
 name: Feature request
 description: An idea for something Holm could do.
-labels: [enhancement]
+labels: ["type: feature", "status: needs triage"]
 body:
+  - type: markdown
+    attributes:
+      value: Not sure yet, or want to see who else would use it? Talk it through in [Ideas](https://github.com/IndraTensei/holm/discussions/categories/ideas) first. Ideas that gather interest become requests.
   - type: textarea
     id: problem
     attributes:
@@ -19,6 +22,13 @@ body:
     attributes:
       label: Area
       options: [The island itself, Music, Claude Code and agents, Harnesses, Games, Shelf and widgets, Settings, Install and updates, Something else]
+    validations:
+      required: true
+  - type: textarea
+    id: look
+    attributes:
+      label: How it could look
+      description: A sketch, a screenshot from another app, or a few words. Optional.
   - type: checkboxes
     id: help
     attributes:

@@ -1,0 +1,47 @@
+name: Performance problem
+description: Holm uses more CPU, memory or battery than it should, or starts slowly.
+labels: ["type: performance", "status: needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: In Task Manager, Holm's memory is the whole Holm group, including its "Microsoft Edge WebView2" processes. About 110 MB at rest is expected today.
+  - type: textarea
+    id: what
+    attributes:
+      label: What you see
+      description: Task Manager's CPU and memory for the Holm group, and how long it lasts.
+      placeholder: 8% CPU and 260 MB for minutes after closing Settings
+    validations:
+      required: true
+  - type: checkboxes
+    id: state
+    attributes:
+      label: What was going on
+      options:
+        - label: Music playing, with lyrics on the island
+        - label: An AI agent working
+        - label: A game running
+        - label: A focus timer running
+        - label: The settings window open
+  - type: dropdown
+    id: graphics
+    attributes:
+      label: Graphics setting
+      description: Settings → General → Graphics.
+      options: [Software (default), Hardware]
+    validations:
+      required: true
+  - type: input
+    id: holm
+    attributes:
+      label: Holm version
+      placeholder: "0.1.6"
+    validations:
+      required: true
+  - type: input
+    id: pc
+    attributes:
+      label: Windows version and PC
+      placeholder: Windows 11 24H2, i5-1135G7, 16 GB, 1920×1080 at 125%
+    validations:
+      required: true

@@ -5,19 +5,45 @@ translations of the docs, and ports to macOS and Linux are all welcome.
 
 ## Ways to help
 
-- **Report a bug**: [open a bug report](https://github.com/IndraTensei/holm/issues/new?template=bug_report.yml).
-  Say which Holm and Windows versions you have and what you did; a screenshot or a short clip helps a lot.
-- **Ask for a feature**: [open a feature request](https://github.com/IndraTensei/holm/issues/new?template=feature_request.yml).
-  Say what you'd like to see and why; the why matters more than the how.
-- **Ask a question or share an idea**: use [Discussions](https://github.com/IndraTensei/holm/discussions).
-- **Port Holm to macOS or Linux**: see [#10 macOS](https://github.com/IndraTensei/holm/issues/10) and
-  [#11 Linux](https://github.com/IndraTensei/holm/issues/11). Comment there with the part you're taking.
+Open an issue from the [new issue page](https://github.com/IndraTensei/holm/issues/new/choose), which has a form
+for each kind:
+
+| Form | Use it for |
+| --- | --- |
+| [Bug report](https://github.com/IndraTensei/holm/issues/new?template=1_bug_report.yml) | Something doesn't work the way it should. A screenshot or a short clip helps a lot. |
+| [Feature request](https://github.com/IndraTensei/holm/issues/new?template=2_feature_request.yml) | Something new Holm could do. The why matters more than the how. |
+| [Game support](https://github.com/IndraTensei/holm/issues/new?template=3_game_support.yml) | A game that isn't recognised, or shows the wrong name or logo. |
+| [Performance problem](https://github.com/IndraTensei/holm/issues/new?template=4_performance.yml) | High CPU, memory or battery use, or a slow start. |
+| [Documentation or website](https://github.com/IndraTensei/holm/issues/new?template=5_docs.yml) | Something wrong, unclear or missing in the docs or on holm.indratensei.me. |
+
+Questions go to [Q&A](https://github.com/IndraTensei/holm/discussions/categories/q-a), and ideas you'd like to
+talk through first to [Ideas](https://github.com/IndraTensei/holm/discussions/categories/ideas). Report security
+problems privately, as [SECURITY.md](SECURITY.md) explains.
+
+To write code:
+
 - **Pick up an issue**: look for [good first issue](https://github.com/IndraTensei/holm/labels/good%20first%20issue)
   and [help wanted](https://github.com/IndraTensei/holm/labels/help%20wanted). Comment before you start so
   nobody else does the same work.
+- **Port Holm to macOS or Linux**: see [#10 macOS](https://github.com/IndraTensei/holm/issues/10) and
+  [#11 Linux](https://github.com/IndraTensei/holm/issues/11). Comment there with the part you're taking.
 
 For anything bigger than a small fix, open an issue first so we can agree on the approach before you spend
 time on code.
+
+### How issues are labelled
+
+Every issue gets one label from each group that applies. The forms set the first ones; maintainers do the rest.
+
+| Group | Labels | Meaning |
+| --- | --- | --- |
+| Type | `type: bug`, `type: feature`, `type: performance`, `type: docs`, `type: question`, `type: accessibility` | What kind of issue it is |
+| Area | `area: island`, `area: music`, `area: agents`, `area: harnesses`, `area: games`, `area: widgets`, `area: settings`, `area: install` | Which part of Holm. Set from the form's Area answer |
+| Platform | `platform: windows`, `platform: macos`, `platform: linux` | Only when it's specific to one system |
+| Status | `status: needs triage` → `needs info`, `confirmed`, `planned`, `in progress` or `blocked` | Where it stands. "Needs triage" comes off by itself when another status goes on |
+| Priority | `priority: high`, `priority: low` | Set by maintainers; most issues have neither |
+| Help | `good first issue`, `help wanted` | Open for anyone to pick up |
+| Closed as | `duplicate`, `wontfix`, `invalid` | Why it was closed without a change; the issue says more |
 
 ## Setting up
 
