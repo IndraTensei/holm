@@ -231,9 +231,12 @@ processor. No particular graphics card is needed.
 
 Holm is open for development, and help of every size is welcome.
 
-- **Found a bug?** [Open a bug report](https://github.com/IndraTensei/holm/issues/new?template=bug_report.yml).
-- **Have an idea?** [Request a feature](https://github.com/IndraTensei/holm/issues/new?template=feature_request.yml),
-  or talk it through first in [Discussions](https://github.com/IndraTensei/holm/discussions).
+- **Found a bug?** [Open a bug report](https://github.com/IndraTensei/holm/issues/new?template=1_bug_report.yml).
+  A game Holm doesn't recognise has [its own form](https://github.com/IndraTensei/holm/issues/new?template=3_game_support.yml),
+  and so does [high CPU or memory](https://github.com/IndraTensei/holm/issues/new?template=4_performance.yml).
+- **Have an idea?** [Request a feature](https://github.com/IndraTensei/holm/issues/new?template=2_feature_request.yml),
+  or talk it through first in [Ideas](https://github.com/IndraTensei/holm/discussions/categories/ideas).
+- **Have a question?** Ask in [Q&A](https://github.com/IndraTensei/holm/discussions/categories/q-a).
 - **Want to write code?** Start with [CONTRIBUTING.md](CONTRIBUTING.md), then look for a
   [good first issue](https://github.com/IndraTensei/holm/labels/good%20first%20issue) or
   [help wanted](https://github.com/IndraTensei/holm/labels/help%20wanted), or help bring Holm to

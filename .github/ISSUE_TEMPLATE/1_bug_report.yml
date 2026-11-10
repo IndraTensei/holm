@@ -1,10 +1,12 @@
 name: Bug report
 description: Something in Holm doesn't work the way it should.
-labels: [bug]
+labels: ["type: bug", "status: needs triage"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for taking the time. Please check the [open issues](https://github.com/IndraTensei/holm/issues) first, in case it's already known.
+      value: |
+        Thanks for taking the time. Please check the [open issues](https://github.com/IndraTensei/holm/issues) first, in case it's already known.
+        A game that isn't recognised or shows the wrong logo has [its own form](https://github.com/IndraTensei/holm/issues/new?template=3_game_support.yml), and so does [high CPU or memory](https://github.com/IndraTensei/holm/issues/new?template=4_performance.yml).
   - type: textarea
     id: what
     attributes:
@@ -23,12 +25,20 @@ body:
         3. ...
     validations:
       required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of Holm. Your best guess is fine.
+      options: [The island itself, Music, Claude Code and agents, Harnesses, Games, Shelf and widgets, Settings, Install and updates, Something else]
+    validations:
+      required: true
   - type: input
     id: holm
     attributes:
       label: Holm version
       description: Settings → About shows it.
-      placeholder: "0.1.2"
+      placeholder: "0.1.6"
     validations:
       required: true
   - type: dropdown
@@ -50,4 +60,4 @@ body:
     id: extra
     attributes:
       label: Screenshots, clips or anything else
-      description: Display scaling, more than one monitor, the theme or style you use, a Task Manager reading if it's about CPU or memory.
+      description: Display scaling, more than one monitor, the theme or style you use. Holm's log, island.log, is in %APPDATA%\in.tenseitech.holm.
