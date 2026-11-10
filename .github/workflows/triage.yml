@@ -1,0 +1,46 @@
+# Keeps issue labels tidy without anyone doing it by hand:
+# - a new issue gets the area label for the "Area" its form asked about;
+# - when someone sets a status (confirmed, planned, …), "status: needs triage" comes off.
+name: Triage
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const target = { owner: context.repo.owner, repo: context.repo.repo, issue_number: issue.number };
+
+            if (context.payload.action === 'opened') {
+              // Issue forms write each answer under its label as a "### Area" heading.
+              const match = /^### Area\s*\n+\s*(.+?)\s*$/m.exec(issue.body ?? '');
+              const areas = {
+                'The island itself': 'area: island',
+                'Music': 'area: music',
+                'Claude Code and agents': 'area: agents',
+                'Harnesses': 'area: harnesses',
+                'Games': 'area: games',
+                'Shelf and widgets': 'area: widgets',
+                'Settings': 'area: settings',
+                'Install and updates': 'area: install',
+              };
+              const label = match && areas[match[1]];
+              if (label) await github.rest.issues.addLabels({ ...target, labels: [label] });
+              return;
+            }
+
+            const added = context.payload.label?.name ?? '';
+            const triage = 'status: needs triage';
+            const hasTriage = issue.labels.some((l) => l.name === triage);
+            if (added.startsWith('status: ') && added !== triage && hasTriage) {
+              await github.rest.issues.removeLabel({ ...target, name: triage });
+            }
