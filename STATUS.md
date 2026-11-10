@@ -332,3 +332,9 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 - 2026-11-09 (session 7): v0.1.6 released: game logos from the installed-programs list and the redesigned
   intro, Holm's own Games icon in Settings, the focus timer on the resting island, update hardening (SHA-256,
   slow downloads, leftover installer), the chime's audio context closing after it plays, README tour.
+- 2026-11-10 (session 7): issue triage. Labels in groups (type, area, platform, status, priority, help,
+  closed as); `bug`/`enhancement`/`performance`/`documentation`/`question`/`accessibility` renamed into
+  `type: …` so old issues keep them; Dependabot's own labels left as they are. Five issue forms in order
+  (bug, feature, game support, performance, docs) each set a type and `status: needs triage`; Q&A and Ideas
+  discussion forms; `triage.yml` adds the area label from a form's Area answer and drops "needs triage" when
+  another status is set. CONTRIBUTING has the form table and the label guide.

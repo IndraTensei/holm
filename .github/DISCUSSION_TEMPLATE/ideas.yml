@@ -1,0 +1,14 @@
+labels: ["type: feature"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What Holm could do, and the moment you'd want it.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [The island itself, Music, Claude Code and agents, Harnesses, Games, Shelf and widgets, Settings, Install and updates, Something else]
