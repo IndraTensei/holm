@@ -11,7 +11,7 @@
   });
 </script>
 
-<svg {width} {height} viewBox="0 0 {width} {height}" aria-hidden="true">
+<svg {width} {height} viewBox="0 0 {width} {height}" aria-hidden="true" style="filter:var(--glow, none)">
   <defs>
     <linearGradient {id} x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color={color} stop-opacity="0.28" />
@@ -19,5 +19,5 @@
     </linearGradient>
   </defs>
   <path d={path.area} fill="url(#{id})" />
-  <path d={path.line} fill="none" stroke={color} stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" style="filter:var(--glow, none)" />
+  <path d={path.line} fill="none" stroke={color} stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
 </svg>
