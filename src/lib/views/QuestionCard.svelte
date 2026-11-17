@@ -1,12 +1,14 @@
 <script lang="ts">
   // Claude Code asking a multiple-choice question (AskUserQuestion), answered from the island.
   // One question at a time; a single-choice pick moves on by itself, a multi-choice one waits
-  // for Next. "In terminal" hands it back to Claude Code's own prompt (where you can also type).
+  // for Next. An answer of your own can be typed below the options (on its own, or added to
+  // multi-choice picks). "In terminal" hands it back to Claude Code's own prompt.
   import { MessageCircleQuestionMark, Check } from '@lucide/svelte';
   import Ring from '../ui/Ring.svelte';
   import type { Approval } from '../types';
   import { agents } from '../stores/agents.svelte';
   import { clock } from '../stores/clock.svelte';
+  import { inTauri, focusWindow, send } from '../bridge';
 
   let { approval, more = 0, compact = false }: { approval: Approval; more?: number; compact?: boolean } = $props();
 
@@ -18,16 +20,30 @@
   let step = $state(0);
   let answers = $state<Record<string, string>>({});
   let picked = $state<string[]>([]);
+  /** An answer of the user's own for the question on screen. */
+  let typed = $state('');
 
   const count = $derived(approval.questions.length);
   const q = $derived(approval.questions[Math.min(step, count - 1)]);
   const last = $derived(step >= count - 1);
 
+  const own = $derived(typed.trim());
+  const ready = $derived(picked.length > 0 || own.length > 0);
+
+  /** Typing took keyboard focus from the app the user was in; give it back once answered. */
+  function releaseFocus() {
+    if (inTauri && document.hasFocus()) send('island_release_focus');
+  }
+
   function commit(labels: string[]) {
     const next = { ...answers, [q.question]: labels.join(', ') };
-    if (last) return agents.answer(approval.id, next);
+    if (last) {
+      releaseFocus();
+      return agents.answer(approval.id, next);
+    }
     answers = next;
     picked = [];
+    typed = '';
     step += 1;
   }
 
@@ -36,10 +52,23 @@
     picked = picked.includes(label) ? picked.filter((l) => l !== label) : [...picked, label];
   }
 
+  /** Next or Send: the picks, with the typed answer (if any) after them. */
+  function sendThis() {
+    if (ready) commit(own ? [...picked, own] : picked);
+  }
+
   function back() {
     step -= 1;
     const prev = approval.questions[step];
-    picked = prev.multiSelect ? (answers[prev.question]?.split(', ') ?? []) : [];
+    const parts = answers[prev.question]?.split(', ') ?? [];
+    const labels = prev.options.map((o) => o.label);
+    picked = prev.multiSelect ? parts.filter((p) => labels.includes(p)) : [];
+    typed = parts.filter((p) => !labels.includes(p)).join(', ');
+  }
+
+  function terminal() {
+    releaseFocus();
+    agents.answer(approval.id, null);
   }
 </script>
 
@@ -81,11 +110,24 @@
           </button>
         {/each}
       </div>
+      <input
+        class="own"
+        type="text"
+        bind:value={typed}
+        placeholder={q.multiSelect ? 'Add an answer of your own' : 'Or type your own answer'}
+        aria-label="Your own answer"
+        onfocus={() => void focusWindow()}
+        onclick={(e) => e.stopPropagation()}
+        onkeydown={(e) => {
+          e.stopPropagation();
+          if (e.key === 'Enter') sendThis();
+        }}
+      />
     </div>
   {/key}
 
   <div class="actions">
-    <button class="quiet" title="Answer in Claude Code instead, where you can also type your own" onclick={(e) => { e.stopPropagation(); agents.answer(approval.id, null); }}>
+    <button class="quiet" title="Answer in Claude Code's own prompt instead" onclick={(e) => { e.stopPropagation(); terminal(); }}>
       In terminal
     </button>
     {#if more > 0}<span class="more">{more} more waiting</span>{/if}
@@ -93,8 +135,8 @@
     {#if step > 0}
       <button class="ghost" onclick={(e) => { e.stopPropagation(); back(); }}>Back</button>
     {/if}
-    {#if q.multiSelect}
-      <button class="send" disabled={picked.length === 0} onclick={(e) => { e.stopPropagation(); commit(picked); }}>
+    {#if q.multiSelect || own}
+      <button class="send" disabled={!ready} onclick={(e) => { e.stopPropagation(); sendThis(); }}>
         {last ? 'Send' : 'Next'}
       </button>
     {/if}
@@ -252,6 +294,30 @@
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+  .own {
+    width: 100%;
+    height: 36px;
+    margin-top: 8px;
+    padding: 0 12px;
+    border: none;
+    outline: none;
+    border-radius: 12px;
+    background: var(--fill-1);
+    box-shadow: inset 0 0 0 1px var(--fill-2);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--t-sm);
+    transition: box-shadow 0.15s;
+  }
+  .compact .own {
+    background: var(--fill-2);
+  }
+  .own::placeholder {
+    color: var(--ink-3);
+  }
+  .own:focus {
+    box-shadow: inset 0 0 0 1.5px var(--accent);
   }
   .actions {
     display: flex;
