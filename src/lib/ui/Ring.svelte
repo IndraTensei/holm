@@ -42,11 +42,11 @@
     display: grid;
     place-items: center;
   }
+  /* The theme's glow goes on the whole svg: on the arc itself the browser clips the blur to a box
+     around it, which shows as a faint square. */
   svg {
     position: absolute;
     inset: 0;
-  }
-  circle + circle {
     filter: var(--glow, none);
   }
   circle {
