@@ -46,7 +46,7 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 | Agents | Codex live activity | ⬜ (quota only; see next steps) |
 | Usage | Claude 5-hour / weekly ring, Codex windows | ✅ Claude ring shown; last good numbers kept on 429 and cached across restarts; Codex 🧪 |
 | System | CPU, memory, network, battery with sparklines; charging peek | ✅ 🧪 |
-| System | GPU load and memory per adapter (System page) | ✅ verified on Intel UHD (integrated); a graphics card 🧪 |
+| System | GPU load and memory per adapter (System page) | ✅ verified on Intel UHD (integrated) against Task Manager; a graphics card 🧪 |
 | System | Temperatures, per-core | ⬜ (no admin-free CPU temperature on Windows; GPU temperature only on cards that report it) |
 | Shelf | File drop onto the island, open, show in folder | ✅ 🧪 |
 | Shelf | Drag files back out of the shelf | ⬜ |
@@ -347,19 +347,3 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   so Claude Code asks itself. New `agents_answer` command and `QuestionCard` (one question at a time, number
   marks, checkboxes and Send for multi-select, Back). Unit tests for the replies (run in CI; the GNU test
   binary doesn't start here). Browser scene `?approval=question`. Not yet tried against a live Claude Code.
-- 2026-11-17: GPU readings on the System page (branch `feat/gpu-readings`). New `gpu.rs`: adapters from DXGI
-  (software adapters skipped), load and memory from the `GPU Engine(*)\Utilization Percentage` and `GPU Adapter
-  Memory(*)\Dedicated|Shared Usage` counters through PDH (features `Win32_System_Performance`,
-  `Win32_Graphics_Dxgi`; no new crate). Load = per engine every process's share added up, then the busiest
-  engine (Task Manager's GPU figure); memory = shared for integrated graphics (< 512 MB dedicated), dedicated
-  otherwise. The reader lives only while `system_watch` is on; its first second is a baseline. Checked on this
-  PC (i7-13620H, Intel UHD Graphics, Windows 11): Holm 5.9–6.6% against the counters' busiest engine 6.0–7.1%
-  over the same seconds, shared memory 0.79–0.80 GB against 0.80 GB; holm.exe (debug build) 0.63% of one core
-  with the System page open against 0.57% with the reader off and 0.16% closed. Temperatures left out: the
-  thermal-zone counter does not exist here, and the GPU temperature Task Manager reads
-  (D3DKMT adapter perf data) is 0 on integrated graphics, so neither could be tested on this PC.
-  Against Task Manager itself (Performance → GPU 0, captured in the same screenshot as Holm's System page,
-  load from a WebGL shader at three levels): idle Holm 6/6% vs Task Manager 6/5%; light 34/35% vs 34/35%;
-  heavy 95/93% vs 93/94% (both sample once a second, not in step); shared GPU memory 0.8–0.9 of 7.8 GB in
-  both every time. Task Manager shows Temperature N/A for this GPU too.
-
