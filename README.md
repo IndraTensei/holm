@@ -65,7 +65,8 @@ Using Pear Desktop? Connect it and you also get likes, dislikes and exact progre
 
 Connect Claude Code once, and every session shows up live: what it's reading, editing or running, and for how
 long. When it asks for permission, the island opens with **Allow** and **Deny** so you can answer without
-hunting for the right terminal. When it finishes, you hear a soft chime and see a one-line summary. Your 5-hour
+hunting for the right terminal, and when it asks you a question, you pick an option or type your own answer
+right there. When it finishes, you hear a soft chime and see a one-line summary. Your 5-hour
 and weekly limits sit in a small ring.
 
 Holm also spots the other AI coding tools on your PC (Codex, OpenCode, Gemini CLI, Copilot CLI, Cline, Cursor

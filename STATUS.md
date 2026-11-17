@@ -347,3 +347,17 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   so Claude Code asks itself. New `agents_answer` command and `QuestionCard` (one question at a time, number
   marks, checkboxes and Send for multi-select, Back). Unit tests for the replies (run in CI; the GNU test
   binary doesn't start here). Browser scene `?approval=question`. Not yet tried against a live Claude Code.
+- 2026-11-17 (follow-up to #38): the question card takes an answer of your own (a box under the options;
+  Enter or Send; added after the picks for multi-select; Back restores it), and the island gives keyboard
+  focus back after answering. Setting `answerQuestions` (Settings → Agents, default on): off, an
+  AskUserQuestion permission request is answered empty at once (Claude Code's own prompt) and the island marks
+  the session waiting with a "needs you" peek showing the question (`leave_question_to_terminal`,
+  `remind_question`); permission requests and plans are unchanged.
+  Checked in `npx tauri dev` (Windows 11): svelte-check 0/0, clippy clean, the agents tests (the five from
+  #38 and two new) pass; 15 live checks posting Claude Code's PermissionRequest payloads to the hook server
+  and driving the island over WebView2's debugging port: a typed answer alone (Enter), Next/Send appearing
+  once something is typed, Back bringing a typed answer back, picks plus a typed answer ("Points, Form, Rank
+  change since last week"), option picks and In terminal unchanged, setting off → empty reply in ~20 ms with
+  the "needs you" peek and the session waiting, and a Bash permission request still showing Allow and Deny
+  with the setting off. Screenshots 23 to 25 and an updated settings-agents.jpg.
+

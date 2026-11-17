@@ -72,6 +72,9 @@ export interface Settings {
   approvalTimeout: number;
   agentSounds: boolean;
   autoOpenApprovals: boolean;
+  /** Answer Claude Code's multiple-choice questions on the island. Off: they stay in Claude Code's
+   *  own prompt, and the island only says the session is waiting. */
+  answerQuestions: boolean;
   // Plan usage
   quotaClaude: boolean;
   quotaCodex: boolean;
@@ -141,6 +144,7 @@ export const DEFAULTS: Settings = {
   approvalTimeout: 60,
   agentSounds: true,
   autoOpenApprovals: true,
+  answerQuestions: true,
   quotaClaude: true,
   quotaCodex: true,
   quotaMinutes: 1,
