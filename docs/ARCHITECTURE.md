@@ -40,7 +40,13 @@ Pear Desktop and LRCLIB / Open-Meteo are reached from the frontend with fetch/We
   Marquees slide out and back once, then rest.
 - Settings → General → Graphics: software compositing (`--disable-gpu`) drops the GPU process, ~120 MB
   private memory instead of ~185 MB, for ~40% more CPU during an open/close morph.
-- Fonts: Latin subsets only (~390 KB total), bundled, no network.
+- Theme looks (`LOOKS` in `themes.ts`) are static paint: gradients, a grain tile and box-shadows drawn once,
+  glows on rings and sparklines as SVG filters painted with the shape. No CSS `filter` on HTML elements, which the
+  compositor would redo on every frame the island repaints, and no looping motion; a theme's feel only shapes
+  the open/close spring. Measured in the app with Software graphics: the same CPU as without looks, at rest and
+  with the agent spinner.
+- Fonts: Latin subsets only (~460 KB total, with the italic Fraunces and Instrument Serif for theme looks),
+  bundled, no network.
 
 ## Island states
 
