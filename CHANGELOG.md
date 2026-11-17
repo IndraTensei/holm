@@ -6,6 +6,13 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ## [Unreleased]
 
+### Added
+
+- **Graphics on the System page.** Next to the processor and memory, a Graphics row shows how busy your GPU is,
+  with the same sparkline, and how much of its memory is in use (shared memory for built-in graphics, the
+  card's own for a graphics card). PCs with two GPUs get a row for each. The figures are the ones Task Manager
+  shows, and they are only read while the System page is open.
+
 ### Fixed
 
 - **Claude's questions are answered in the island.** When Claude Code asks a multiple-choice question
