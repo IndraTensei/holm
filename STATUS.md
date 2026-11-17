@@ -51,7 +51,7 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 | Shelf | Drag files back out of the shelf | ⬜ |
 | Shelf | Clipboard history (text, private copies skipped), quick note | ✅ 🧪 |
 | Widgets | Focus timer, weather (Open-Meteo + city search), Wi-Fi / Bluetooth toggles + SSID | ✅ 🧪 |
-| Look | 15 themes + custom theme editor, 13 bundled fonts, motion presets, size | ✅ (browser) |
+| Look | 15 themes, each with its own look (surface light and texture, edge glow, play button and bar, italic display type, motion feel), custom theme editor, 13 bundled fonts, motion presets, size | ✅ (browser); looks checked in the app: no measurable CPU at rest or with the spinner |
 | Build | GitHub Actions: check, clippy, test, NSIS installer + portable exe, release on `v*` tag with notes from `docs/releases/<tag>.md` | ✅ green on main and branches (~20 min) |
 | Build | Installer: Tauri's NSIS template plus an options page (start with Windows, Start menu, desktop), branded sidebar and header | ✅ compiles; pages 🧪 |
 | Perf | Looping decorations on a shared 8 fps beat; Graphics setting (hardware or software) | ✅ measured, see log |
