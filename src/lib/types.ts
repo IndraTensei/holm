@@ -63,8 +63,17 @@ export interface Approval {
   tool: string;
   title: string;
   detail: string;
+  /** Filled for AskUserQuestion: answer these instead of Allow and Deny. */
+  questions: AgentQuestion[];
   createdAt: number;
   expiresAt: number;
+}
+
+export interface AgentQuestion {
+  question: string;
+  header: string;
+  options: { label: string; description: string }[];
+  multiSelect: boolean;
 }
 
 export interface AgentsSnapshot {
