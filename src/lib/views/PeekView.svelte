@@ -188,7 +188,6 @@
     display: block;
     height: 100%;
     background: var(--bar-fill, var(--ink));
-    filter: var(--glow, none);
     border-radius: calc(3px * var(--round, 1));
     transition: width 0.12s linear;
   }

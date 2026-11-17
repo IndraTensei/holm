@@ -156,6 +156,7 @@
     flex-direction: column;
   }
   .clock {
+    text-shadow: var(--text-glow, none);
     font-size: var(--t-3xl);
     font-weight: 700;
     letter-spacing: -0.04em;

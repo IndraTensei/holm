@@ -89,7 +89,6 @@ select {
   font-family: var(--font-display);
   font-style: var(--display-style, normal);
   letter-spacing: var(--tracking, normal);
-  text-shadow: var(--text-glow, none);
   font-synthesis: var(--display-synthesis, weight style);
 }
 

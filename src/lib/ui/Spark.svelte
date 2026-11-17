@@ -11,13 +11,17 @@
   });
 </script>
 
-<svg {width} {height} viewBox="0 0 {width} {height}" aria-hidden="true" style="filter:var(--glow, none)">
+<svg {width} {height} viewBox="0 0 {width} {height}" aria-hidden="true" overflow="visible">
   <defs>
+    <!-- The theme's glow on the line (--glow-a, 0 = none), with room so the blur is never clipped. -->
+    <filter id="{id}-glow" filterUnits="userSpaceOnUse" x={-8} y={-8} width={width + 16} height={height + 16}>
+      <feDropShadow dx="0" dy="0" stdDeviation="1.6" style="flood-color:{color};flood-opacity:var(--glow-a, 0)" />
+    </filter>
     <linearGradient {id} x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color={color} stop-opacity="0.28" />
       <stop offset="1" stop-color={color} stop-opacity="0" />
     </linearGradient>
   </defs>
   <path d={path.area} fill="url(#{id})" />
-  <path d={path.line} fill="none" stroke={color} stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+  <path d={path.line} fill="none" stroke={color} stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#{id}-glow)" />
 </svg>

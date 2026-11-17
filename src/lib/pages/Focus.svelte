@@ -100,6 +100,7 @@
     justify-content: center;
   }
   .time {
+    text-shadow: var(--text-glow, none);
     font-size: 34px;
     font-weight: 650;
     letter-spacing: -0.03em;
