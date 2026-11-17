@@ -253,6 +253,7 @@ pub fn run() {
             system::power_get,
             agents::agents_state,
             agents::agents_decide,
+            agents::agents_answer,
             agents::agents_clear,
             agents::hooks_status,
             agents::hooks_install,

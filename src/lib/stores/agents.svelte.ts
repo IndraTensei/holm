@@ -35,6 +35,12 @@ class Agents {
     send('agents_decide', { id, allow });
   }
 
+  /** Answers a question (question text → chosen label); null leaves it to the terminal. */
+  answer(id: string, answers: Record<string, string> | null): void {
+    this.approvals = this.approvals.filter((a) => a.id !== id);
+    send('agents_answer', { id, answers });
+  }
+
   clear(id?: string): void {
     send('agents_clear', { id: id ?? null });
   }

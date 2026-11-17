@@ -1,7 +1,8 @@
 <script lang="ts">
   // A permission request from Claude Code, answered without leaving what you are doing.
-  import { TerminalSquare, FilePen, Globe, Wrench } from '@lucide/svelte';
+  import { TerminalSquare, FilePen, Globe, Wrench, ListChecks } from '@lucide/svelte';
   import Ring from '../ui/Ring.svelte';
+  import QuestionCard from './QuestionCard.svelte';
   import type { Approval } from '../types';
   import { agents } from '../stores/agents.svelte';
   import { clock } from '../stores/clock.svelte';
@@ -19,17 +20,22 @@
         ? 'edit'
         : /^Web/.test(approval.tool)
           ? 'web'
-          : 'tool',
+          : approval.tool === 'ExitPlanMode'
+            ? 'plan'
+            : 'tool',
   );
   const ask = $derived(
-    kind === 'run' ? 'wants to run' : kind === 'edit' ? 'wants to change a file' : kind === 'web' ? 'wants to go online' : `wants to use ${approval.tool}`,
+    kind === 'run' ? 'wants to run' : kind === 'edit' ? 'wants to change a file' : kind === 'web' ? 'wants to go online' : kind === 'plan' ? 'has a plan ready' : `wants to use ${approval.tool}`,
   );
 </script>
 
+{#if approval.questions?.length}
+  <QuestionCard {approval} {more} {compact} />
+{:else}
 <div class="card" class:compact>
   <div class="head">
     <span class="icon">
-      {#if kind === 'run'}<TerminalSquare size={16} />{:else if kind === 'edit'}<FilePen size={16} />{:else if kind === 'web'}<Globe size={16} />{:else}<Wrench size={16} />{/if}
+      {#if kind === 'run'}<TerminalSquare size={16} />{:else if kind === 'edit'}<FilePen size={16} />{:else if kind === 'web'}<Globe size={16} />{:else if kind === 'plan'}<ListChecks size={16} />{:else}<Wrench size={16} />{/if}
     </span>
     <div class="who">
       <span class="project display">{approval.project}</span>
@@ -40,10 +46,11 @@
   <pre class="detail">{approval.detail || approval.title}</pre>
   <div class="actions">
     {#if more > 0}<span class="more">{more} more waiting</span>{/if}
-    <button class="deny" onclick={(e) => { e.stopPropagation(); agents.decide(approval.id, false); }}>Deny</button>
-    <button class="allow" onclick={(e) => { e.stopPropagation(); agents.decide(approval.id, true); }}>Allow</button>
+    <button class="deny" onclick={(e) => { e.stopPropagation(); agents.decide(approval.id, false); }}>{kind === 'plan' ? 'Keep planning' : 'Deny'}</button>
+    <button class="allow" onclick={(e) => { e.stopPropagation(); agents.decide(approval.id, true); }}>{kind === 'plan' ? 'Start' : 'Allow'}</button>
   </div>
 </div>
+{/if}
 
 <style>
   .card {

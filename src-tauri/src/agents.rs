@@ -15,7 +15,7 @@ use std::{
     time::Duration,
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter, Manager, State};
 
@@ -89,13 +89,45 @@ pub struct Approval {
     tool: String,
     title: String,
     detail: String,
+    /// Filled for AskUserQuestion: the questions to answer instead of Allow and Deny.
+    questions: Vec<Question>,
     created_at: i64,
     expires_at: i64,
 }
 
+/// One AskUserQuestion question, as Claude Code sends it.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Question {
+    question: String,
+    #[serde(default)]
+    header: String,
+    options: Vec<Choice>,
+    #[serde(default)]
+    multi_select: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct Choice {
+    label: String,
+    #[serde(default)]
+    description: String,
+}
+
+/// What the island answered for a pending request.
+#[derive(Debug, PartialEq)]
+enum Decision {
+    Allow,
+    Deny,
+    /// Question text → chosen label (several labels joined with ", ").
+    Answer(serde_json::Map<String, Value>),
+    /// Leave it to Claude Code's own prompt in the terminal.
+    Terminal,
+}
+
 struct Pending {
     info: Approval,
-    tx: mpsc::Sender<bool>,
+    tx: mpsc::Sender<Decision>,
 }
 
 #[derive(Default)]
@@ -254,22 +286,7 @@ fn handle(app: AppHandle, agents: Arc<Agents>, secret: &str, mut request: tiny_h
             .u64("approvalTimeout", 60)
             .clamp(10, 590);
         let answer = wait_for_decision(&app, &agents, &event, timeout);
-        let body = match answer {
-            Some(true) => json!({
-                "hookSpecificOutput": { "hookEventName": "PermissionRequest", "decision": { "behavior": "allow" } }
-            })
-            .to_string(),
-            Some(false) => json!({
-                "hookSpecificOutput": {
-                    "hookEventName": "PermissionRequest",
-                    "decision": { "behavior": "deny", "message": "Denied from Holm." }
-                }
-            })
-            .to_string(),
-            // No answer in time: an empty reply lets Claude Code ask in the terminal as usual.
-            None => String::new(),
-        };
-        return respond(request, 200, body);
+        return respond(request, 200, reply(&event, answer));
     }
 
     apply(&app, &agents, &name, &event);
@@ -363,6 +380,7 @@ pub fn describe(tool: &str, input: &Value) -> Activity {
         "Task" | "Agent" => ("Delegating", truncate(&s("description"), 60), "agent"),
         "TodoWrite" | "TaskCreate" | "TaskUpdate" => ("Planning", String::from("tasks"), "plan"),
         "ExitPlanMode" => ("Proposing", String::from("a plan"), "plan"),
+        "AskUserQuestion" => ("Asking", String::from("you a question"), "plan"),
         other if other.starts_with("mcp__") => {
             let mut parts = other.trim_start_matches("mcp__").splitn(2, "__");
             let server = parts.next().unwrap_or("").to_string();
@@ -535,14 +553,32 @@ fn wait_for_decision(
     agents: &Arc<Agents>,
     event: &Value,
     timeout_s: u64,
-) -> Option<bool> {
+) -> Decision {
     let tool = text(event, "tool_name");
     let input = event.get("tool_input").cloned().unwrap_or(Value::Null);
+    let questions = if tool == ASK {
+        questions_of(&input)
+    } else {
+        Vec::new()
+    };
+    // A question the island can't show is left to Claude Code's own prompt.
+    if tool == ASK && questions.is_empty() {
+        return Decision::Terminal;
+    }
     let activity = describe(&tool, &input);
     let detail = match tool.as_str() {
+        ASK => String::new(),
         "Bash" | "PowerShell" => truncate(
             input.get("command").and_then(Value::as_str).unwrap_or(""),
             400,
+        ),
+        PLAN => truncate(
+            input
+                .get("plan")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .trim(),
+            1200,
         ),
         _ => input
             .get("file_path")
@@ -559,15 +595,16 @@ fn wait_for_decision(
         let mut sessions = agents.sessions.lock().expect("sessions");
         let session = session_entry(&mut sessions, event);
         session.status = "waiting";
-        push_log(
-            session,
-            "ask",
+        let note = if tool == ASK {
+            format!("Asks: {}", truncate(&questions[0].question, 120))
+        } else {
             format!(
                 "Asks to {} {}",
                 activity.verb.to_lowercase(),
                 activity.target
-            ),
-        );
+            )
+        };
+        push_log(session, "ask", note);
         project = session.project.clone();
     }
     let info = Approval {
@@ -579,6 +616,7 @@ fn wait_for_decision(
             .trim()
             .to_string(),
         detail,
+        questions,
         created_at: now_ms(),
         expires_at: now_ms() + timeout_s as i64 * 1000,
     };
@@ -592,16 +630,19 @@ fn wait_for_decision(
     let _ = app.emit("agents://approval", &info);
     let _ = app.emit("agents://state", agents.snapshot());
 
-    let answer = rx.recv_timeout(Duration::from_secs(timeout_s)).ok();
+    let answer = rx
+        .recv_timeout(Duration::from_secs(timeout_s))
+        .unwrap_or(Decision::Terminal);
     agents.pending.lock().expect("pending").remove(&id);
     {
         let mut sessions = agents.sessions.lock().expect("sessions");
         let session = session_entry(&mut sessions, event);
         session.status = "working";
         let note = match answer {
-            Some(true) => "Allowed from the island",
-            Some(false) => "Denied from the island",
-            None => "Left to the terminal",
+            Decision::Allow => "Allowed from the island",
+            Decision::Deny => "Denied from the island",
+            Decision::Answer(_) => "Answered from the island",
+            Decision::Terminal => "Left to the terminal",
         };
         push_log(session, "ask", note.into());
     }
@@ -609,20 +650,99 @@ fn wait_for_decision(
     answer
 }
 
+const ASK: &str = "AskUserQuestion";
+const PLAN: &str = "ExitPlanMode";
+
+/// The questions in an AskUserQuestion input; empty when they don't parse or have no options.
+fn questions_of(input: &Value) -> Vec<Question> {
+    input
+        .get("questions")
+        .cloned()
+        .and_then(|q| serde_json::from_value::<Vec<Question>>(q).ok())
+        .filter(|qs| {
+            qs.iter()
+                .all(|q| !q.question.is_empty() && !q.options.is_empty())
+        })
+        .unwrap_or_default()
+}
+
+/// The hook's reply for a decision. AskUserQuestion and ExitPlanMode only run on "allow" when
+/// it carries `updatedInput`: for a question that is the input plus `answers`, for a plan the
+/// input as it came. An empty reply lets Claude Code ask in the terminal as usual.
+fn reply(event: &Value, decision: Decision) -> String {
+    let tool = text(event, "tool_name");
+    let input = event
+        .get("tool_input")
+        .cloned()
+        .unwrap_or_else(|| json!({}));
+    let decision = match decision {
+        Decision::Terminal => return String::new(),
+        // Allow isn't an answer to a question: let the terminal ask it.
+        Decision::Allow if tool == ASK => return String::new(),
+        Decision::Allow if tool == PLAN => json!({ "behavior": "allow", "updatedInput": input }),
+        Decision::Allow => json!({ "behavior": "allow" }),
+        Decision::Deny => json!({ "behavior": "deny", "message": "Denied from Holm." }),
+        Decision::Answer(answers) => {
+            let mut updated = input;
+            match updated.as_object_mut() {
+                Some(fields) => {
+                    fields.insert("answers".into(), Value::Object(answers));
+                }
+                None => return String::new(),
+            }
+            json!({ "behavior": "allow", "updatedInput": updated })
+        }
+    };
+    json!({ "hookSpecificOutput": { "hookEventName": "PermissionRequest", "decision": decision } })
+        .to_string()
+}
+
 #[tauri::command]
 pub fn agents_state(agents: State<'_, Arc<Agents>>) -> Value {
     serde_json::to_value(agents.snapshot()).unwrap_or(Value::Null)
 }
 
-#[tauri::command]
-pub fn agents_decide(agents: State<'_, Arc<Agents>>, id: String, allow: bool) -> bool {
+fn settle(agents: &Agents, id: &str, decision: Decision) -> bool {
     agents
         .pending
         .lock()
         .expect("pending")
-        .get(&id)
-        .map(|p| p.tx.send(allow).is_ok())
+        .get(id)
+        .map(|p| p.tx.send(decision).is_ok())
         .unwrap_or(false)
+}
+
+#[tauri::command]
+pub fn agents_decide(agents: State<'_, Arc<Agents>>, id: String, allow: bool) -> bool {
+    settle(
+        &agents,
+        &id,
+        if allow {
+            Decision::Allow
+        } else {
+            Decision::Deny
+        },
+    )
+}
+
+/// Answers an AskUserQuestion request (question text → chosen label), or with no answers
+/// hands it back to Claude Code's prompt in the terminal.
+#[tauri::command]
+pub fn agents_answer(
+    agents: State<'_, Arc<Agents>>,
+    id: String,
+    answers: Option<HashMap<String, String>>,
+) -> bool {
+    let decision = match answers {
+        Some(answers) if !answers.is_empty() => Decision::Answer(
+            answers
+                .into_iter()
+                .map(|(q, a)| (q, Value::String(a)))
+                .collect(),
+        ),
+        _ => Decision::Terminal,
+    };
+    settle(&agents, &id, decision)
 }
 
 #[tauri::command]
@@ -823,4 +943,84 @@ pub fn hooks_uninstall(config: State<'_, Config>) -> Result<HookStatus, String> 
     }
     util::write_json(&path, &settings).map_err(|e| e.to_string())?;
     Ok(hooks_status(config))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ask_event() -> Value {
+        json!({
+            "hook_event_name": "PermissionRequest",
+            "tool_name": "AskUserQuestion",
+            "tool_input": { "questions": [{
+                "question": "Which framework?",
+                "header": "Framework",
+                "options": [
+                    { "label": "React", "description": "Component library" },
+                    { "label": "Vue" }
+                ],
+                "multiSelect": false
+            }] }
+        })
+    }
+
+    fn decision(body: &str) -> Value {
+        let v: Value = serde_json::from_str(body).expect("json");
+        assert_eq!(
+            v["hookSpecificOutput"]["hookEventName"],
+            "PermissionRequest"
+        );
+        v["hookSpecificOutput"]["decision"].clone()
+    }
+
+    #[test]
+    fn reads_questions() {
+        let qs = questions_of(&ask_event()["tool_input"]);
+        assert_eq!(qs.len(), 1);
+        assert_eq!(qs[0].header, "Framework");
+        assert_eq!(qs[0].options[1].description, "");
+        assert!(
+            questions_of(&json!({ "questions": [{ "question": "?", "options": [] }] })).is_empty()
+        );
+        assert!(questions_of(&json!({})).is_empty());
+    }
+
+    #[test]
+    fn answer_echoes_questions_and_adds_answers() {
+        let mut answers = serde_json::Map::new();
+        answers.insert("Which framework?".into(), json!("React"));
+        let d = decision(&reply(&ask_event(), Decision::Answer(answers)));
+        assert_eq!(d["behavior"], "allow");
+        assert_eq!(d["updatedInput"]["answers"]["Which framework?"], "React");
+        assert_eq!(
+            d["updatedInput"]["questions"],
+            ask_event()["tool_input"]["questions"]
+        );
+    }
+
+    #[test]
+    fn question_left_to_terminal_unless_answered() {
+        assert_eq!(reply(&ask_event(), Decision::Allow), "");
+        assert_eq!(reply(&ask_event(), Decision::Terminal), "");
+        assert_eq!(
+            decision(&reply(&ask_event(), Decision::Deny))["behavior"],
+            "deny"
+        );
+    }
+
+    #[test]
+    fn plan_allow_carries_its_input() {
+        let event = json!({ "tool_name": "ExitPlanMode", "tool_input": { "plan": "1. Do it" } });
+        let d = decision(&reply(&event, Decision::Allow));
+        assert_eq!(d["behavior"], "allow");
+        assert_eq!(d["updatedInput"]["plan"], "1. Do it");
+    }
+
+    #[test]
+    fn other_tools_plain_allow() {
+        let event = json!({ "tool_name": "Bash", "tool_input": { "command": "ls" } });
+        let d = decision(&reply(&event, Decision::Allow));
+        assert_eq!(d, json!({ "behavior": "allow" }));
+    }
 }
