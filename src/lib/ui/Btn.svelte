@@ -57,7 +57,6 @@
   }
   .active {
     color: var(--accent);
-    filter: var(--glow, none);
   }
   .solid {
     background: var(--solid-bg, var(--ink));

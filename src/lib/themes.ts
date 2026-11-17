@@ -26,17 +26,19 @@ export interface Theme {
 }
 
 export interface Look {
-  /** Images layered over the island fill: light, grain, scanlines, a stripe. */
+  /** Images layered over the island fill: light, grain, scanlines. In notch style they fade in below the top edge. */
   surface?: string;
   /** Outer box-shadow layers on the island: a glow, a coloured shadow. */
   edge?: string;
-  /** Inset box-shadow layers inside the island's edge: a rim, a highlight. Open at the top in notch style. */
+  /** Inset box-shadow layers inside the island's edge: a highlight, a shade. */
   frame?: string;
+  /** A 1 px line around the island (pill style; in notch style the island flows into the screen edge). */
+  outline?: string;
   /** Scale for card and art corners, 1 or more (1 = today). */
   round?: number;
-  /** A filter on accent marks (rings, sparklines, the progress bar): a glow. */
-  glow?: string;
-  /** A text-shadow for display text (big numbers, titles). */
+  /** Strength (0–1) of the accent glow on rings and sparklines. */
+  glow?: number;
+  /** A text-shadow for the big numbers (the Home clock, System figures, the Focus timer). */
   textGlow?: string;
   /** Display text in italics (fonts with a real italic: Fraunces, Instrument Serif). */
   italic?: boolean;
@@ -56,7 +58,6 @@ const A = (a: number) => `rgb(from var(--accent) r g b / ${a})`;
 const C = (hex: string, a: number) => `rgb(from ${hex} r g b / ${a})`;
 const grain = (light: boolean, a: number) =>
   `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 ${light ? 0 : 1} 0 0 0 0 ${light ? 0 : 1} 0 0 0 0 ${light ? 0 : 1} 0 0 0 ${a} 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
-const glow = (a = 0.8, px = 4) => `drop-shadow(0 0 ${px}px ${A(a)})`;
 
 // Each theme's look. All of it is static paint, or motion that plays once when the island opens or
 // closes: nothing loops, so a resting island costs what it did before.
@@ -66,7 +67,7 @@ const LOOKS: Record<string, Look> = {
     surface: 'radial-gradient(120% 70% at 50% 0%, rgb(255 255 255 / 0.07), transparent 60%)',
     frame: 'inset 0 1px 0 rgb(255 255 255 / 0.05)',
     edge: `0 10px 30px -14px ${A(0.45)}`,
-    glow: glow(0.55, 3),
+    glow: 0.55,
     bar: { fill: `linear-gradient(90deg, ${A(0.65)}, var(--accent))` },
   },
   // Brushed metal.
@@ -76,7 +77,7 @@ const LOOKS: Record<string, Look> = {
     frame: 'inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 -1px 0 rgb(0 0 0 / 0.4)',
     bar: { fill: 'linear-gradient(90deg, #6fb6e8, var(--accent))' },
     solid: { bg: 'linear-gradient(180deg, #fafafc, #c3c6cf)', ink: '#1d1d20', ring: 'inset 0 1px 0 #fff, 0 2px 6px rgb(0 0 0 / 0.5)' },
-    glow: glow(0.5, 3),
+    glow: 0.5,
     feel: 'crisp',
   },
   // Glazed ceramic.
@@ -90,9 +91,9 @@ const LOOKS: Record<string, Look> = {
   // A gold spotlight from above.
   arena: {
     surface: `radial-gradient(80% 110% at 50% -25%, ${A(0.2)}, transparent 60%), linear-gradient(0deg, rgb(70 227 183 / 0.06), transparent 40%)`,
-    frame: `inset 0 0 0 1px ${A(0.32)}`,
+    outline: A(0.32),
     edge: `0 0 26px -8px ${A(0.55)}`,
-    glow: glow(0.7),
+    glow: 0.7,
     textGlow: `0 0 18px ${A(0.4)}`,
     tracking: '0.01em',
     bar: { fill: 'linear-gradient(90deg, #c8912a, #ffe08a)' },
@@ -112,9 +113,9 @@ const LOOKS: Record<string, Look> = {
   // Candlelight on paper.
   editorial: {
     surface: `radial-gradient(110% 140% at 0% 0%, ${A(0.16)}, transparent 55%), ${grain(false, 0.07)}`,
-    frame: `inset 0 0 0 1px ${A(0.22)}`,
+    outline: A(0.22),
     edge: `0 0 30px -10px ${A(0.5)}`,
-    glow: glow(0.6, 3),
+    glow: 0.6,
     textGlow: `0 0 20px ${A(0.3)}`,
     italic: true,
     trueWeights: true,
@@ -127,16 +128,16 @@ const LOOKS: Record<string, Look> = {
     surface: `radial-gradient(110% 90% at 100% 0%, ${C('#88c0d0', 0.18)}, transparent 55%), radial-gradient(90% 90% at 0% 100%, ${C('#a3be8c', 0.12)}, transparent 60%), radial-gradient(60% 70% at 15% 0%, ${C('#b48ead', 0.1)}, transparent 60%)`,
     frame: 'inset 0 1px 0 rgb(236 239 244 / 0.07)',
     edge: `0 0 28px -10px ${C('#88c0d0', 0.5)}`,
-    glow: glow(0.6, 3),
+    glow: 0.6,
     bar: { fill: 'linear-gradient(90deg, #a3be8c, #88c0d0, #b48ead)' },
     solid: { bg: 'linear-gradient(135deg, #8fbcbb, #88c0d0 50%, #81a1c1)', ink: '#2e3440' },
     feel: 'slow',
   },
   dracula: {
     surface: `radial-gradient(100% 120% at 100% 0%, ${C('#ff79c6', 0.13)}, transparent 55%), radial-gradient(120% 120% at 0% 100%, ${A(0.14)}, transparent 60%)`,
-    frame: `inset 0 0 0 1px ${A(0.3)}`,
+    outline: A(0.3),
     edge: `0 0 28px -8px ${A(0.55)}`,
-    glow: glow(0.8),
+    glow: 0.8,
     textGlow: `0 0 16px ${A(0.4)}`,
     bar: { fill: 'linear-gradient(90deg, var(--accent), #ff79c6)' },
     solid: { bg: 'linear-gradient(135deg, #ff79c6, #bd93f9)', ink: '#282a36', ring: `0 0 16px -3px ${C('#ff79c6', 0.7)}` },
@@ -148,7 +149,7 @@ const LOOKS: Record<string, Look> = {
     frame: 'inset 0 1px 0 rgb(205 214 244 / 0.06)',
     edge: `0 12px 30px -12px ${A(0.45)}`,
     round: 1.35,
-    glow: glow(0.5, 3),
+    glow: 0.5,
     bar: { height: '5px', fill: 'linear-gradient(90deg, #89dceb, #cba6f7, #f5c2e7)' },
     solid: { bg: 'linear-gradient(135deg, #f5c2e7, #cba6f7)', ink: '#1e1e2e', ring: `0 6px 16px -6px ${A(0.7)}` },
     feel: 'bouncy',
@@ -156,9 +157,9 @@ const LOOKS: Record<string, Look> = {
   // City lights at night.
   'tokyo-night': {
     surface: `linear-gradient(180deg, transparent 45%, ${A(0.1)}), radial-gradient(60% 90% at 85% 110%, ${C('#bb9af7', 0.18)}, transparent 70%)`,
-    frame: `inset 0 0 0 1px ${A(0.26)}`,
+    outline: A(0.26),
     edge: `0 0 28px -8px ${A(0.55)}`,
-    glow: glow(0.75),
+    glow: 0.75,
     textGlow: `0 0 18px ${A(0.35)}`,
     bar: { fill: 'linear-gradient(90deg, #7dcfff, #7aa2f7, #bb9af7)' },
     solid: { bg: 'linear-gradient(135deg, #7dcfff, #7aa2f7 50%, #bb9af7)', ink: '#1a1b26', ring: `0 0 16px -4px ${A(0.75)}` },
@@ -169,7 +170,7 @@ const LOOKS: Record<string, Look> = {
     frame: 'inset 0 1px 0 rgb(224 222 244 / 0.06)',
     edge: `0 12px 30px -12px ${A(0.4)}`,
     italic: true,
-    glow: glow(0.5, 3),
+    glow: 0.5,
     bar: { fill: 'linear-gradient(90deg, #c4a7e7, #ebbcba)' },
     solid: { bg: 'linear-gradient(135deg, #f6c177, #ebbcba 50%, #c4a7e7)', ink: '#191724' },
     feel: 'slow',
@@ -177,9 +178,9 @@ const LOOKS: Record<string, Look> = {
   // Warm amber light: from above, and an ember glow rising from the bottom edge.
   gruvbox: {
     surface: `radial-gradient(120% 140% at 50% 0%, ${A(0.09)}, transparent 60%), radial-gradient(90% 70% at 50% 120%, ${C('#fe8019', 0.16)}, transparent 70%)`,
-    frame: `inset 0 0 0 1px ${A(0.16)}`,
+    outline: A(0.16),
     edge: `0 0 26px -10px ${C('#fe8019', 0.5)}`,
-    glow: glow(0.5, 3),
+    glow: 0.5,
     bar: { fill: 'linear-gradient(90deg, #b8bb26, #fabd2f, #fe8019)' },
     solid: { bg: 'linear-gradient(135deg, #fabd2f, #fe8019)', ink: '#282828' },
     feel: 'crisp',
@@ -196,9 +197,9 @@ const LOOKS: Record<string, Look> = {
   },
   synthwave: {
     surface: `linear-gradient(180deg, transparent 35%, ${A(0.13)} 100%), repeating-linear-gradient(0deg, rgb(255 255 255 / 0.03) 0 1px, transparent 1px 3px)`,
-    frame: `inset 0 0 0 1px ${A(0.5)}`,
+    outline: A(0.5),
     edge: `0 0 30px -6px ${A(0.75)}`,
-    glow: glow(0.85),
+    glow: 0.85,
     textGlow: `0 0 16px ${A(0.55)}`,
     tracking: '0.01em',
     bar: { fill: 'linear-gradient(90deg, #36f2c6, var(--accent))' },
@@ -381,9 +382,10 @@ function lookVars(l: Look): ThemeVars {
   return {
     '--surface': l.surface ?? 'none',
     '--edge': l.edge ?? '0 0 #0000',
-    '--frame': l.frame ?? 'none',
+    '--frame': l.frame ?? '0 0 #0000',
+    '--outline': l.outline ?? 'transparent',
     '--round': String(Math.max(1, l.round ?? 1)),
-    '--glow': l.glow ?? 'none',
+    '--glow-a': String(l.glow ?? 0),
     '--text-glow': l.textGlow ?? 'none',
     '--display-style': l.italic ? 'italic' : 'normal',
     '--display-synthesis': l.trueWeights ? 'none' : 'weight style',

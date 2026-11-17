@@ -672,7 +672,7 @@
     position: absolute;
     inset: 0;
     overflow: hidden;
-    background: var(--surface, none), var(--island);
+    background: var(--island);
     border-radius: calc(var(--r) * var(--round, 1));
     transition:
       border-radius var(--d) var(--e),
@@ -682,19 +682,36 @@
       var(--edge, 0 0 #0000),
       var(--shadow);
   }
-  /* The theme's inner frame. In notch style it starts above the top edge, so the frame stays open
-     where the island meets the screen. */
+  /* The theme's surface (light, texture) over the fill, and its frame and outline inside the edge. */
+  .body::before,
   .body::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    box-shadow: var(--frame, none);
     pointer-events: none;
+  }
+  .body::before {
+    background: var(--surface, none);
+  }
+  .body::after {
+    box-shadow:
+      inset 0 0 0 1px var(--outline, transparent),
+      var(--frame, 0 0 #0000);
+  }
+  /* Notch: the island flows out of the screen edge through the ears, which are plain fill. So the
+     surface fades in below the top edge and there is no outline, and the island stays one piece. */
+  .notch .body::before {
+    mask-image: linear-gradient(to bottom, transparent, #000 16px);
   }
   .notch .body::after {
     top: -12px;
     border-radius: 0 0 calc(var(--r) * var(--round, 1)) calc(var(--r) * var(--round, 1));
+    box-shadow: var(--frame, 0 0 #0000);
+  }
+  .line .body::before,
+  .line .body::after {
+    display: none;
   }
   .notch .body {
     border-top-left-radius: 0;
