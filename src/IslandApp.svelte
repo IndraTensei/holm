@@ -40,7 +40,7 @@
   let artAccent = $state<string | null>(null);
 
   const s = $derived(settings.v);
-  const motion = $derived(motionFor(s.motion));
+  const motion = $derived(motionFor(s.motion, findTheme(s.theme, s.customThemes).look?.feel));
   const compactH = 34;
 
   const approval = $derived(s.autoOpenApprovals ? (agents.approvals[0] ?? null) : null);
@@ -672,20 +672,36 @@
     position: absolute;
     inset: 0;
     overflow: hidden;
-    background: var(--island);
-    border-radius: var(--r);
+    background: var(--surface, none), var(--island);
+    border-radius: calc(var(--r) * var(--round, 1));
     transition:
       border-radius var(--d) var(--e),
       box-shadow 0.4s;
     box-shadow:
       inset 0 0 0 1px rgb(from var(--rim-color) r g b / calc(alpha * var(--rim))),
+      var(--edge, 0 0 #0000),
       var(--shadow);
+  }
+  /* The theme's inner frame. In notch style it starts above the top edge, so the frame stays open
+     where the island meets the screen. */
+  .body::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--frame, none);
+    pointer-events: none;
+  }
+  .notch .body::after {
+    top: -12px;
+    border-radius: 0 0 calc(var(--r) * var(--round, 1)) calc(var(--r) * var(--round, 1));
   }
   .notch .body {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     box-shadow:
       inset 0 -1px 0 0 rgb(from var(--rim-color) r g b / calc(alpha * var(--rim))),
+      var(--edge, 0 0 #0000),
       var(--shadow);
   }
   .notch.compact .body {
@@ -694,7 +710,7 @@
   .halo {
     position: absolute;
     inset: 0;
-    border-radius: var(--r);
+    border-radius: calc(var(--r) * var(--round, 1));
     box-shadow: 0 6px 26px -6px var(--accent);
     opacity: 0;
     transition:

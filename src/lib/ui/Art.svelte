@@ -9,7 +9,7 @@
   });
 </script>
 
-<div class="art" style="width:{size}px;height:{size}px;border-radius:{radius}px">
+<div class="art" style="width:{size}px;height:{size}px;border-radius:calc({radius}px * var(--round, 1))">
   {#if src && !failed}
     <img {src} {alt} draggable="false" onerror={() => (failed = true)} />
   {:else}

@@ -109,7 +109,7 @@
   .card.compact {
     width: 100%;
     padding: 12px;
-    border-radius: 18px;
+    border-radius: calc(18px * var(--round, 1));
     background: var(--fill-1);
   }
   .head {
@@ -193,7 +193,7 @@
     gap: 10px;
     width: 100%;
     padding: 9px 11px;
-    border-radius: 12px;
+    border-radius: calc(12px * var(--round, 1));
     background: var(--fill-1);
     box-shadow: inset 0 0 0 1px transparent;
     text-align: left;
@@ -227,7 +227,7 @@
     font-weight: 650;
   }
   .mark.box {
-    border-radius: 6px;
+    border-radius: calc(6px * var(--round, 1));
   }
   .on .mark {
     background: var(--accent);

@@ -46,6 +46,9 @@
     position: absolute;
     inset: 0;
   }
+  circle + circle {
+    filter: var(--glow, none);
+  }
   circle {
     transition: stroke-dashoffset 0.6s var(--ease-out), stroke 0.3s;
   }

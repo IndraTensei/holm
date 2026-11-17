@@ -178,7 +178,7 @@
     align-items: center;
     gap: 10px;
     padding: 8px 10px;
-    border-radius: 12px;
+    border-radius: calc(12px * var(--round, 1));
     text-align: left;
     transition: background 0.15s;
   }
@@ -239,7 +239,7 @@
   .answer {
     position: relative;
     padding: 10px 12px 30px;
-    border-radius: 12px;
+    border-radius: calc(12px * var(--round, 1));
     background: var(--fill-1);
   }
   .answer p {

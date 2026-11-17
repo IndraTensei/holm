@@ -179,16 +179,17 @@
   }
   .bar {
     flex: 1;
-    height: 6px;
-    border-radius: 3px;
+    height: max(6px, var(--bar-h, 4px));
+    border-radius: calc(3px * var(--round, 1));
     background: var(--fill-2);
     overflow: hidden;
   }
   .bar span {
     display: block;
     height: 100%;
-    background: var(--ink);
-    border-radius: 3px;
+    background: var(--bar-fill, var(--ink));
+    filter: var(--glow, none);
+    border-radius: calc(3px * var(--round, 1));
     transition: width 0.12s linear;
   }
   .pct {

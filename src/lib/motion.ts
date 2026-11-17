@@ -32,14 +32,22 @@ export function spring(stiffness: number, damping: number): Motion {
 
 const cache = new Map<string, Motion>();
 
-export function motionFor(kind: 'spring' | 'smooth' | 'reduced'): Motion {
-  const hit = cache.get(kind);
+/** A theme's way of moving: the default spring, a looser bounce, a firm snap, or a slow glide. */
+export type Feel = 'spring' | 'bouncy' | 'crisp' | 'slow';
+
+export function motionFor(kind: 'spring' | 'smooth' | 'reduced', feel: Feel = 'spring'): Motion {
+  const key = `${kind}:${feel}`;
+  const hit = cache.get(key);
   if (hit) return hit;
   const prefersReduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   let motion: Motion;
   if (kind === 'reduced' || prefersReduced) motion = { easing: 'ease-out', duration: 140 };
   else if (kind === 'smooth') motion = { easing: 'cubic-bezier(0.32, 0.72, 0, 1)', duration: 460 };
+  // Spring (the default setting) takes the theme's feel; Smooth and Reduced stay as chosen.
+  else if (feel === 'bouncy') motion = spring(240, 15);
+  else if (feel === 'crisp') motion = spring(420, 38);
+  else if (feel === 'slow') motion = { easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', duration: 640 };
   else motion = spring(230, 21);
-  cache.set(kind, motion);
+  cache.set(key, motion);
   return motion;
 }

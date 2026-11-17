@@ -225,7 +225,7 @@
   kbd {
     min-width: 20px;
     padding: 2px 6px;
-    border-radius: 6px;
+    border-radius: calc(6px * var(--round, 1));
     background: var(--fill-2);
     box-shadow: inset 0 -1.5px 0 rgb(0 0 0 / 0.35);
     font: 600 11px/1.3 var(--font-ui);

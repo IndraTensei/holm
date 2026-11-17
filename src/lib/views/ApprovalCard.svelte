@@ -60,7 +60,7 @@
   .card.compact {
     width: 100%;
     padding: 12px;
-    border-radius: 18px;
+    border-radius: calc(18px * var(--round, 1));
     background: var(--fill-1);
   }
   .head {
@@ -103,7 +103,7 @@
     padding: 9px 11px;
     max-height: 84px;
     overflow: auto;
-    border-radius: 10px;
+    border-radius: calc(10px * var(--round, 1));
     background: var(--fill-1);
     font-family: 'JetBrains Mono Variable', Consolas, monospace;
     font-size: 12px;
