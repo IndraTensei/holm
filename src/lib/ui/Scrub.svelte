@@ -60,22 +60,22 @@
   .rail {
     position: relative;
     width: 100%;
-    height: 4px;
-    border-radius: 3px;
+    height: var(--bar-h, 4px);
+    border-radius: calc(3px * var(--round, 1));
     background: var(--fill-2);
     overflow: hidden;
     transition: height 0.18s var(--ease-out);
   }
   .scrub:hover .rail,
   .dragging .rail {
-    height: 7px;
+    height: calc(var(--bar-h, 4px) + 3px);
   }
   /* Stepped with the 4 Hz clock, never transitioned: a transition restarted every tick ran at
      60 fps for as long as music played (a 0.4 px step is invisible). A transform needs no layout. */
   .fill {
     height: 100%;
-    background: var(--ink);
-    border-radius: 3px;
+    background: var(--bar-fill, var(--ink));
+    border-radius: calc(3px * var(--round, 1));
     transform-origin: left;
   }
   .dragging .fill {

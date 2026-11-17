@@ -19,5 +19,5 @@
     </linearGradient>
   </defs>
   <path d={path.area} fill="url(#{id})" />
-  <path d={path.line} fill="none" stroke={color} stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+  <path d={path.line} fill="none" stroke={color} stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" style="filter:var(--glow, none)" />
 </svg>
