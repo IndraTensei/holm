@@ -6,6 +6,16 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ## [Unreleased]
 
+### Fixed
+
+- **Claude's questions are answered in the island.** When Claude Code asks a multiple-choice question
+  (AskUserQuestion), the island shows the question and its options instead of an Allow/Deny card with raw
+  JSON. Pick an option and Claude goes on; questions that allow several answers get checkboxes and Send, and
+  several questions are asked one after another. "In terminal" hands the question back to Claude Code, where
+  you can also type your own answer. ([#37](https://github.com/IndraTensei/holm/issues/37))
+- **Plans can be started from the island.** A plan Claude proposes (ExitPlanMode) shows the plan itself with
+  Start and Keep planning; Start now really starts it, where before Allow had no effect.
+
 ## [0.1.6] - 2026-11-09
 
 ### Added
