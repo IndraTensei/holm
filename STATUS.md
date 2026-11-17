@@ -358,4 +358,8 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   with the System page open against 0.57% with the reader off and 0.16% closed. Temperatures left out: the
   thermal-zone counter does not exist here, and the GPU temperature Task Manager reads
   (D3DKMT adapter perf data) is 0 on integrated graphics, so neither could be tested on this PC.
+  Against Task Manager itself (Performance → GPU 0, captured in the same screenshot as Holm's System page,
+  load from a WebGL shader at three levels): idle Holm 6/6% vs Task Manager 6/5%; light 34/35% vs 34/35%;
+  heavy 95/93% vs 93/94% (both sample once a second, not in step); shared GPU memory 0.8–0.9 of 7.8 GB in
+  both every time. Task Manager shows Temperature N/A for this GPU too.
 
