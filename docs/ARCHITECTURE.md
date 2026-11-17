@@ -17,6 +17,7 @@
 │ agents.rs   127.0.0.1:47821 HTTP hook server → agents://state|approval|done       │
 │ quotas.rs   Claude / Codex usage every N min → quotas://update                    │
 │ system.rs   CPU/RAM/net (only while watched) → system://stats; power://changed   │
+│ gpu.rs      GPU load and memory per adapter (DXGI + GPU counters), in stats      │
 │ clipboard.rs message-only window listener → clipboard://changed                   │
 │ volume.rs   Core Audio callback → volume://changed; volume_set/mute               │
 │ radios.rs   Windows.Devices.Radios + WLAN SSID                                     │
@@ -32,7 +33,11 @@ Pear Desktop and LRCLIB / Open-Meteo are reached from the frontend with fetch/We
 - No polling where Windows has events: media sessions, clipboard and volume are callbacks.
 - The cursor poll is the only always-on loop: 25 Hz away from the island, 60 Hz near it, and it only calls into
   the window when the inside/outside state changes.
-- CPU, memory and network are read only while a page or view shows them (`system_watch` reference count).
+- CPU, memory, network and GPU are read only while a page or view shows them (`system_watch` reference count).
+  The GPU reader (`gpu.rs`: adapters from DXGI, load and memory from the `GPU Engine` and `GPU Adapter Memory`
+  counters, load = the busiest engine with every process's share added up, as Task Manager shows it) is
+  opened when watching starts and dropped when it stops; measured at ~0.06% of one core while the System
+  page is open.
 - The frontend clock ticks every 15 s at rest and 4 Hz only while something live is on screen.
 - No infinite CSS animations in the island. Each frame of one recomposites the whole transparent window
   (measured 11–21% of a core for a spinner and four equalizer bars). Looping decorations step together on
