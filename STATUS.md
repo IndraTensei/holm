@@ -41,6 +41,7 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 | Music | Volume peek from Core Audio callback, system volume slider | ✅ peek verified; slider 🧪 |
 | Agents | Claude Code HTTP hook server, sessions, activity log, completion peek + chime | ✅ HTTP hooks accepted; session, live tool and log right; done peek 🧪 |
 | Agents | Allow / Deny permission requests from the island | ✅ 🧪 |
+| Agents | Answer Claude's multiple-choice questions (AskUserQuestion) and start plans from the island | ✅ (browser, unit tests) 🧪 live |
 | Agents | One-click hook install/uninstall in `~/.claude/settings.json` (backup kept) | ✅ install worked (12 events); uninstall 🧪 |
 | Agents | Codex live activity | ⬜ (quota only; see next steps) |
 | Usage | Claude 5-hour / weekly ring, Codex windows | ✅ Claude ring shown; last good numbers kept on 429 and cached across restarts; Codex 🧪 |
@@ -337,3 +338,11 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   (bug, feature, game support, performance, docs) each set a type and `status: needs triage`; Q&A and Ideas
   discussion forms; `triage.yml` adds the area label from a form's Area answer and drops "needs triage" when
   another status is set. CONTRIBUTING has the form table and the label guide.
+- 2026-11-17 (session 8): issue #37. AskUserQuestion reached the island as an Allow/Deny card with the raw
+  input JSON, and Allow can't answer it (Claude Code only runs AskUserQuestion and ExitPlanMode on an allow
+  that carries `updatedInput`). `PermissionRequest` replies now go through `reply()`: a question is answered
+  with the input plus `answers` (question text → label, several joined with ", "), a plan is allowed with its
+  input echoed back, and "In terminal", a timeout or a question that doesn't parse returns the empty reply
+  so Claude Code asks itself. New `agents_answer` command and `QuestionCard` (one question at a time, number
+  marks, checkboxes and Send for multi-select, Back). Unit tests for the replies (run in CI; the GNU test
+  binary doesn't start here). Browser scene `?approval=question`. Not yet tried against a live Claude Code.

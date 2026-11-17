@@ -121,20 +121,57 @@ const agentsState: AgentsSnapshot = {
             log: [{ at: now - 420_000, kind: 'done', text: 'Finished' }],
           },
         ],
-  approvals: params.get('approval')
-    ? [
-        {
-          id: 'a1',
-          sessionId: 's1',
-          project: 'qinshin-bot',
-          tool: 'Bash',
-          title: 'Running npm install discord.js@latest',
-          detail: 'npm install discord.js@latest',
-          createdAt: now,
-          expiresAt: now + 60_000,
-        },
-      ]
-    : [],
+  approvals:
+    params.get('approval') === 'question'
+      ? [
+          {
+            id: 'a1',
+            sessionId: 's1',
+            project: 'qinshin-bot',
+            tool: 'AskUserQuestion',
+            title: 'Asking you a question',
+            detail: '',
+            questions: [
+              {
+                question: 'Where should the standings come from?',
+                header: 'Source',
+                multiSelect: false,
+                options: [
+                  { label: 'League API', description: 'Live table from the league site, cached for a minute' },
+                  { label: 'Our database', description: 'Results we already store after each match' },
+                  { label: 'Both', description: 'Database first, API when a match is in progress' },
+                ],
+              },
+              {
+                question: 'Which columns should the table show?',
+                header: 'Columns',
+                multiSelect: true,
+                options: [
+                  { label: 'Points', description: '' },
+                  { label: 'Goal difference', description: '' },
+                  { label: 'Form', description: 'Last five results' },
+                ],
+              },
+            ],
+            createdAt: now,
+            expiresAt: now + 60_000,
+          },
+        ]
+      : params.get('approval')
+        ? [
+            {
+              id: 'a1',
+              sessionId: 's1',
+              project: 'qinshin-bot',
+              tool: 'Bash',
+              title: 'Running npm install discord.js@latest',
+              detail: 'npm install discord.js@latest',
+              questions: [],
+              createdAt: now,
+              expiresAt: now + 60_000,
+            },
+          ]
+        : [],
 };
 
 const quotas: QuotaProvider[] = [
