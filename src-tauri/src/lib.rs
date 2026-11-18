@@ -13,6 +13,7 @@ mod appvolume;
 mod clipboard;
 mod config;
 mod games;
+mod gpu;
 mod harness;
 mod installed;
 mod island;

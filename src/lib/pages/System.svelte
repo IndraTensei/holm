@@ -7,6 +7,8 @@
   const s = $derived(system.stats);
   const netMax = $derived(Math.max(64 * 1024, ...system.down, ...system.up));
   const b = $derived(system.battery);
+  /** "Intel(R) UHD Graphics" → "Intel UHD Graphics". */
+  const tidy = (name: string) => name.replace(/\((R|TM|C)\)/gi, '').replace(/\s+/g, ' ').trim();
   const left = $derived.by(() => {
     if (!b?.secondsLeft || b.plugged) return '';
     const m = Math.round(b.secondsLeft / 60);
@@ -28,6 +30,19 @@
       {#if s}<span class="note num">{s.memoryUsedGb.toFixed(1)} of {s.memoryTotalGb.toFixed(0)} GB</span>{/if}
     </div>
   </div>
+  {#each s?.gpus ?? [] as g, i (g.name + i)}
+    <div class="row">
+      <div class="label">{s && s.gpus.length > 1 ? `Graphics ${i + 1}` : 'Graphics'}</div>
+      <div class="value display num">{Math.round(g.usage)}<small>%</small></div>
+      <div class="spark-col">
+        <Spark data={system.gpu[i] ?? []} max={100} width={250} height={34} color="var(--warn)" />
+        <span class="note gpu num" title={g.name}>
+          <span class="name">{tidy(g.name)}</span>
+          <span class="mem">· {g.memoryUsedGb.toFixed(1)} of {g.memoryTotalGb.toFixed(1)} GB {g.shared ? 'shared' : 'dedicated'}</span>
+        </span>
+      </div>
+    </div>
+  {/each}
   <div class="row">
     <div class="label">Network</div>
     <div class="value net num">
@@ -111,6 +126,24 @@
   .note {
     font-size: var(--t-xs);
     color: var(--ink-3);
+  }
+  .spark-col {
+    min-width: 0;
+  }
+  .gpu {
+    display: flex;
+    gap: 4px;
+    max-width: 250px;
+    white-space: nowrap;
+  }
+  /* A long adapter name gives way before the memory figures do. */
+  .gpu .name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gpu .mem {
+    flex: none;
   }
   .dual {
     position: relative;

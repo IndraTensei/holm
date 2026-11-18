@@ -198,6 +198,13 @@ function stats(): Stats {
     netDown: 240_000 + Math.random() * 900_000,
     netUp: 40_000 + Math.random() * 60_000,
     battery: { percent: 78, charging: false, plugged: true, saver: false, secondsLeft: null },
+    gpus:
+      params.get('gpus') === '2'
+        ? [
+            { name: 'NVIDIA GeForce RTX 4060 Laptop GPU', usage: 34 + 20 * Math.sin(t / 4) + Math.random() * 6, memoryUsedGb: 2.6, memoryTotalGb: 8, shared: false },
+            { name: 'Intel(R) UHD Graphics', usage: 8 + Math.random() * 5, memoryUsedGb: 0.9, memoryTotalGb: 7.8, shared: true },
+          ]
+        : [{ name: 'Intel(R) UHD Graphics', usage: 12 + 8 * Math.sin(t / 4) + Math.random() * 5, memoryUsedGb: 1.2, memoryTotalGb: 7.8, shared: true }],
   };
 }
 

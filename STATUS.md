@@ -46,7 +46,8 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
 | Agents | Codex live activity | ⬜ (quota only; see next steps) |
 | Usage | Claude 5-hour / weekly ring, Codex windows | ✅ Claude ring shown; last good numbers kept on 429 and cached across restarts; Codex 🧪 |
 | System | CPU, memory, network, battery with sparklines; charging peek | ✅ 🧪 |
-| System | GPU, temperatures, per-core | ⬜ |
+| System | GPU load and memory per adapter (System page) | ✅ verified on Intel UHD (integrated) against Task Manager; a graphics card 🧪 |
+| System | Temperatures, per-core | ⬜ (no admin-free CPU temperature on Windows; GPU temperature only on cards that report it) |
 | Shelf | File drop onto the island, open, show in folder | ✅ 🧪 |
 | Shelf | Drag files back out of the shelf | ⬜ |
 | Shelf | Clipboard history (text, private copies skipped), quick note | ✅ 🧪 |
