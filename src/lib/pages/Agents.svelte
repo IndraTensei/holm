@@ -151,16 +151,26 @@
 
 <style>
   .agents {
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     gap: 12px;
     padding: 2px;
   }
+  /* The sessions take what's left after the approval card and the usage footer, and scroll. */
   .split {
+    flex: 0 1 auto;
     display: grid;
     grid-template-columns: 210px 1fr;
+    grid-template-rows: minmax(0, 1fr);
     gap: 14px;
-    min-height: 150px;
+    min-height: 120px;
+  }
+  .split > * {
+    min-height: 0;
+    overflow-y: auto;
+    overflow-anchor: none;
   }
   .list {
     list-style: none;
@@ -222,6 +232,10 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+  }
+  /* When space is short the panel scrolls; its parts keep their size. */
+  .detail > * {
+    flex-shrink: 0;
   }
   .request {
     margin: 0;
@@ -321,6 +335,7 @@
     color: var(--ink-3);
   }
   .quotas {
+    flex: none;
     display: flex;
     flex-wrap: wrap;
     gap: 18px;

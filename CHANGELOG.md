@@ -26,6 +26,10 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ### Fixed
 
+- **The Agents page fits the island.** With an approval waiting, a long log and plan usage on two rows (Claude
+  and Codex together), the page ran past the bottom of the island and cut the usage meters in half. The open
+  island now keeps to the space it has: the sessions and their log shrink and scroll, and the usage meters and
+  the rounded bottom edge always show. ([#43](https://github.com/IndraTensei/holm/issues/43))
 - **Claude's questions are answered in the island.** When Claude Code asks a multiple-choice question
   (AskUserQuestion), the island shows the question and its options instead of an Allow/Deny card with raw
   JSON. Pick an option and Claude goes on; questions that allow several answers get checkboxes and Send, and

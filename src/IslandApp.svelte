@@ -42,6 +42,10 @@
   const s = $derived(settings.v);
   const motion = $derived(motionFor(s.motion, findTheme(s.theme, s.customThemes).look?.feel));
   const compactH = 34;
+  // The window is a fixed canvas (WIN_H in island.rs). The open island may use what's left of it below
+  // its offset, at its scale, less room for its shadow; pages taller than that scroll inside.
+  let winH = $state(typeof window === 'undefined' ? 560 : window.innerHeight);
+  const room = $derived(Math.max(240, Math.floor((winH - (s.style === 'notch' ? 0 : s.offsetY)) / s.scale - 28)));
 
   const approval = $derived(s.autoOpenApprovals ? (agents.approvals[0] ?? null) : null);
 
@@ -548,11 +552,11 @@
   }
 </script>
 
-<svelte:window onpointermove={(e) => (pointer = { x: e.clientX, y: e.clientY })} onpointerdown={() => expanded && fit.used()} onwheel={() => expanded && fit.used()} onkeydown={() => expanded && fit.used()} />
+<svelte:window bind:innerHeight={winH} onpointermove={(e) => (pointer = { x: e.clientX, y: e.clientY })} onpointerdown={() => expanded && fit.used()} onwheel={() => expanded && fit.used()} onkeydown={() => expanded && fit.used()} />
 
 <div
   class="stage"
-  style="--d:{motion.duration}ms;--e:{motion.easing};--h:{compactH}px;transform:scale({s.scale});padding-top:{notch ? 0 : s.offsetY}px"
+  style="--d:{motion.duration}ms;--e:{motion.easing};--h:{compactH}px;--room:{room}px;transform:scale({s.scale});padding-top:{notch ? 0 : s.offsetY}px"
 >
   <div
     class="island {style} {mode}"

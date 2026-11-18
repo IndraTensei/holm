@@ -369,3 +369,9 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   15–20 s samples, three alternating rounds, Obsidian and Synthwave): #41 as submitted ran higher with the
   agent spinner and the timer; the optimised version averaged 2.65% of one core against main's 2.62% over the
   busy scenes, inside the round-to-round noise.
+- 2026-11-18 (session 9, later): issue #43, the Agents page ran past the fixed 560 px window (approval card,
+  log, five usage meters on two rows) and the footer was cut through. The open island now has a height cap from
+  IslandApp (`--room`: window height less the pill offset, over the scale, less 28 px for the shadow); on the
+  Agents page `Expanded` becomes a flex column, the session split shrinks (min 120 px) and its list and log
+  scroll, the usage footer never shrinks. Other pages keep their layout (measured box sizes equal to main).
+  Browser scene `&quotas=5` (three Claude and two Codex meters); checked at 560 and 470 px tall.
