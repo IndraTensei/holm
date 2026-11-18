@@ -87,6 +87,9 @@ select {
 
 .display {
   font-family: var(--font-display);
+  font-style: var(--display-style, normal);
+  letter-spacing: var(--tracking, normal);
+  font-synthesis: var(--display-synthesis, weight style);
 }
 
 .sr {

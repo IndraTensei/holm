@@ -110,7 +110,13 @@ opens while you're dragging something, never steals focus, and respects Windows'
 ### Make it yours
 
 Choose a Notch, Pill or Line shape, one of 15 themes or your own, 13 typefaces, and springy, smooth or minimal
-motion.
+motion. Each theme has a look of its own, not just its colours: Synthwave glows neon over faint scanlines, Nord
+carries an aurora, Editorial sits in candlelight on paper grain, Sakura is soft and round, and each one moves in
+its own way when the island opens.
+
+<p align="center">
+  <img src="docs/screenshots/27-themes.jpg" width="620" alt="The Music page in six themes: Synthwave, Sakura, Editorial, Nord, Gruvbox and Tokyo Night">
+</p>
 
 <p align="center">
   <img src="docs/screenshots/settings-look.jpg" width="620" alt="Settings, Look: shapes, themes and typefaces">

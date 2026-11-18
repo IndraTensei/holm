@@ -129,7 +129,7 @@
     align-items: center;
     gap: 7px;
     padding: 14px 8px 10px;
-    border-radius: 14px;
+    border-radius: calc(14px * var(--round, 1));
     background: var(--fill-1);
     cursor: default;
     transition: background 0.15s;
@@ -213,7 +213,7 @@
     align-items: center;
     gap: 12px;
     padding: 8px 10px;
-    border-radius: 10px;
+    border-radius: calc(10px * var(--round, 1));
     text-align: left;
   }
   .clips button:hover {
@@ -241,7 +241,7 @@
     resize: none;
     padding: 12px 14px;
     border: 0;
-    border-radius: 14px;
+    border-radius: calc(14px * var(--round, 1));
     background: var(--fill-1);
     font-size: var(--t-md);
     line-height: 1.55;
