@@ -6,6 +6,8 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-11-18
+
 ### Added
 
 - **Type your own answer to Claude's questions.** The question card has a box under the options: type an
@@ -155,7 +157,8 @@ The first release.
 - Notch, Pill and Line shapes, 15 themes plus your own, 13 typefaces, three motion styles.
 - An installer with an options page (start with Windows, Start menu and desktop shortcuts) and a portable exe.
 
-[Unreleased]: https://github.com/IndraTensei/holm/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/IndraTensei/holm/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/IndraTensei/holm/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/IndraTensei/holm/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/IndraTensei/holm/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/IndraTensei/holm/compare/v0.1.3...v0.1.4

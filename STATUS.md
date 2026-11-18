@@ -7,7 +7,7 @@ Read this first, then CLAUDE.md, then docs/ARCHITECTURE.md.
 
 ## Where things stand
 
-Version 0.1.6. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
+Version 0.1.7. All planned v0.1 features are written. GitHub Actions builds it on Windows (clippy, tests,
 NSIS installer 1.9 MB, portable zip 2.3 MB). The CI build has run on a real Windows 11 desktop (1920×1080,
 100% scale) and the core paths work: placement, click-through, hover, shortcut, full-screen hide, Pear,
 Claude Code hooks, volume peek. 🧪 below means not yet seen on real Windows.
@@ -375,3 +375,6 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   Agents page `Expanded` becomes a flex column, the session split shrinks (min 120 px) and its list and log
   scroll, the usage footer never shrinks. Other pages keep their layout (measured box sizes equal to main).
   Browser scene `&quotas=5` (three Claude and two Codex meters); checked at 560 and 470 px tall.
+- 2026-11-18 (session 9): v0.1.7 released: answering Claude's questions on the island (options, several
+  answers, your own answer, the terminal setting), starting plans, theme looks at no run-time cost, GPU load
+  and memory on the System page, and the Agents page kept inside the island.
