@@ -565,6 +565,11 @@ fn wait_for_decision(
     if tool == ASK && questions.is_empty() {
         return Decision::Terminal;
     }
+    let answer_here = app.state::<Config>().bool("answerQuestions", true);
+    if leave_question_to_terminal(&tool, answer_here) {
+        remind_question(app, agents, event, &questions[0].question);
+        return Decision::Terminal;
+    }
     let activity = describe(&tool, &input);
     let detail = match tool.as_str() {
         ASK => String::new(),
@@ -652,6 +657,32 @@ fn wait_for_decision(
 
 const ASK: &str = "AskUserQuestion";
 const PLAN: &str = "ExitPlanMode";
+
+/// With "Answer questions in Holm" off (`answerQuestions`), a question goes straight to Claude
+/// Code's own prompt; permission requests and plans are not affected.
+fn leave_question_to_terminal(tool: &str, answer_here: bool) -> bool {
+    tool == ASK && !answer_here
+}
+
+/// The question stays in the terminal or VS Code: the island only says the session is waiting
+/// for an answer, with a "needs you" peek showing the question. The next hook from the session
+/// (the answered tool, the next prompt) moves it on as usual.
+fn remind_question(app: &AppHandle, agents: &Agents, event: &Value, question: &str) {
+    let attention;
+    {
+        let mut sessions = agents.sessions.lock().expect("sessions");
+        let session = session_entry(&mut sessions, event);
+        session.status = "waiting";
+        push_log(session, "ask", format!("Asks: {}", truncate(question, 120)));
+        attention = json!({
+            "sessionId": session.id,
+            "project": session.project,
+            "message": truncate(question, 200),
+        });
+    }
+    let _ = app.emit("agents://state", agents.snapshot());
+    let _ = app.emit("agents://attention", attention);
+}
 
 /// The questions in an AskUserQuestion input; empty when they don't parse or have no options.
 fn questions_of(input: &Value) -> Vec<Question> {
@@ -1022,5 +1053,28 @@ mod tests {
         let event = json!({ "tool_name": "Bash", "tool_input": { "command": "ls" } });
         let d = decision(&reply(&event, Decision::Allow));
         assert_eq!(d, json!({ "behavior": "allow" }));
+    }
+    #[test]
+    fn questions_go_to_the_terminal_only_when_turned_off() {
+        assert!(leave_question_to_terminal(ASK, false));
+        assert!(!leave_question_to_terminal(ASK, true));
+        // Permission requests and plans still come to the island.
+        assert!(!leave_question_to_terminal("Bash", false));
+        assert!(!leave_question_to_terminal(PLAN, false));
+    }
+
+    #[test]
+    fn typed_answer_goes_back_like_a_label() {
+        let mut answers = serde_json::Map::new();
+        answers.insert(
+            "Which framework?".into(),
+            json!("Svelte, as the rest of the app"),
+        );
+        let d = decision(&reply(&ask_event(), Decision::Answer(answers)));
+        assert_eq!(d["behavior"], "allow");
+        assert_eq!(
+            d["updatedInput"]["answers"]["Which framework?"],
+            "Svelte, as the rest of the app"
+        );
     }
 }

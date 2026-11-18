@@ -6,6 +6,15 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 
 ## [Unreleased]
 
+### Added
+
+- **Type your own answer to Claude's questions.** The question card has a box under the options: type an
+  answer and press Enter or Send, or add it to the picks of a question that allows several answers. No need
+  to switch to the terminal when none of the options fit.
+- **Answer questions in Holm** (Settings → Agents, on by default). Turn it off to keep answering Claude Code's
+  questions in the terminal or VS Code: the island then only tells you that Claude is waiting for an answer,
+  with the question, and permission requests and plans still come to the island.
+
 ### Fixed
 
 - **Claude's questions are answered in the island.** When Claude Code asks a multiple-choice question

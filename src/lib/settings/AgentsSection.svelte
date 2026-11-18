@@ -47,7 +47,7 @@
 <section>
   <h2 class="display">Agents</h2>
   <p class="lead">
-    See what Claude Code is doing in every terminal, answer its permission requests from the island, and hear when it finishes. Everything stays on this PC.
+    See what Claude Code is doing in every terminal, answer its permission requests and questions from the island, and hear when it finishes. Everything stays on this PC.
   </p>
 
   <div class="connect">
@@ -80,6 +80,9 @@
   </Field>
   <Field label="Open permission requests" hint="The island shows Allow and Deny the moment Claude Code asks.">
     <Toggle label="Open permission requests" checked={s.autoOpenApprovals} onchange={(v) => settings.set({ autoOpenApprovals: v })} />
+  </Field>
+  <Field label="Answer questions in Holm" hint="When Claude Code asks you to pick an option, answer it on the island. Off: it asks in the terminal or VS Code, and the island only tells you it's waiting.">
+    <Toggle label="Answer questions in Holm" checked={s.answerQuestions} onchange={(v) => settings.set({ answerQuestions: v })} />
   </Field>
   <Field label="Time to answer" hint="After this, the question goes back to the terminal as usual.">
     <input type="range" min="15" max="300" step="15" value={s.approvalTimeout} oninput={(e) => settings.set({ approvalTimeout: Number((e.target as HTMLInputElement).value) })} />
