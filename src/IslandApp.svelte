@@ -702,7 +702,7 @@
   /* Notch: the island flows out of the screen edge through the ears, which are plain fill. So the
      surface fades in below the top edge and there is no outline, and the island stays one piece. */
   .notch .body::before {
-    mask-image: linear-gradient(to bottom, transparent, #000 16px);
+    background: linear-gradient(to bottom, var(--island), transparent 16px), var(--surface, none);
   }
   .notch .body::after {
     top: -12px;

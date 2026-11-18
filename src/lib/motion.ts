@@ -44,7 +44,7 @@ export function motionFor(kind: 'spring' | 'smooth' | 'reduced', feel: Feel = 's
   if (kind === 'reduced' || prefersReduced) motion = { easing: 'ease-out', duration: 140 };
   else if (kind === 'smooth') motion = { easing: 'cubic-bezier(0.32, 0.72, 0, 1)', duration: 460 };
   // Spring (the default setting) takes the theme's feel; Smooth and Reduced stay as chosen.
-  else if (feel === 'bouncy') motion = spring(240, 15);
+  else if (feel === 'bouncy') motion = spring(400, 22);
   else if (feel === 'crisp') motion = spring(420, 38);
   else if (feel === 'slow') motion = { easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', duration: 640 };
   else motion = spring(230, 21);

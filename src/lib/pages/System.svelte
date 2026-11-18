@@ -87,7 +87,6 @@
     color: var(--ink-2);
   }
   .value {
-    text-shadow: var(--text-glow, none);
     font-size: var(--t-2xl);
     font-weight: 650;
     letter-spacing: -0.03em;
