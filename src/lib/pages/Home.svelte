@@ -156,6 +156,7 @@
     flex-direction: column;
   }
   .clock {
+    text-shadow: var(--text-glow, none);
     font-size: var(--t-3xl);
     font-weight: 700;
     letter-spacing: -0.04em;
@@ -245,7 +246,7 @@
     align-items: center;
     gap: 11px;
     padding: 8px 8px 8px 8px;
-    border-radius: 16px;
+    border-radius: calc(16px * var(--round, 1));
     background: var(--fill-1);
     cursor: pointer;
     transition: background 0.15s;
@@ -256,7 +257,7 @@
   .a-glyph {
     width: 46px;
     height: 46px;
-    border-radius: 11px;
+    border-radius: calc(11px * var(--round, 1));
     display: grid;
     place-items: center;
     background: var(--fill-1);

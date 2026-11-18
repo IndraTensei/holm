@@ -59,12 +59,13 @@
     color: var(--accent);
   }
   .solid {
-    background: var(--ink);
-    color: var(--island);
+    background: var(--solid-bg, var(--ink));
+    color: var(--solid-ink, var(--island));
+    box-shadow: var(--solid-ring, 0 0 #0000);
   }
   .solid:hover {
-    background: var(--ink);
-    color: var(--island);
+    background: var(--solid-bg, var(--ink));
+    color: var(--solid-ink, var(--island));
     transform: scale(1.04);
   }
   .ok {

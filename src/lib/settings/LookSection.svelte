@@ -48,7 +48,7 @@
         }}
         style="--t-island:{t.island};--t-ink:{t.ink};--t-accent:{t.accent};--t-dim:{alpha(t.ink, 0.45)};--t-font:{fontStack(t.fontDisplay)}"
       >
-        <span class="swatch">
+        <span class="swatch" style="--accent:{t.accent};--t-surface:{t.look?.surface ?? 'none'}">
           <span class="mini">
             <span class="dot"></span>
             <span class="bars"><i></i><i></i><i></i></span>
@@ -190,7 +190,8 @@
     position: relative;
     height: 74px;
     border-radius: 10px;
-    background: var(--t-island, var(--fill-1));
+    /* The theme's own surface (light, grain, scanlines) over its fill. */
+    background: var(--t-surface, none), var(--t-island, var(--fill-1));
     box-shadow: inset 0 0 0 1px var(--line);
     display: grid;
     place-items: center;
