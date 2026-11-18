@@ -25,7 +25,7 @@
   const go = (p: PageId) => (page = p);
 </script>
 
-<div class="expanded">
+<div class="expanded" class:fill={page === 'agents'}>
   <header>
     <nav aria-label="Pages">
       {#each pages as p (p)}
@@ -60,7 +60,20 @@
 <style>
   .expanded {
     width: 600px;
+    max-height: var(--room, 520px);
     padding: 12px 16px 18px;
+  }
+  .expanded.fill {
+    display: flex;
+    flex-direction: column;
+  }
+  /* The Agents page can outgrow the room left in the window (an approval, a long log, two rows of
+     usage meters): it gets the space that's there and scrolls its sessions, so the footer stays whole. */
+  .fill main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
   header {
     display: flex;

@@ -15,7 +15,7 @@ cargo clippy --manifest-path src-tauri/Cargo.toml
 cargo test --manifest-path src-tauri/Cargo.toml --lib
 ```
 
-Browser preview scenes (mock data, `src/lib/mock.ts`): `?open=music|agents|home|system|shelf|focus` (`&gpus=2` for two GPUs on System),
+Browser preview scenes (mock data, `src/lib/mock.ts`): `?open=music|agents|home|system|shelf|focus` (`&gpus=2` for two GPUs on System, `&quotas=5` for five usage meters on Agents),
 `?peek=done|track|volume|charging`, `?approval=1` (`?approval=question` for a multiple-choice question), `?drop=1`, `?timer=1`, `?game=<name>` (add `&icon=1` for a logo), `?front=<app>` (a maximized app in front; add `&near=1` for the pointer near it), `?ended=1`, `?missed=1`, `?theme=<id>`, `?style=notch|pill|line`,
 `?music=off`, `?agents=off`, `?title=lyrics`, `#settings&section=look`, `?section=games#settings`, `?section=tools#settings`. `python3 scripts/shots.py` screenshots them
 (needs `npx vite preview --port 4173` and Playwright). `python scripts/film.py` records the promo clips from

@@ -184,8 +184,25 @@ const quotas: QuotaProvider[] = [
     items: [
       { label: '5-hour', percent: 64, resetsAt: now + 98 * 60_000, windowMinutes: 300 },
       { label: 'Weekly', percent: 31, resetsAt: now + 3.2 * 86_400_000, windowMinutes: 10080 },
+      // &quotas=5: a third Claude window and Codex, so the Agents footer wraps onto a second row.
+      ...(params.get('quotas') === '5' ? [{ label: 'Fable weekly', percent: 12, resetsAt: now + 3.2 * 86_400_000, windowMinutes: 10080 }] : []),
     ],
   },
+  ...(params.get('quotas') === '5'
+    ? [
+        {
+          provider: 'codex' as const,
+          ok: true,
+          plan: 'plus',
+          error: '',
+          fetchedAt: now,
+          items: [
+            { label: '5-hour', percent: 22, resetsAt: now + 140 * 60_000, windowMinutes: 300 },
+            { label: 'Weekly', percent: 47, resetsAt: now + 4.1 * 86_400_000, windowMinutes: 10080 },
+          ],
+        },
+      ]
+    : []),
 ];
 
 function stats(): Stats {
