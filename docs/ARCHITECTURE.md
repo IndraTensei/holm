@@ -44,7 +44,7 @@ Pear Desktop and LRCLIB / Open-Meteo are reached from the frontend with fetch/We
 
 ## Island states
 
-`compact` (resting) → `peek` (a few seconds of news) → `approval` (stays until answered; a multiple-choice question from Claude shows its options instead of Allow and Deny) → `drop` (dragging files)
+`compact` (resting) → `peek` (a few seconds of news) → `approval` (stays until answered; a multiple-choice question from Claude shows its options, and a box for an answer of your own, instead of Allow and Deny; with `answerQuestions` off it is left to Claude Code's prompt and the island only peeks "needs you") → `drop` (dragging files)
 → `expanded` (pages). The shape morphs with a spring written as CSS `linear()` easing; content cross-fades.
 A second live activity sits in a round bubble next to the island, like iOS.
 
