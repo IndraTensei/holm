@@ -14,6 +14,15 @@ versions follow [Semantic Versioning](https://semver.org). Downloads are on the
 - **Answer questions in Holm** (Settings → Agents, on by default). Turn it off to keep answering Claude Code's
   questions in the terminal or VS Code: the island then only tells you that Claude is waiting for an answer,
   with the question, and permission requests and plans still come to the island.
+- **Graphics on the System page.** Next to the processor and memory, a Graphics row shows how busy your GPU is,
+  with the same sparkline, and how much of its memory is in use (shared memory for built-in graphics, the
+  card's own for a graphics card). PCs with two GPUs get a row for each. The figures are the ones Task Manager
+  shows, and they are only read while the System page is open. ([#40](https://github.com/IndraTensei/holm/pull/40))
+- **Themes with a look of their own.** Each of the 15 themes now has its own light and texture, glow, play
+  button and bar, and a way of moving when the island opens: Synthwave glows neon over faint scanlines, Nord
+  carries an aurora, Editorial sits in candlelight on paper grain, Sakura is soft and round. All of it is
+  static paint, so the island costs the same CPU as before, resting or busy.
+  ([#41](https://github.com/IndraTensei/holm/pull/41))
 
 ### Fixed
 

@@ -361,4 +361,12 @@ Legend: ✅ written and checked as far as possible here · 🧪 needs a first ru
   change since last week"), option picks and In terminal unchanged, setting off → empty reply in ~20 ms with
   the "needs you" peek and the session waiting, and a Bash permission request still showing Allow and Deny
   with the setting off. Screenshots 23 to 25 and an updated settings-agents.jpg.
-
+- 2026-11-18 (session 9): merged #39 (type your own answer, `answerQuestions`), #40 (GPU load and memory per
+  adapter on the System page, `gpu.rs`) and #41 (theme looks). Looks made free at run time: #41 drew rings and
+  sparklines through an SVG blur filter (the resting island's timer and usage rings tick, so every tick
+  re-ran the blur), glowed the System figures and Focus timer (every second), masked the notch surface and gave
+  Bouncy an 879 ms spring. Now plain strokes, glow on the Home clock only, a fill-coloured gradient instead of
+  the mask, Bouncy spring(400, 22) at 675 ms. Measured with Playwright Chromium (`--disable-gpu`, mock data,
+  15–20 s samples, three alternating rounds, Obsidian and Synthwave): #41 as submitted ran higher with the
+  agent spinner and the timer; the optimised version averaged 2.65% of one core against main's 2.62% over the
+  busy scenes, inside the round-to-round noise.
