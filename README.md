@@ -86,8 +86,9 @@ Agent, Amp and more) and shows which are running and what each one used today.
 ### A home for the small things
 
 The home page puts the clock, the weather, Wi-Fi and Bluetooth toggles and your battery next to what's playing
-and what your agents are up to. Drop files on the island to keep them on a shelf, scroll back through your
-clipboard, jot a quick note, or start a focus timer that counts down right in the island.
+and what your agents are up to. The System page keeps an eye on your processor, memory, graphics and network.
+Drop files on the island to keep them on a shelf, scroll back through your clipboard, jot a quick note, or start
+a focus timer that counts down right in the island.
 
 <p align="center">
   <img src="docs/screenshots/17-open-home-arena.jpg" width="620" alt="The home page in the Arena theme">

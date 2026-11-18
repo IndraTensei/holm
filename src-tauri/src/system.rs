@@ -1,6 +1,7 @@
-//! CPU, memory, network and battery readings straight from Win32: no WMI, no performance
-//! counters. Readings are only taken while something on screen asks for them (`system_watch`),
-//! except the cheap power check that drives the charging live activity.
+//! CPU, memory, network and battery readings straight from Win32, no WMI; GPU readings from
+//! `gpu.rs` (Windows' GPU performance counters, the only source of GPU load). Readings are only
+//! taken while something on screen asks for them (`system_watch`), except the cheap power check
+//! that drives the charging live activity.
 
 use std::{
     sync::{
@@ -38,6 +39,8 @@ pub struct Stats {
     net_down: f64,
     net_up: f64,
     battery: Option<Battery>,
+    /// One per hardware graphics adapter; empty when Windows has no GPU counters.
+    gpus: Vec<crate::gpu::Gpu>,
 }
 
 #[derive(Serialize, Clone, Default, PartialEq)]
@@ -130,6 +133,9 @@ pub fn start(app: AppHandle) {
             let mut previous_net = network_bytes();
             let mut previous_at = Instant::now();
             let mut power_tick = 0u32;
+            // Open only while readings are watched, so nothing is held while they aren't.
+            let mut gpu: Option<crate::gpu::Reader> = None;
+            let mut gpu_tried = false;
             loop {
                 thread::sleep(Duration::from_millis(1000));
                 power_tick += 1;
@@ -147,7 +153,16 @@ pub fn start(app: AppHandle) {
                     previous_cpu = cpu_times();
                     previous_net = network_bytes();
                     previous_at = Instant::now();
+                    gpu = None;
+                    gpu_tried = false;
                     continue;
+                }
+                // Load is a rate over the second since the last collection: a reader opened just
+                // now has only its baseline, so it gives its first reading on the next tick.
+                let gpu_ready = gpu.is_some();
+                if gpu.is_none() && !gpu_tried {
+                    gpu_tried = true;
+                    gpu = crate::gpu::Reader::open();
                 }
                 let cpu_now = cpu_times();
                 let cpu = match (previous_cpu, cpu_now) {
@@ -174,6 +189,10 @@ pub fn start(app: AppHandle) {
                     net_down,
                     net_up,
                     battery: battery(),
+                    gpus: match gpu.as_mut() {
+                        Some(g) if gpu_ready => g.read(),
+                        _ => Vec::new(),
+                    },
                 };
                 let _ = app.emit("system://stats", &stats);
             }

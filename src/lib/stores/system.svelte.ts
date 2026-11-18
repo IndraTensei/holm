@@ -10,6 +10,8 @@ class System {
   memory = $state<number[]>([]);
   down = $state<number[]>([]);
   up = $state<number[]>([]);
+  /** Load history per graphics adapter, in the order Rust lists them. */
+  gpu = $state<number[][]>([]);
   battery = $state<Battery | null>(null);
   quotas = $state<QuotaProvider[]>([]);
   clips = $state<Clip[]>([]);
@@ -39,6 +41,7 @@ class System {
       this.memory = push(this.memory, s.memory);
       this.down = push(this.down, s.netDown);
       this.up = push(this.up, s.netUp);
+      this.gpu = s.gpus.map((g, i) => push(this.gpu[i] ?? [], g.usage));
       this.battery = s.battery;
     });
     await on<Battery | null>('power://changed', (b) => {

@@ -122,6 +122,18 @@ export interface Stats {
   netDown: number;
   netUp: number;
   battery: Battery | null;
+  /** One per hardware graphics adapter; empty when Windows has no GPU counters. */
+  gpus: Gpu[];
+}
+
+export interface Gpu {
+  name: string;
+  /** The busiest engine's load, 0–100, as Task Manager shows it. */
+  usage: number;
+  memoryUsedGb: number;
+  memoryTotalGb: number;
+  /** Integrated graphics: the memory figures are shared system memory. */
+  shared: boolean;
 }
 
 export interface Clip {
